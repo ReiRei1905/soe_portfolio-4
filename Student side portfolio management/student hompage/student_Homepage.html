@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="style_About_Us.css.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="About_us.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+        };
+
+        // Default zoom level
+        let zoomLevel = 1;
+
+        function zoomIn() {
+            zoomLevel += 0.1; // Increase zoom level by 10%
+            document.body.style.transform = `scale(${zoomLevel})`;
+            document.body.style.transformOrigin = '0 0'; // Set the origin for scaling
+            document.getElementById('zoomPercentage').innerText = `${Math.round(zoomLevel * 100)}%`;
+        }
+
+        function zoomOut() {
+            if (zoomLevel > 0.1) { // Prevent zooming out too much
+                zoomLevel -= 0.1; // Decrease zoom level by 10%
+                document.body.style.transform = `scale(${zoomLevel})`;
+                document.body.style.transformOrigin = '0 0'; // Set the origin for scaling
+                document.getElementById('zoomPercentage').innerText = `${Math.round(zoomLevel * 100)}%`;
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto flex justify-between items-center py-2 px-4">
+            <div class="flex items-center">
+                <img alt="College logo" class="h-10 w-10" src="student hompage/309029587_459753179521293_5621644846638556558_n.jpg" />
+                <div class="ml-2">
+                    <h1 class="text-orange-600 font-bold text-sm">ASIA PACIFIC COLLEGE</h1>
+                    <h2 class="text-orange-600 text-xs">SCHOOL OF ENGINEERING</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto flex justify-between items-center py-2 px-4">
+            <div class="flex items-center">
+                <i class="fas fa-home cursor-pointer" onclick="goToOverviewPage()"></i>
+                <h1 class="text-lg ml-2">E-PORTFOLIO</h1>
+            </div>
+            <div class="flex items-center justify-center flex-1 mx-4">
+                <input type="text" placeholder="Search..." class="border p-2 rounded w-96 text-center" />
+            </div>
+            <div class="relative flex items-center space-x-2">
+                <div class="relative">
+                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleDropdown('notificationDropdown')"></i>
+                    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-md p-4">
+                        <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                    </div>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-cloud-upload-alt text-lg cursor-pointer" onclick="toggleDropdown('uploadDropdown')"></i>
+                    <div id="uploadDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md p-4 space-y-4">
+                        <div class="flex space-x-2">
+                            <button class="bg-yellow-500 text-black px-4 py-2 w-1/2 border-2 border-blue-500 hover:bg-yellow-600">Add Custom Folder</button>
+                            <button class="bg-yellow-500 text-black px-4 py-2 w-1/2 border-2 border-blue-500 hover:bg-yellow-600">Use Existing Folder</button>
+                        </div>
+                        <div>
+                            <label class="font-semibold">Select Category:</label>
+                            <div class="mt-1 space-y-1">
+                                <label class="block"><input type="radio" name="category" value="assessment" class="mr-1"> Assessment</label>
+                                <label class="block"><input type="radio" name="category" value="projects" class="mr-1"> Projects</label>
+                                <label class="block"><input type="radio" name="category" value="certificates" class="mr-1"> Certificate & Awards</label>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="bg-gray-500 text-white px-4 py-2 w-1/2 hover:bg-gray-600" onclick="closeUploadModal()">Cancel</button>
+                            <button class="bg-orange-500 text-white px-4 py-2 w-1/2 hover:bg-orange-600" onclick="addFile()">Done</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="w-10 h-10 border-2 border-orange-500 rounded-full flex items-center justify-center cursor-pointer" onclick="toggleDropdown('profileDropdown')">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md">
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-200"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
+                        <a href="customize_portfolio.html" class="block px-4 py-2 hover:bg-gray-200"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-200"><i class="fas fa-cog mr-2"></i> Settings</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-200"><i class="fas fa-question-circle mr-2"></i> Help</a>
+                        <hr>
+                        <div class="flex justify-center items-center space-x-2 mt-4">
+                            <i class="fas fa-search-minus text-xl cursor-pointer" onclick="zoomOut()"></i>
+                            <span id="zoomPercentage" class="font-bold">100%</span>
+                            <i class="fas fa-search-plus text-xl cursor-pointer" onclick="zoomIn()"></i>
+                        </div>
+                        <div class="text-center">
+                            <a href="#" class="block px-4 py-2 text-red-600 font-bold hover:bg-gray-200"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-6 px-6 flex-1 flex">
+        <div id="sidebar" class="bg-black text-white px-6 fixed left-0 w-64 h-full z-50 transition-transform transform -translate-x-full">
+            <nav class="flex flex-col space-y-6 mt-6">
+                <a class="text-lg" href="#">Assessment</a>
+                <a class="text-lg" href="#">Projects</a>
+                <a class="text-lg" href="#">Certificate/Awards</a>
+                <a class="text-lg" href="#">Classes</a>
+                <a class="text-lg" href="#">About us</a>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="flex-1 transition-all duration-300">
+            <div class="flex justify-between items-center mb-2">
+                <i class="fas fa-bars text-xl cursor-pointer" onclick="toggleSidebar()"></i>
+            </div>
+            <div class="border border-black rounded-lg p-4 mb-4 flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-lg" id="studentName">Name of user</h2>
+                    <p>About the user</p>
+                </div>
+                <div class="flex items-center justify-center w-16 h-16 border-2 border-orange-500 rounded-full">
+                    <i class="fas fa-user text-3xl"></i>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="openFileManagement('projectsModal')" class="border border-green-500 rounded-lg p-16 text-center w-full">
+                    <img src="student hompage/folder.png" alt="Top Projects" class="mx-auto mb-2" width="50"/>
+                    <h3 class="font-bold text-blue-700">Top projects</h3>
+                </button>
+
+                <button onclick="openFileManagement('certificatesModal')" class="border border-green-500 rounded-lg p-16 text-center w-full">
+                    <img src="student hompage/folder.png" alt="Top Certificates" class="mx-auto mb-2" width="50"/>
+                    <h3 class="font-bold text-blue-700">Top certificates/awards</h3>
+                </button>
+
+                <button onclick="openFileManagement('assessmentsModal')" class="border border-green-500 rounded-lg p-16 text-center w-full">
+                    <img src="student hompage/folder.png" alt="Top Assessments" class="mx-auto mb-2" width="50"/>
+                    <h3 class="font-bold text-blue-700">Top assessments</h3>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-blue-700 text-white py-4 mt-4 w-full text-left">
+        <p>Copyright © 2024 |
+            <a class="text-blue-300" href="#">JRC.inc.</a> All rights reserved</p>
+    </footer>
+
+    <!-- Modal for File Management -->
+    <div id="fileManagementModal" class="hidden fixed top-0 left-0 w-full h-full bg-gray-700 bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-lg w-2/3 max-h-[90vh] overflow-y-auto">
+            <h2 class="font-bold text-lg mb-4">Manage Files</h2>
+            <div id="fileTileContainer" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- File tiles will be inserted here -->
+            </div>
+            <div class="mt-6">
+                <button onclick="closeFileManagement()" class="bg-gray-500 text-white w-full py-2 rounded-md">Close</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            fetch('../../user_info_V3/get_student_info.php')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('studentName').textContent = data.name || "Name of user";
+            });
+        });
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("-translate-x-full");
+        }
+
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById(id);
+            dropdown.classList.toggle("hidden");
+
+            document.querySelectorAll(".absolute.right-0.mt-2").forEach(el => {
+                if (el.id !== id) el.classList.add("hidden");
+            });
+        }
+
+        function openFileManagement() {
+            const modal = document.getElementById("fileManagementModal");
+            const container = document.getElementById("fileTileContainer");
+
+            if (!modal || !container) {
+                console.error("Required elements not found in the DOM.");
+                return;
+            }
+
+            modal.classList.remove("hidden");
+            container.innerHTML = ''; // Clear previous
+
+            const sampleFiles = ["Sample File 1", "Sample File 2"];
+            sampleFiles.forEach(name => {
+                container.appendChild(createFileTile(name));
+            });
+        }
+
+        function createFileTile(name) {
+            const tile = document.createElement('div');
+            tile.className = "border rounded-lg p-4 flex flex-col bg-gray-50 shadow-md";
+
+            const fileLink = document.createElement('a');
+            fileLink.textContent = name;
+            fileLink.className = "text-blue-600 hover:underline";
+            fileLink.onclick = () => alert(`Viewing: ${name}`); // View file action
+
+            tile.appendChild(fileLink);
+            return tile;
+        }
+
+        function closeFileManagement() {
+            const modal = document.getElementById("fileManagementModal");
+            if (modal) {
+                modal.classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>

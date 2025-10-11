@@ -1,0 +1,107 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="style_faculty.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="faculty_scripts.js" defer></script>
+</head>
+<body class="page-layout">
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t39.30808-1/309029587_459753179521293_5621644846638556558_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeFir2kR4G3TSgwoXK8CTYwXgMcJ5eEQJR6Axwnl4RAlHh_niM6f3hc9REt9On1Bo0hYDuB602Jje_sH9YjjMMJV&_nc_ohc=TTD306I9niwQ7kNvgEtCZM5&_nc_oc=Adhw3AcB7qiaAsToDKdD3JAhWPWCt2SO61lUdbT6ClMw6jFkF6ND-ny7aVblaIMsf88&_nc_zt=24&_nc_ht=scontent.fmnl17-2.fna&_nc_gid=mW9KxobHMlYlxAve0jPylg&oh=00_AYFa8CFwbvHj3IGVauxhoB8n0ph2y0pJu0_gVvhxt_-kXA&oe=67DD68CC"/>
+            <div class="college-info">
+                <h1>ASIA PACIFIC COLLEGE</h1>
+                <h2>SCHOOL OF ENGINEERING</h2>
+            </div>
+        </div>
+    </div>
+    <div class="header-actions">
+        <!--Home and E-portfolio-->
+        <div class="header-home">
+            <i class="fas fa-home" onclick="goToOverviewPage()"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <!--Search Input-->
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        <!--Profile Icon-->
+        <div class="header-profile">
+            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleProfileClick()"></i>
+        </div>
+    </div>
+</header>
+<main class="main-content">
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="./programs.html">Programs</a>
+            <a class="text-lg" href="./classes.html">Classes</a>
+            <a class="text-lg" href="./lists_students.html">Lists of Students</a>
+            <a class="text-lg" href="./faculty_about_us.html">About us</a>
+        </nav>
+    </div>
+
+<div id="aboutUs" class="about-us-section">
+    <div class="about-us-header">
+        <div class="header-left">
+            <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+            <h2 class="about-us-title">About us</h2>
+        </div>
+    </div>
+    <!-- Start of Content -->
+    <div class="about-us-content">
+        <h2 class="content-title">SOE E-Portfolio</h2>
+        <p class="content-paragraph">
+            A comprehensive platform designed to help individuals showcase their skills, achievements/certifications, and experiences.
+            We offer a range of features, including customizable files and easy-to-use tools.
+        </p>
+        <p class="content-paragraph mt-4">
+            Our goal is to make compiling files more efficient and easily accessible to both students and professors for skill evaluation.
+        </p>
+        <p class="content-paragraph mt-4 mb-8">
+            We empower users to create professional, engaging e-portfolios that highlight their unique talents.
+        </p>
+        <!-- Image Placeholders Section -->
+        <div class="profiles-container">
+            <!-- Profile 1 -->
+            <div class="profile">
+                <div class="profile-image">
+                    <img src="https://i.pinimg.com/474x/39/80/2b/39802b37687c61a3bcd4cd86ce1c3968.jpg" alt="Profile 1" class="image" onerror="this.onerror=null; this.src='placeholder.jpg';">
+                </div>
+                <p class="profile-name">Claude Jared Yriarte</p>
+            </div>
+            <!-- Profile 2 -->
+            <div class="profile">
+                <div class="profile-image">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTbwbf30bYm_5jk7WNgEIpxCDHPzBWRSEaZA&s" alt="Profile 2" class="image" onerror="this.onerror=null; this.src='placeholder.jpg';">
+                </div>
+                <p class="profile-name">Reimon Zaryl Torio</p>
+            </div>
+            <!-- Profile 3 -->
+            <div class="profile">
+                <div class="profile-image">
+                    <img src="https://i.pinimg.com/236x/e6/22/28/e6222886fdc2dc2b847284232e03ba74.jpg" alt="Profile 3" class="image" onerror="this.onerror=null; this.src='placeholder.jpg';">
+                </div>
+                <p class="profile-name">Hans Gabriel Chua</p>
+            </div>
+        </div>
+    </div>
+    <!-- End of Content -->
+</div>
+</main>
+<footer class="footer-content">
+    <div class="footer-container">
+        <p class="footer-text">
+            Copyright © 2024 |
+            <a class="footer-link" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer> 
+</body>
+</html>

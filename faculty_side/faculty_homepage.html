@@ -1,0 +1,128 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="style_faculty.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="faculty_scripts.js" defer></script>
+</head>
+<body class="page-layout">
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t39.30808-1/309029587_459753179521293_5621644846638556558_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeFir2kR4G3TSgwoXK8CTYwXgMcJ5eEQJR6Axwnl4RAlHh_niM6f3hc9REt9On1Bo0hYDuB602Jje_sH9YjjMMJV&_nc_ohc=TTD306I9niwQ7kNvgEtCZM5&_nc_oc=Adhw3AcB7qiaAsToDKdD3JAhWPWCt2SO61lUdbT6ClMw6jFkF6ND-ny7aVblaIMsf88&_nc_zt=24&_nc_ht=scontent.fmnl17-2.fna&_nc_gid=mW9KxobHMlYlxAve0jPylg&oh=00_AYFa8CFwbvHj3IGVauxhoB8n0ph2y0pJu0_gVvhxt_-kXA&oe=67DD68CC"/>
+            <div class="college-info">
+                <h1>ASIA PACIFIC COLLEGE</h1>
+                <h2>SCHOOL OF ENGINEERING</h2>
+            </div>
+        </div>
+    </div>
+    <div class="header-actions">
+        <!--Home and E-portfolio-->
+        <div class="header-home">
+            <i class="fas fa-home" onclick="goToOverviewPage()"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <!--Search Input-->
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        <!--Profile Icon-->
+        <div class="header-profile">
+            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleProfileClick()"></i>
+        </div>
+    </div>
+</header>
+<main class= "main-content">
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="./programs.html">Programs</a>
+            <a class="text-lg" href="./classes.html">Classes</a>
+            <a class="text-lg" href="./lists_students.html">Lists of Students</a>
+            <a class="text-lg" href="./faculty_about_us.html">About us</a>
+        </nav>
+    </div>
+    <div id="overview" class="overview-section">
+        <div class="overview-header">
+            <div class="header-left">
+                <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+                <h2 class="overview-title">Overview</h2>
+            </div>
+        </div>
+        <!--Start of Content-->
+        <div class="content-container">
+            <div id="profName" class="prof-name">
+                    <h3>Hello! Professor Name</h3>
+            </div>
+            <div id="chartsContainer" class="charts-container">
+                <div id="pieChart" class="chart pie-chart">
+                    <h3 class="chart-title">Participation per Program</h3>
+                    <div class="chart-content">
+                        <div class="chart-circle">
+                            <span class="chart-label">Pie Chart</span>
+                        </div>
+                    </div>
+                    <div class="chart-report">
+                        <p>
+                            CPE 75%
+                            <span class="text-blue">|</span>
+                            ECE 10%
+                            <span class="text-yellow">|</span>
+                            CE 15%
+                        </p>
+                    </div>
+                </div>
+                <div id="mostUploads" class="most-uploads">
+                    <h3 class="section-title">Most Uploads</h3>
+                    <div class="chart-container">
+                        <div class="chart-circle">
+                            <span class="chart-label">Bar Graph</span>
+                        </div>
+                    </div>
+                    <div class="report-text">
+                        <p>
+                            Assessments 50%
+                            <span class="text-green">|</span>
+                            Projects 40%
+                            <span class="text-purple">|</span>
+                            Certificates 10%
+                        </p>
+                    </div>
+                </div>
+                <div id="barChart" class="bar-chart">
+                    <h3 class="section-title">Participation per Year</h3>
+                    <div class="chart-container">
+                        <div class="chart-circle">
+                            <span class="chart-label">Bar Graph</span>
+                        </div>
+                    </div>
+                    <div class="report-text">
+                        <p>
+                            Year 1 30%
+                            <span class="text-blue">|</span>
+                            Year 2 40%
+                            <span class="text-yellow">|</span>
+                            Year 3 30%
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <i id="arrowRight" class="fas fa-arrow-right absolute right-4 top-1/2 transform -translate-y-1/2 text-xl cursor-pointer" onclick="toggleChart()" style="display: block;"></i>
+            <i id="arrowLeft" class="fas fa-arrow-left absolute left-4 top-1/2 transform -translate-y-1/2 text-xl cursor-pointer" onclick="toggleChart()" style="display: none;"></i>
+        </div> <!--End of Content-->
+    </div>
+</main>
+<footer class="footer-content">
+    <div class="footer-container">
+        <p class="footer-text">
+            Copyright © 2024 |
+            <a class="footer-link" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer> 
+</body>
+</html>

@@ -1,0 +1,1709 @@
+.page-layout {
+    background-color: #f7fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+}
+
+/* Start of Header styles */
+
+header {
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Ensures it stays above other elements */
+}
+
+.header-container {
+    flex: 1;
+    max-width: 1280px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.header-display {
+    display: flex;
+    align-items: center;
+}
+
+.college-header{
+    height: 2.5rem;
+    width: 2.5rem;
+
+}
+
+.college-info {
+    margin-left: 0.5rem;
+    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 */
+}
+
+.college-info h1 {
+    font-weight: bold;
+    font-size: 0.875rem; /* 14px */
+}
+
+.college-info h2 {
+    font-size: 0.75rem; /* 12px */
+}
+
+/* End of Header*/
+main {
+    margin-top: calc(120px); /* Add space for the header */
+    margin-bottom: calc(70px); /* Add space for the fixed footer */
+    padding: 1rem; /* Optional: Add padding for better spacing */
+    overflow-y: auto; /* Allow scrolling for the content */
+    height: 100vh; /* Ensure the content fits within the viewport */
+    box-sizing: border-box; /* Include padding and border in height calculation */
+}
+
+/*Header-actions*/
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: -10px 20px;
+    width: 100%;
+    border-top: 4px solid #FBAF41; /* Add this line */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.header-home, .header-profile {
+    display: flex;
+    align-items: center;
+}
+
+.header-actions .header-home {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Equivalent to space-x-4 */
+    
+}
+
+.header-actions .header-home i {
+    font-size: 1.25rem; /*20px*/
+    cursor: pointer;
+
+}
+
+.header-actions .header-home h1 {
+    font-size: 1.125rem; /* 18px */
+    font-weight: bold;
+}
+
+.header-actions .header-search {
+    position: relative;
+}
+
+.search-input {
+    border: 1px solid #e2e8f0; /* Equivalent to border */
+    border-radius: 9999px; /* Equivalent to rounded-full */
+    padding-top: 0.25rem; /* Equivalent to py-1 */
+    padding-bottom: 0.25rem; /* Equivalent to py-1 */
+    padding-left: 2rem; /* Equivalent to pl-8 */
+    padding-right: 1rem; /* Equivalent to px-4 */
+}
+
+.header-actions .header-search i {
+    position: absolute;
+    left: 0.5rem; /* Equivalent to left-2 */
+    top: 0.5rem; /* Equivalent to top-2 */
+    color: #6b7280; /* Equivalent to text-gray-500 */
+}
+
+/* Notification Icon */
+.header-notifications {
+    position: relative;
+    align-items: center;
+    display: flex;
+    margin-left: auto; /* Remove any large margins */
+    margin-right: 0.5rem; /* Add spacing between notification and profile icons */
+}
+
+.header-notifications i {
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.header-notifications i:hover {
+    color: #007bff;
+}
+
+/* Notification Dropdown */
+#notificationDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    z-index: 10;
+    width: 300px;
+}
+
+#notificationDropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#notificationDropdown ul li {
+    padding: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#notificationDropdown ul li:last-child {
+    border-bottom: none;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    display: none; /* Initially hidden */
+}
+
+.header-actions .header-profile{
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Equivalent to space-x-4 */
+
+}
+
+.header-actions .header-profile i{
+    font-size: 1.25rem; /* 20px */
+    cursor: pointer;
+}
+
+/*End of Header actions*/
+
+/* Start of Main content styles */
+.main-content {
+    max-width: 100%;
+    margin-top: 1rem; /* mt-4 */
+    margin-bottom: 16px;
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem; /* px-4 */
+    flex: 1;
+    display: flex;
+}
+
+#sidebar {
+    background-color: #4a4a4a;
+    color: #ffffff;
+    padding: 1rem;
+    position: fixed;
+    left: 0;
+    width: 16rem;
+    height: 80%;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    top: 0; /* Start from the top */
+    height: 100vh; /* Full height of the viewport */
+    overflow-y: auto; /* Add scrolling if content overflows */
+}
+
+#sidebar.active {
+    transform: translateX(0);
+}
+
+#sidebar nav {
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem; /* Space between links */
+}
+
+#sidebar nav a {
+    color: #ffffff; /* Link color */
+    font-weight: bold;
+    text-decoration: none; /* Remove underline */
+    font-size: 1.25rem; /* Font size */
+    padding: 1rem 2rem; /* Padding for links */
+    /*background-color: #6c757d; /* Background color for links */
+    border-radius: 0.5rem; /* Rounded corners */
+    text-align: center; /* Center text */
+    transition: background-color 0.3s ease; /* Transition for background color */
+}
+
+#sidebar nav a:hover {
+    background-color: #6c757d; /* Darker background color on hover */
+}
+
+/* Overview Section */
+
+#overview {
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+}
+
+#overview.shifted {
+    margin-left: 16rem;
+}
+
+
+.overview-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+.overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-toggle {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    margin-right: 0.5rem; /* Equivalent to mr-2 */
+    cursor: pointer;
+}
+
+.overview-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* Content Container */
+.content-container {
+    background-color: #ffffff; /* Equivalent to bg-white */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-md */
+    border-radius: 0.5rem; /* Equivalent to rounded-lg */
+    padding: 1rem; /* Equivalent to p-4 */
+    position: relative;
+}
+
+/* Charts Container */
+.charts-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Pie Chart */
+.pie-chart {
+    display: block;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    width: 50%; /* Equivalent to w-1/2 */
+}
+
+/* Chart Title */
+.chart-title {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Chart Content */
+.chart-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 12rem; /* Equivalent to h-48 */
+}
+
+/* Chart Circle */
+.chart-circle {
+    width: 8rem; /* Equivalent to w-32 */
+    height: 8rem; /* Equivalent to h-32 */
+    background-color: #e5e7eb; /* Equivalent to bg-gray-200 */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Chart Label */
+.chart-label {
+    font-size: 0.875rem; /* Equivalent to text-sm */
+}
+
+/* Chart Report */
+.chart-report {
+    text-align: center;
+    margin-top: 0.5rem; /* Equivalent to mt-2 */
+}
+
+/* Colored Text */
+.text-blue {
+    color: #3b82f6; /* Equivalent to text-blue-500 */
+}
+
+.text-yellow {
+    color: #f59e0b; /* Equivalent to text-yellow-500 */
+}
+
+
+/* Most Uploads Section */
+.most-uploads {
+    display: block;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    width: 50%;
+}
+
+/* Bar Chart Section */
+.bar-chart {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Section Title */
+.section-title {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Chart Container */
+.chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 12rem; /* Equivalent to h-48 */
+}
+
+/* Chart Circle */
+.chart-circle {
+    width: 8rem; /* Equivalent to w-32 */
+    height: 8rem; /* Equivalent to h-32 */
+    background-color: #e5e7eb; /* Equivalent to bg-gray-200 */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Chart Label */
+.chart-label {
+    font-size: 0.875rem; /* Equivalent to text-sm */
+}
+
+/* Report Text */
+.report-text {
+    text-align: center;
+    margin-top: 0.5rem; /* Equivalent to mt-2 */
+}
+
+/* Colored Text */
+.text-green {
+    color: #10b981; /* Equivalent to text-green-500 */
+}
+
+.text-purple {
+    color: #8b5cf6; /* Equivalent to text-purple-500 */
+}
+
+.text-blue {
+    color: #3b82f6; /* Equivalent to text-blue-500 */
+}
+
+
+/*Start of About us*/
+#aboutUs {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+}
+
+#aboutUs.shifted {
+    margin-left: 16rem;
+}
+
+/* About Us Section */
+.about-us-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+/* About Us Header */
+.about-us-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid black; /* Add this line */
+    
+}
+
+.sidebar-toggle {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    margin-right: 0.5rem; /* Equivalent to mr-2 */
+    cursor: pointer;
+    border-bottom: 2px solid black; /* Add this line */
+}
+
+.about-us-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* About Us Content */
+.about-us-content {
+    background-color: #ffffff; /* Equivalent to bg-white */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-md */
+    border-radius: 0.5rem; /* Equivalent to rounded-lg */
+    padding: 2rem; /* Equivalent to p-8 */
+    position: relative;
+    
+}
+
+.content-title {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+    text-align: left;
+    margin-bottom: 1.5rem; /* Equivalent to mb-6 */
+}
+
+.content-paragraph {
+    color: #4a5568; /* Equivalent to text-gray-700 */
+    text-align: left;
+    font-size: 1.125rem; /* Equivalent to text-lg */
+}
+
+.mt-4 {
+    margin-top: 1rem; /* Equivalent to mt-4 */
+}
+
+.mb-8 {
+    margin-bottom: 2rem; /* Equivalent to mb-8 */
+}
+
+/* Profiles Section */
+.profiles-container {
+    display: flex;
+    justify-content: center;
+    gap: 3rem; /* Equivalent to space-x-12 */
+}
+
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-image {
+    width: 8rem; /* Equivalent to w-32 */
+    height: 8rem; /* Equivalent to h-32 */
+    border-radius: 50%; /* Equivalent to rounded-full */
+    overflow: hidden;
+    border: 2px solid #6b7280; /* Equivalent to border-2 border-gray-500 */
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Equivalent to object-cover */
+}
+
+.profile-name {
+    margin-top: 0.75rem; /* Equivalent to mt-3 */
+    text-align: center;
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/*End of About us content*/
+
+/*Start of Programs*/
+#programs {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+}
+
+#programs.shifted {
+    margin-left: 16rem;
+}
+
+/* Programs Section */
+.programs-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+.programs-title {
+    margin-top: 1rem; /* Space above the title */
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* Programs Content */
+/* General container styling */
+.programs-content {
+    background-color: #f8f9fa; /* Light gray background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1.5rem; /* Padding around content */
+    margin-top: 1rem; /* Space from the header */
+    margin-bottom: 2rem; /* Add space to prevent cutoff */
+}
+
+/* Create Program Button */
+.create-program-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff; /* Blue background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+}
+
+.create-program-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Input container for adding programs */
+#programInputContainer {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#programInput {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+}
+
+.confirm-btn {
+    background-color: #28a745; /* Green background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-btn:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+/* Program list styling */
+.program-list {
+    margin-top: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers items horizontally */
+}
+
+.programs-content,
+.program-list {
+    overflow: visible;
+}
+
+.program-item {
+    position: relative; /* Required for the dropdown to position correctly */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    height: 3rem; /* Fixed height to prevent resizing */
+    width: 70%; /* Center alignment */
+    overflow: visible; /* Ensure dropdown is not clipped */
+}
+
+.program-item span {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.program-options {
+    display: flex;                /* Center the icon */
+    align-items: center;
+    justify-content: center;
+    width: 20px;                  /* Increase width */
+    height: 20px;                 /* Increase height */
+    border-radius: 50%;           /* Optional: make it circular */
+    background: transparent;      /* No background unless hovered */
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 5rem;
+    transition: 0.2s, color 0.3s;
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    /* Remove margin-left if present */
+    margin-left: 0;
+}
+
+@media (max-width: 768px) {
+    .program-options {
+        right: 0.5rem; /* Adjust right margin for smaller screens */
+
+    }
+}
+
+.program-options:hover {
+    color: #343a40; /* Darker gray on hover */
+}
+
+/* Dropdown menu styling */
+.dropdown {
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: calc(100% + 5px); /* Position below the ellipsis icon */
+    right: 0; /* Align to the right edge of the parent */
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    z-index: 10;
+    display: none; /* Initially hidden */
+    width: max-content; /* Ensure dropdown width doesn't affect layout */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Dropdown menu styling */
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    z-index: 10;
+    display: flex; /* Use flexbox */
+    flex-direction: column; /* Align items vertically */
+    gap: 0.5rem; /* Add spacing between buttons */
+
+}
+
+
+.dropdown.hidden {
+    display: none;
+}
+
+.assign-PD-btn {
+    display: block; /* Ensure buttons stack vertically */
+    background-color: #17a2b8; /* Teal background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.assign-PD-btn:hover {
+    background-color: #138496; /* Darker teal on hover */
+}
+
+.assign-Prof-btn {
+    display: block; /* Ensure buttons stack vertically */
+    background-color: #17a2b8; /* Teal background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.assign-Prof-btn:hover {
+    background-color: #138496; /* Darker teal on hover */
+}
+
+.remove-btn {
+    display: block; /* Ensure buttons stack vertically */
+    background-color: #dc3545; /* Red background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.remove-btn:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+.programs-content h3 {
+    margin-top: 2rem; /* Space above the title */
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+
+}
+
+/* Header styling */
+.programs-title {
+    font-size: 1.125rem;
+    font-weight: bold;
+
+}
+
+/*End of Programs Styles*/
+
+/*Start of Courses Styles*/
+
+#courses {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+}
+
+#courses.shifted {
+    margin-left: 16rem;
+}
+
+/* Courses Section */
+.courses-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+.courses-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* Courses Content */
+/* General container styling */
+.courses-content {
+    background-color: #f8f9fa; /* Light gray background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1.5rem; /* Padding around content */
+    margin-top: 1rem; /* Space from the header */
+    margin-bottom: 2rem; /* Add space to prevent cutoff */
+}
+
+/* Create Program Button */
+.create-course-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff; /* Blue background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+}
+
+.course-search {
+    position: relative;
+    margin-bottom: 1rem; /* Space below the search bar */
+}
+
+.course-search i {
+    position: absolute;
+    left: 0.5rem; /* Equivalent to left-2 */
+    top: 0.5rem; /* Equivalent to top-2 */
+    color: #6b7280; /* Equivalent to text-gray-500 */
+}
+
+#courseSearchInput {
+    height: 2rem; /* Equivalent to h-6 */
+    width: 30rem; /* Adjust width as needed */
+    border: 1px solid #e2e8f0; /* Equivalent to border */
+    border-radius: 9999px; /* Equivalent to rounded-full */
+    padding-top: 0.25rem; /* Equivalent to py-1 */
+    padding-bottom: 0.25rem; /* Equivalent to py-1 */
+    padding-left: 2rem; /* Equivalent to pl-8 */
+    padding-right: 1rem; /* Equivalent to px-4 */
+}
+
+.create-course-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Input container for adding courses */
+#courseInputContainer {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+
+#courseInput {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+}
+
+.confirm-btn {
+    background-color: #28a745; /* Green background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-btn:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+/* Course list styling */
+.course-list {
+    margin-top: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers items horizontally */
+}
+
+.course-item {
+    display: flex;
+    height: 3rem; /* Equivalent to h-12 */
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e9ecef; /* Light gray background */
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    font-weight: bold; /* Make text bold */
+    
+}
+
+.course-item span {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/*.course-options {
+    cursor: pointer;
+    color: #6c757d; /* Gray color 
+    font-size: 1.25rem;
+    transition: color 0.3s ease;
+}*/
+
+.courses-options:hover {
+    color: #343a40; /* Darker gray on hover */
+}
+
+.course-options {
+    display: flex;                /* Center the icon */
+    align-items: center;
+    justify-content: center;
+    width: 20px;                  /* Increase width */
+    height: 20px;                 /* Increase height */
+    border-radius: 50%;           /* Optional: make it circular */
+    background: transparent;      /* No background unless hovered */
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 5rem;
+    transition: 0.2s, color 0.3s;
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    /* Remove margin-left if present */
+    margin-left: 0;
+}
+
+@media (max-width: 768px) {
+    .course-options {
+        right: 0.5rem; /* Adjust right margin for smaller screens */
+
+    }
+}
+
+.course-options:hover {
+    color: #343a40; /* Darker gray on hover */
+}
+
+/* Dropdown menu styling */
+.dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    z-index: 10;
+    display: flex; /* Use flexbox */
+    flex-direction: column; /* Align items vertically */
+    gap: 0.5rem; /* Add spacing between buttons */
+
+}
+
+.dropdown.hidden {
+    display: none;
+}
+
+.edit-btn {
+    background-color: orange; /* Teal background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.edit-btn:hover {
+    background-color: darkorange; /* Darker teal on hover */
+}
+
+.remove-btn {
+    background-color: #dc3545; /* Red background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.remove-btn:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+.courses-content h3 {
+    margin-top: 2rem; /* Space above the title */
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+
+}
+
+/* Header styling */
+.course-title {
+    font-size: 1.125rem;
+    font-weight: bold;
+
+}
+
+
+/*End of Courses Styles*/
+
+/*Start of Classes Styles*/
+#classes {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+}
+
+#classes.shifted {
+    margin-left: 16rem;
+}
+
+/* Classes Section */
+.classes-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+.classes-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* Classes Content */
+.classes-content {
+    background-color: #f8f9fa; /* Light gray background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1.5rem; /* Padding around content */
+    margin-top: 1rem; /* Space from the header */
+    margin-bottom: 2rem; /* Add space to prevent cutoff */
+}
+.classes-content h3 {
+    margin-top: 0.5rem; /* Space above the title */
+    font-weight: bold;
+}
+
+.classes-content h3 span {
+    font-weight: normal; /* Override bold for the span inside h3 */
+}
+
+/* Create Class Button */
+.create-class-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff; /* Blue background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+    margin-bottom: 0.1rem; /* Space below the button */
+}
+
+
+
+/* Dropdown container for search suggestions */
+#courseDropdown {
+    background-color: white;
+    border: 1px solid black;
+    z-index: 9999;
+    position: absolute;
+}
+
+.course-lists {
+    position: absolute;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.course-lists.hidden {
+    display: none;
+}
+
+.course-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+
+.class-search {
+    position: relative;
+    margin-top: 1.5rem; /* Space below the search bar */
+}
+
+.class-search i {
+    position: absolute;
+    left: 0.5rem; /* Equivalent to left-2 */
+    top: 0.5rem; /* Equivalent to top-2 */
+    color: #6b7280; /* Equivalent to text-gray-500 */
+}
+
+.search-input {
+    border: 1px solid #e2e8f0; /* Equivalent to border */
+    border-radius: 9999px; /* Equivalent to rounded-full */
+    padding-top: 0.25rem; /* Equivalent to py-1 */
+    padding-bottom: 0.25rem; /* Equivalent to py-1 */
+    padding-left: 2rem; /* Equivalent to pl-8 */
+    padding-right: 1rem; /* Equivalent to px-4 */
+}
+
+/* Input container for adding classes */
+#classInputContainer {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+
+#classInput {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+}
+
+/* Style for the role selection dropdown */
+#term_number {
+    width: 12%; /* Make it consistent with other input fields */
+    padding: 10px; /* Add padding for a larger clickable area */
+    font-size: 14px; /* Increase font size slightly */
+    border: 1px solid #cccccc; /* Match the border style of other inputs */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #ffffff; /* White background */
+    transition: border-color 0.3s ease; /* Smooth transition on focus */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+/* Add focus effect for the dropdown */
+#term_number:focus {
+    border-color: #007bff; /* Blue border on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle glow effect */
+    outline: none; /* Remove default outline */
+}
+
+.year-selection {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Add spacing between the dropdowns and the "to" text */
+}
+
+#startYear, #endYear {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    background-color: #ffffff;
+    width: auto;
+}
+
+#startYear:focus, #endYear:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+.confirm-btn {
+    background-color: #28a745; /* Green background */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-btn:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+.class-item {
+    position: relative; /* Required for the dropdown to position correctly */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 70%; /* Match the width of program-item and course-item */
+    margin: 0 auto; /* Center horizontally */
+}
+
+.class-item:hover {
+    background-color: #d6d8db;
+}
+
+.class-options {
+    display: flex;                /* Center the icon */
+    align-items: center;
+    justify-content: center;
+    width: 20px;                  /* Increase width */
+    height: 20px;                 /* Increase height */
+    border-radius: 50%;           /* Optional: make it circular */
+    background: transparent;      /* No background unless hovered */
+    cursor: pointer;
+    color: #6c757d;
+    font-size: 1rem;
+    transition: 0.2s, color 0.3s;
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    /* Remove margin-left if present */
+    margin-left: 0;
+}
+
+/*.class-options {
+    position: absolute;  Position relative to the program item 
+    top: 50%; /* Center vertically 
+    right: 1rem; /* Align to the right edge of the parent 
+    transform: translateY(-50%); /* Adjust for vertical centering 
+    margin-left: 55em;
+    cursor: pointer;
+    color: #6c757d; /* Gray color 
+    transition: color 0.3s ease;
+}*/
+
+@media (max-width: 768px) {
+    .class-options {
+        right: 0.5rem; /* Adjust right margin for smaller screens */
+
+    }
+}
+
+.class-options:hover {
+    color: #343a40; /* Darker gray on hover */
+}
+
+.dropdown {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/*Start of Class handling styles:*/
+.breadcrumb-container {
+    display: flex; /* Use Flexbox to align items horizontally */
+    align-items: center; /* Vertically center the items */
+    gap: 1rem; /* Add spacing between [Name of Class] and the navigation links */
+}
+
+.breadcrumb-container .class-name {
+    font-weight: bold; /* Make the class name bold */
+    font-size: 1.25rem; /* Adjust font size as needed */
+}
+
+.breadcrumb-container .nav {
+    display: flex; /* Ensure the navigation links are also aligned horizontally */
+    list-style: none; /* Remove default list styling */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+}
+
+/* Default style for the active link */
+.nav-link.active {
+    color: #007bff !important; /* Default blue color */
+    text-decoration: underline !important; /* Add underline by default */
+}
+
+/* Default style for nav links */
+.nav-link {
+    color: black !important; /* Default color is black */ 
+    text-decoration: none; /* Remove underline by default */
+    transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition */
+}
+
+/* Hover effect for nav links */
+.nav-link:hover {
+    color: #007bff !important; /* Change to blue on hover */
+    text-decoration: underline; /* Add underline on hover */
+}
+
+/* Container for class details and actions */
+.class-details-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 2rem; /* Add spacing from the top */
+    gap: 2rem; /* Add spacing between the details and actions */
+}
+
+/* Styling for the class details section */
+.class-details {
+    background-color: #f8f9fa; /* Light gray background */
+    border: 1px solid #ced4da; /* Border color */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1rem; /* Padding inside the box */
+    width: 30%; /* Adjust width as needed */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.class-details h3 {
+    color: #007bff; /* Blue color for headings */
+    font-weight: bold;
+    margin-bottom: 1rem; /* Add spacing below headings */
+}
+
+.class-details p {
+    margin: 0.5rem 0; /* Add spacing between paragraphs */
+    font-size: 1rem; /* Adjust font size */
+}
+
+/* Styling for the action buttons */
+.class-actions {
+    width: 20%; /* Adjust width as needed */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Add spacing between buttons */
+    margin: 0; /* Remove hardcoded margin */
+    align-self: flex-start; /* Align to the top of the container */
+    width: fit-content; /* Adjust width to fit the content */
+}
+
+@media (max-width: 768px) {
+    .class-details-container {
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center; /* Center align items */
+    }
+
+    .class-actions {
+        width: 100%; /* Make it take full width */
+        align-items: center; /* Center buttons horizontally */
+    }
+}
+
+.action-btn {
+    background-color: white; /* White background */
+    border: 1px solid black; /* Black border */
+    border-radius: 0.25rem; /* Rounded corners */
+    padding: 0.5rem 1rem; /* Padding inside the button */
+    font-size: 1rem; /* Adjust font size */
+    font-weight: bold; /* Bold text */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+}
+
+.action-btn:hover {
+    background-color: #007bff; /* Blue background on hover */
+    color: white; /* White text on hover */
+}
+
+.create-output-container {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.required-outputs-list {
+    margin-top: 0;
+    width: 50%;
+    max-height: 500px; /* Set a maximum height for the container */
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    border: 1px solid #ced4da; /* Optional: Add a border for better visibility */
+    padding: 0.5rem; /* Optional: Add padding inside the container */
+    background-color: #ffffff; /* Optional: Set a background color */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
+    border-radius: 0.5rem; /* Optional: Add rounded corners */
+}
+
+.required-outputs-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.required-outputs-list li {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.required-outputs-list li .input-and-buttons {
+    display: flex; /* Align input and buttons horizontally */
+    align-items: center; /* Vertically align input and buttons */
+    gap: 0.5rem; /* Add spacing between input and buttons */
+}
+
+.required-outputs-list li .user-score {
+    width: 150px; /* Set a consistent width for the input field */
+    padding: 0.25rem; /* Add padding for better appearance */
+    font-size: 0.875rem; /* Adjust font size */
+    border: 1px solid #ced4da; /* Add a border */
+    border-radius: 0.25rem; /* Rounded corners */
+}
+
+.required-outputs-list li .editOutput-btn,
+.required-outputs-list li .delete-btn {
+    margin-left: 0; /* Remove extra margin */
+}
+
+.required-outputs-list li .button-group {
+    display: flex; /* Align buttons horizontally */
+    gap: 0.5rem; /* Add spacing between buttons */
+}
+
+/* Add styles for the set-deadline-container */
+.set-deadline-container {
+    background-color: #f8f9fa; /* Light gray background */
+    border: 1px solid #ced4da; /* Border color */
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1rem; /* Padding inside the box */
+    margin-top: 1rem; /* Space above the container */
+    width: 30%; /* Adjust width as needed */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Style the time input field */
+#set-deadline-container input[type="time"] {
+    width: 150px; /* Adjust the width of the time input */
+    height: 40px; /* Adjust the height of the time input */
+    font-size: 1rem; /* Adjust the font size */
+    padding: 0.5rem; /* Add padding for better appearance */
+    border: 1px solid #ced4da; /* Add a border */
+    border-radius: 0.25rem; /* Rounded corners */
+    cursor: pointer; /* Add a pointer cursor */
+}
+
+/* Add hover effect for the time input */
+#set-deadline-container input[type="time"]:hover {
+    border-color: #007bff; /* Change border color on hover */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add a subtle shadow */
+}
+
+.editOutput-btn, .delete-btn {
+    background-color: #007bff; /* Blue for Edit */
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.editOutput-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.delete-btn {
+    background-color: #dc3545; /* Red for Delete */
+}
+
+.delete-btn:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+/* Style the add requirement container */
+.add-requirement-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Add spacing between input and button */
+    margin-top: 1rem;
+}
+
+.add-requirement-container.hidden {
+    display: none; /* Hide the container */
+}
+
+.add-requirement-container input {
+    width: 70%; /* Adjust width as needed */
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+.add-requirement-container button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.add-requirement-container button:hover {
+    background-color: #0056b3;
+}
+
+#requirementsList {
+    margin-top: 1rem;
+    padding: 0;
+    list-style-type: none;
+}
+
+#requirementsList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden; /* Prevent content from overflowing */
+    word-wrap: break-word; /* Break long words to fit within the container */
+    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+}
+
+.requirement-text {
+    flex: 1; /* Allow the text to take up available space */
+    margin-right: 1rem; /* Add spacing between text and buttons */
+    white-space: normal; /* Allow text to wrap to the next line */
+    overflow: hidden; /* Hide overflowing text */
+    word-wrap: break-word; /* Break long words to fit within the container */
+}
+
+.requirement-actions {
+    display: flex;
+    gap: 0.5rem; /* Add spacing between buttons */
+}
+
+.requirement-actions button {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.requirement-actions .edit-requirement-btn {
+    background-color: #ffc107; /* Yellow for Edit */
+    color: #000;
+}
+
+.requirement-actions .edit-requirement-btn:hover {
+    background-color: #e0a800;
+}
+
+.requirement-actions .delete-requirement-btn {
+    background-color: #dc3545; /* Red for Delete */
+    color: #fff;
+}
+
+.requirement-actions .delete-requirement-btn:hover {
+    background-color: #c82333;
+}
+
+/*End of Class Handling Styles*/
+
+/*Start of Lists of Students Styles*/
+#listsStudents {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+    
+}
+
+#listsStudents.shifted {
+    margin-left: 16rem;
+}
+
+/* Lists of Student Section */
+.listsStudents-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+.listsStudents-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* Lists of Students Content */
+.listsStudents-content {
+    background-color: #ffffff; /* Equivalent to bg-white */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-md */
+    border-radius: 0.5rem; /* Equivalent to rounded-lg */
+    padding: 2rem; /* Equivalent to p-8 */
+    position: relative;
+}
+
+/*End of Lists of Students Styles*/
+
+
+
+/*Start of footer*/
+footer {
+    background-color: #1e3a8a;
+    color: #ffffff;
+    width: 100%;
+    z-index: 70;  
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1000; 
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
+    min-height: 7%; /* Ensure a minimum height */
+    position : relative; /* Change to relative for normal flow */
+
+}
+
+.footer-container {
+    max-width: 1200px; /* Example max-width */
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem; /* px-4 */
+}
+
+.footer-text {
+    text-align: left; /* text-left */
+    color: white; /* Example text color */
+    font-weight: bold;
+    margin-top: 1rem; /* mt-4 */
+
+}
+
+.footer-link {
+    color: #007bff; /* text-blue-300 */
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
+
+footer a {
+    color: #93c5fd;
+}
+/* End of Footer styles */

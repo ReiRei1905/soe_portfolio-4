@@ -1,0 +1,261 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: white;
+    border: 2px solid #f4a261;
+    border-radius: 15px;
+    padding: 20px;
+    width: 800px; /* Adjust the width of the container */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.back-arrow {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    text-decoration: none;
+    color: black;
+}
+
+h1 {
+    text-align: center;
+    color: #264653;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+form {
+    width: 100%;
+    margin-left: 26px;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.form-group:last-child {
+    margin-right: 0;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 70%; /* Adjust the width of the input fields and select elements */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    height: 20px; /* Adjust the height of the input fields and select elements */
+}
+
+.radio-group {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    
+}
+
+.radio-group input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.5);
+}
+
+.radio-group label {
+    margin-right: 20px;
+}
+
+.form-footer a{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    width: 100%;
+    text-decoration: none;
+    color: #0044cc;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: center; /* Center the contents horizontally */
+    align-items: center;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+.confirm-button {
+    background-color: #0044cc;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 26px;
+}
+
+.confirm-button:hover {
+    background-color: #003399;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder {
+    font-size: 14px;
+    color: #999;
+}
+
+input[type="text"] {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" class="bi bi-person" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm4-3a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/><path fill-rule="evenodd" d="M8 9a5 5 0 0 0-4.546 2.916C3.02 12.72 3 13.34 3 14v1h10v-1c0-.66-.02-1.28-.454-1.084A5 5 0 0 0 8 9zm-6 5a6 6 0 1 1 12 0v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    padding-left: 40px;
+}
+
+input[type="email"] {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" class="bi bi-envelope" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383l-4.708 2.825L15 11.383V5.383zM1 5.383v6l4.708-2.825L1 5.383zM7.5 8.383L1 12.383V13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.617l-6.5-4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    padding-left: 40px;
+}
+
+input[type="password"] {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" class="bi bi-lock" viewBox="0 0 16 16"><path d="M8 1a3 3 0 0 0-3 3v3H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-1V4a3 3 0 0 0-3-3zm-2 6V4a2 2 0 1 1 4 0v3H6zm-3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    padding-left: 40px;
+}
+
+select {
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 40px;
+    width: 90%;
+    height: 40px;
+}
+
+/* Adjust the position of the email form group */
+#email-form-group {
+    margin-left: 20px; /* Adjust the left margin to move the email form group to the right */
+}
+
+/* Style for the info icon */
+.info-icon {
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 2px;
+    color: black;
+    position: relative;
+    
+}
+
+/*Confirmation popup*/
+.popup-content img {
+    width: 50px; /* Adjust the width as needed */
+    height: 50px; /* Adjust the height as needed */
+    display: block;
+    margin: 20px auto 20px; /* Center the image and add some margin at the bottom */
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 7.5cm;
+    width: 15cm;
+    background-color: white;
+    border: 2px solid #f4a261;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    text-align: center;
+    font-family: 'Gill Sans MT', sans-serif;
+    font-size: 30px;
+}
+
+.popup-content p {
+    margin-bottom: 20px;
+}
+
+.popup-content button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.popup-content button:first-of-type {
+    height: 1cm;
+    width: 5cm;
+    background-color: #f4a261;
+    color: white;
+    border: 1px solid black;
+}
+
+.popup-content button:first-of-type:hover {
+    background-color: #999;
+}
+
+.popup-content button:last-of-type {
+    height: 1cm;
+    width: 5cm;
+    background-color: #0044cc;
+    color: white;
+    border: 1px solid black;
+}
+
+.popup-content button:last-of-type:hover {
+    background-color: #003399;
+}

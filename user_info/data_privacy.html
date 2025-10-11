@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Privacy Act</title>
+    <link rel="stylesheet" href="style_data_privacy.css">
+</head>
+<body>
+    <div class="text-overlay">
+        <h1>APC Data Privacy Policy</h1>
+        <p>The Data Privacy Act (DPA) of 2012, or Republic Act 10173, is an act that aims to protect an individual’s personal information in the information and communications systems of the government and private sector.</p>
+        <p>Personal information collection, processing, and disclosure are allowed, provided that an institution complies with the requirements of the DPA and other laws in adherence to the principles of transparency, legitimate purpose and proportionality [Based on the “Implementing Rules and Regulations (IRR) of the DPA of 2012”]</p>
+        <div class="checkbox-container">
+            <input type="checkbox" id="agree" name="agree">
+            <label for="agree">I confirm that I have read and agree to SOE-Portfolio User Agreement and Privacy Policy.</label>
+        </div>
+        <button type="button" onclick="redirectToRolePage()">Confirm</button>
+    </div>
+
+    <script>
+        function redirectToRolePage() {
+            if (document.getElementById('agree').checked) {
+                window.location.href = 'user_info_V3/index.php?showSignup=1';
+            } else {
+                alert('Please confirm that you have read and agree to the privacy policy.');
+            }
+        }
+    </script>
+</body>
+</html>

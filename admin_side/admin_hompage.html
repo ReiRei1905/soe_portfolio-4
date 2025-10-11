@@ -1,0 +1,180 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="style_admin.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="admin_scripts.js" defer></script>
+</head>
+<body class="page-layout">
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t39.30808-1/309029587_459753179521293_5621644846638556558_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeFir2kR4G3TSgwoXK8CTYwXgMcJ5eEQJR6Axwnl4RAlHh_niM6f3hc9REt9On1Bo0hYDuB602Jje_sH9YjjMMJV&_nc_ohc=TTD306I9niwQ7kNvgEtCZM5&_nc_oc=Adhw3AcB7qiaAsToDKdD3JAhWPWCt2SO61lUdbT6ClMw6jFkF6ND-ny7aVblaIMsf88&_nc_zt=24&_nc_ht=scontent.fmnl17-2.fna&_nc_gid=mW9KxobHMlYlxAve0jPylg&oh=00_AYFa8CFwbvHj3IGVauxhoB8n0ph2y0pJu0_gVvhxt_-kXA&oe=67DD68CC"/>
+            <div class="college-info">
+                <h1>ASIA PACIFIC COLLEGE</h1>
+                <h2>SCHOOL OF ENGINEERING</h2>
+            </div>
+        </div>
+    </div>
+    <div class="header-actions">
+        <!--Home and E-portfolio-->
+        <div class="header-home">
+            <i class="fas fa-home" onclick="goToOverviewPage()"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <!--Search Input-->
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        <!--Profile Icon-->
+        <div class="header-profile">
+            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleProfileClick()"></i>
+        </div>
+    </div>
+</header>
+<main class="main-content">
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="../admin_side/admin_hompage.html">User Lists</a>
+            <a class="text-lg" href="../faculty_side/classes.html">Classes</a>
+            <a class="text-lg" href="../faculty_side/lists_students.html">Lists of Students</a>
+            <a class="text-lg" href="../admin_side/admin_about_us.html">About us</a>
+        </nav>
+    </div>
+    <div id="listsUsers" class="lists-users-section">
+        <div class="lists-users-header">
+            <div class="header-left">
+                <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+                <h2 class="lists-users-title">Lists of Users</h2>
+            </div>
+        </div>
+
+        <!-- Search Bar and Filter Icon -->
+        <div class="search-filter-container">
+            <div class="search-bar">
+                <input class="search-input" placeholder="Search Users" type="text"/>
+                <i class="search-icon fas fa-search"></i>
+            </div>
+            <div class="search-dropdown">
+                <button class="filter-button" onclick="toggleUsersDropdown(this)">
+                    <i class="filter-icon fas fa-filter"></i> <!-- Filter Icon -->
+                    <span id="selectedFilter">All Users</span> <!-- Placeholder for selected filter -->
+                </button>
+                <div class="search-dropdown-content">
+                    <a href="#" onclick="filterUsers('all')">All Users</a>
+                    <a href="#" onclick="filterUsers('admin')">Admin</a>
+                    <a href="#" onclick="filterUsers('executiveDirector')">Executive Director</a>
+                    <a href="#" onclick="filterUsers('programDirector')">Program Director</a>
+                    <a href="#" onclick="filterUsers('professor')">Professor</a>
+                    <a href="#" onclick="filterUsers('student')">Student</a>
+                </div>
+            </div>
+            <div class="dropdown info-dropdown-container">
+                <button class="info-button" onclick="toggleInfoDropdown(this)">
+                    <i class="fas fa-info-circle"></i> <!-- Info Icon -->
+                </button>
+                <div class="info-dropdown">
+                    <p><strong>Executive Director Role</strong><br>Has access to create programs in program management.<br>Assign Program Director in specific program.</p>
+                    <p><strong>Program Directors Role</strong><br>Has access to create courses, lists of student management.<br>Assign Professor in classes.</p>
+                    <p><strong>Professors Role</strong><br>Has access to create courses, classes and define required outputs for academic portfolios.<br>Authorization of students enrolled courses in their classes.</p>
+                    <p><strong>Students Role</strong><br>Has access to folder management and upload portfolios.</p>
+                </div>
+            </div>
+        </div>
+
+        <!--Start of Content-->
+        <div class = "tableContainer">
+            <section class = "table__body">
+                <!--Start of Table-->
+                <table>
+                    <thead> 
+                        <tr>
+                            <th> First Name </th>
+                            <th> Middle Initial</th>
+                            <th> Last Name </th>
+                            <th> Suffix</th>
+                            <th> Role </th>
+                            <th> Status </th>
+                            <th> Created Account </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id = userTableBody>
+                        <!--<tr id="userRow-1">
+                            <td> 1 </td>
+                            <td> Kim</td>
+                            <td> </td>
+                            <td> </td>
+                            <td> Chaewon </td>
+                            <td> Professor </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(1)">Check User Info</a>
+                                        <a href="#" onclick="removeUser(1)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>-->
+                    </tbody>
+                </table>
+            </section>
+        </div>
+                <!-- ...existing code... -->
+        <div id="userDetailModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>User Details</h2>
+                    <button onclick="closeUserDetailModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="left-section">
+                        <h3 id="userName"></h3>
+                        <p id="userId"></p>
+                        <p id="userRole"></p>
+                        <p id="userEmail"></p>
+                        <p id="userProgram"></p>
+                        <p id="userYearEnroll"></p>
+                        <p id="userIdNumber"></p>
+                        <p id="userSignUpDate"></p>
+                    </div>
+                    <div class="right-section">
+                        <h3>Account Access</h3>
+                        <div class="role-buttons">
+                            <button id="executiveDirectorButton" class="role-button">Executive Director</button>
+                            <button id="programDirectorButton" class="role-button">Program Directors</button>
+                            <button id="professorButton" class="role-button">Professors</button>
+                            <button id="studentButton" class="role-button">Students</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button id = "approveButton" class="approve-button">Approve</button>
+                            <button id= "rejectButton" class ="reject-button">Reject</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ...existing code... -->
+    
+        
+        <!--End of Content-->
+    </div>
+</main>
+<footer class="footer-content">
+    <div class="footer-container">
+        <p class="footer-text">
+            Copyright © 2024 |
+            <a class="footer-link" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer> 
+</body>
+</html>

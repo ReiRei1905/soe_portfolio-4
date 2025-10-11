@@ -1,0 +1,71 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: lightgray; /* Set background color to light gray */
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.text-overlay {
+    color: black;
+    text-align: center;
+    background: white; /* Set background color to white */
+    padding: 20px;
+    border-radius: 50px;
+    width: 19.5cm; /* Set width to 19.5 cm */
+    height: 12.37cm; 
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for better visibility */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 5px solid #FBAF41; /* Set border color to #FBAF41 */
+}
+
+.text-overlay h1 {
+    margin-bottom: 20px;
+}
+
+.text-overlay p {
+    margin-bottom: 20px;
+    text-align: center;
+    font-family: 'Gill Sans MT', sans-serif;
+    font-size: 20px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-family: 'Gill Sans MT', sans-serif;
+    font-size: 18px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-right: 10px;
+    width: 15px; /* Set the width of the checkbox */
+    height: 15px; /* Set the height of the checkbox */
+    transform: scale(1.5); /* Scale the checkbox to make it bigger */
+    
+    
+    
+}
+
+button {
+    background-color: #0044cc;
+    color: white;
+    width: 150px;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #003399;
+}

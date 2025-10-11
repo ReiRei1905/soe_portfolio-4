@@ -1,0 +1,155 @@
+body {
+    background-color: #f7fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.container {
+    flex: 1;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+footer {
+    background-color: #1e3a8a;
+    color: #ffffff;
+    position: absolute;
+    padding: 1rem 0;
+    bottom: 0%;
+    width: 100%;
+    transition: all 0.3s;
+    z-index: 70; /* Ensure the footer is above other elements */
+
+    /*position: relative;
+    bottom: 0;
+    width: 100vw;
+    font-size: 16px;
+    background-color: #1e3a8a;
+    color: white;
+    z-index: 15;
+    transition: all 0.3s;*/
+    
+}
+
+
+footer a {
+    color: #93c5fd;
+}
+
+#sidebar {
+    background-color: #4a4a4a;
+    color: #ffffff;
+    padding: 1rem;
+    position: absolute;
+    left: 0;
+    width: 16rem;
+    height: 85.5%;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+#sidebar.active {
+    transform: translateX(0);
+}
+
+#sidebar nav {
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem; /* Space between links */
+}
+
+#sidebar nav a {
+    color: #ffffff; /* Link color */
+    font-weight: bold;
+    text-decoration: none; /* Remove underline */
+    font-size: 1.25rem; /* Font size */
+    padding: 1rem 2rem; /* Padding for links */
+    /*background-color: #6c757d; /* Background color for links */
+    border-radius: 0.5rem; /* Rounded corners */
+    text-align: center; /* Center text */
+    transition: background-color 0.3s ease; /* Transition for background color */
+}
+
+#sidebar nav a:hover {
+    background-color: #6c757d; /* Darker background color on hover */
+}
+
+#mainContent {
+    transition: all 0.3s;
+    margin-left: 0;
+}
+
+#mainContent.shifted {
+    margin-left: 16rem;
+}
+
+footer.shifted {
+    margin-left: 16rem;
+}
+
+#chartsContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#pieChart, #barChart, #mostUploads {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#pieChart .w-32, #barChart .w-32, #mostUploads .w-32 {
+    background-color: #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 10rem;
+    width: 10rem;
+}
+
+#pieChart h3, #barChart h3, #mostUploads h3 {
+    font-weight: bold;
+    text-align: center;
+}
+
+#pieChart p, #barChart p, #mostUploads p {
+    text-align: center;
+    margin-top: 0.5rem;
+    margin-bottom: 193px;
+}
+
+#arrowLeft {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+#arrowRight {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    cursor: pointer;
+
+}

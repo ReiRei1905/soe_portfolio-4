@@ -1,0 +1,806 @@
+.page-layout {
+    background-color: #f7fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+}
+
+/* Start of Header styles */
+
+header {
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.header-container {
+    flex: 1;
+    max-width: 1280px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.header-display {
+    display: flex;
+    align-items: center;
+}
+
+.college-header{
+    height: 2.5rem;
+    width: 2.5rem;
+
+}
+
+.college-info {
+    margin-left: 0.5rem;
+    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 */
+}
+
+.college-info h1 {
+    font-weight: bold;
+    font-size: 0.875rem; /* 14px */
+}
+
+.college-info h2 {
+    font-size: 0.75rem; /* 12px */
+}
+
+/* End of Header*/
+
+/*Start of Main content*/
+
+/*Header-actions*/
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: -10px 20px;
+    width: 100%;
+    border-top: 4px solid #FBAF41; /* Add this line */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.header-home, .header-profile {
+    display: flex;
+    align-items: center;
+}
+
+.header-actions .header-home {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Equivalent to space-x-4 */
+    
+}
+
+.header-actions .header-home i {
+    font-size: 1.25rem; /*20px*/
+    cursor: pointer;
+
+}
+
+.header-actions .header-home h1 {
+    font-size: 1.125rem; /* 18px */
+    font-weight: bold;
+}
+
+.header-actions .header-search {
+    position: relative;
+}
+
+.search-input {
+    border: 1px solid #e2e8f0; /* Equivalent to border */
+    border-radius: 9999px; /* Equivalent to rounded-full */
+    padding-top: 0.25rem; /* Equivalent to py-1 */
+    padding-bottom: 0.25rem; /* Equivalent to py-1 */
+    padding-left: 2rem; /* Equivalent to pl-8 */
+    padding-right: 1rem; /* Equivalent to px-4 */
+}
+
+.header-actions .header-search i {
+    position: absolute;
+    left: 0.5rem; /* Equivalent to left-2 */
+    top: 0.5rem; /* Equivalent to top-2 */
+    color: #6b7280; /* Equivalent to text-gray-500 */
+}
+
+.header-actions .header-profile{
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Equivalent to space-x-4 */
+
+}
+
+.header-actions .header-profile i{
+    font-size: 1.25rem; /* 20px */
+    cursor: pointer;
+}
+
+/*End of Header actions*/
+
+/*Start of Main content*/
+.main-content {
+    max-width: 100%;
+    margin-top: 1rem; /* mt-4 */
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem; /* px-4 */
+    flex: 1;
+    display: flex;
+}
+
+#sidebar {
+    background-color: #4a4a4a;
+    color: #ffffff;
+    padding: 1rem;
+    position: absolute;
+    left: 0;
+    width: 16rem;
+    height: 80%;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+#sidebar.active {
+    transform: translateX(0);
+}
+
+#sidebar nav {
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem; /* Space between links */
+}
+
+#sidebar nav a {
+    color: #ffffff; /* Link color */
+    font-weight: bold;
+    text-decoration: none; /* Remove underline */
+    font-size: 1.25rem; /* Font size */
+    padding: 1rem 2rem; /* Padding for links */
+    /*background-color: #6c757d; /* Background color for links */
+    border-radius: 0.5rem; /* Rounded corners */
+    text-align: center; /* Center text */
+    transition: background-color 0.3s ease; /* Transition for background color */
+}
+
+#sidebar nav a:hover {
+    background-color: #6c757d; /* Darker background color on hover */
+}
+
+/* Lists Users Section */
+.lists-users-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+/* Lists Users Header */
+.lists-users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+/* Header Left Section */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+/* Sidebar Toggle Icon */
+.sidebar-toggle {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    margin-right: 0.5rem; /* Equivalent to mr-2 */
+    cursor: pointer;
+}
+
+/* Lists Users Title */
+.lists-users-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+#listsUsers {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+}
+
+#listsUsers.shifted {
+    margin-left: 16rem;
+}
+
+/* Start of Searching lists of users and filter icon */
+/* Add some basic styles for the dropdown */
+.search-dropdown {
+    position: relative;
+    display: inline-block;
+    z-index: 100;
+}
+
+.search-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    top: 100%; /* Position below the filter button */
+    left: 400; /* Align to the left of the filter button */
+    margin-top: 0.5rem; /* Add some space between the button and the dropdown */
+    
+}
+
+.search-dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.search-dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.search-dropdown.show .search-dropdown-content {
+    display: block;
+}
+
+.info-dropdown {
+    display: none;
+    position: fixed; /* Changed to fixed to cover the table */
+    background-color: white;
+    min-width: 300px; /* Adjust width as needed */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 100; /* Ensure it appears above other elements */
+    padding: 20px; /* Add some padding */
+    border-radius: 8px; /* Optional: rounded corners */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust for centering */
+}
+
+.dropdown.show .info-dropdown {
+    display: block;
+}
+
+.search-filter-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 5rem;
+    margin-bottom: 1rem; /* Equivalent to mb-4 */
+
+}
+
+.search-bar {
+    width: 50%;
+    position: relative; /* Equivalent to relative */
+}
+
+.search-input {
+    border: 1px solid #ccc;
+    width: 70%;
+    border-radius: 9999px;
+    padding: 0.25rem 2rem;
+    padding-left: 2rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+    color: #6b7280;
+}
+
+
+.filter-button {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 9999px;
+    padding: 0.5rem;
+    margin-left: 35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 15rem;
+}
+
+#selectedFilter {
+    margin-left: 0.5rem;
+    font-weight: bold;
+    align-items: center;
+}
+
+.filter-icon {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+.filter-dropdown-content {
+    top: -150%;
+    left: 0;
+    z-index: 100; /* Ensure it appears above other elements */
+}
+
+.info-dropdown-container {
+    margin-left: 0.5rem;
+    margin-right: 5rem;
+}
+
+.info-button {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 9999px;
+    padding: 0.5rem;
+}
+
+.info-icon {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+
+table, th, td {
+    border-collapse: collapse;
+    padding: 1rem;
+    text-align: center;
+    
+}
+
+tr {
+    border-bottom: 1px solid black; /* Adjust the color and thickness as needed */
+}
+
+table{
+    width: 100%;
+    
+    
+}
+
+thead th{
+    position: sticky;
+    top: 0%;
+    left: 0%;
+    background-color: lightgray;
+    z-index: 10;
+
+
+}
+
+#tableContainer {
+    width: 50vh;
+    height: 90vh;
+
+}
+
+.table__body{
+    width: 95%;
+    max-height: 65vh;
+    background-color: #ffffff;
+    margin: .8rem;
+    border-radius: .6rem;
+    overflow: auto;
+    text-align: center;
+
+}
+
+.table_body::-webkit-scrollbar{
+    width: 0.5rem;
+    height: 0.5rem;
+}
+
+.table__body::-webkit-scrollbar-thumb{
+    background-color: #6c757d;
+    border-radius: 0.5rem;
+    visibility: hidden;
+}
+
+.table__body:hover::-webkit-scrollbar-thumb{
+    visibility: visible;
+}
+
+.status {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.875em;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 0.25rem;
+    color: white;
+    
+}
+
+.role-button.selected {
+    background-color: #e5e7eb;
+    color: blue;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+
+
+.status.not-verified {
+    background-color: #dc3545; /* Red background for Not Verified */
+    border: 1px solid #dc3545;
+    color: white;
+    
+}
+
+.status.verified {
+    background-color: #007bff; /* Blue background for Verified */
+    border: 1px solid #007bff;
+    color: white;
+    text-align: center;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    
+}
+
+.dropbtn {
+    background: none;
+    font-size: 18px;
+    cursor: pointer;
+    transform: rotate(90deg);
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    right: 0; /* Align the dropdown to the right */
+    min-width: 160px; /* Ensure the dropdown has a minimum width */
+    overflow: visible; /* Ensure the dropdown content is visible */
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown-ol {
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+    z-index: 1000;
+    right: 0; /* Align the dropdown to the right */
+    min-width: 160px; /* Ensure the dropdown has a minimum width */
+    overflow: visible; /* Ensure the dropdown content is visible */
+}
+
+.dropdown-popup{
+    background-color: white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+
+#userDetailModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(75, 85, 99, 0.5); /* bg-gray-600 bg-opacity-50 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Add the hidden class to hide the modal initially */
+    display: none;
+    z-index: 100;
+    
+}
+
+
+#userDetailModal .modal-content {
+    background-color: white; /* bg-white */
+    padding: 20px; /* p-6 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-lg */
+    width: 700px; /* Adjust the width */
+    height: 400px;
+    display: flex;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid #000; /* Add a black border */
+    
+    
+}
+
+#userDetailModal .modal-header {
+    display: flex; /* flex */
+    justify-content: space-between; /* justify-between */
+    align-items: center; /* items-center */
+    width: 100%;
+    margin-bottom: 1rem; /* Add some space below the header */
+    
+}
+
+#userDetailModal .modal-header h2 {
+    font-size: 1.5rem; /* text-lg */
+    font-weight: bold; /* font-bold */
+    
+}
+
+#userDetailModal .modal-header button {
+    color: rgba(107, 114, 128, 1); /* text-gray-500 */
+    font-size: 1.5rem; /* Increase the font size */
+    margin-bottom: 1rem; /* Add some space above the button */
+}
+
+#userDetailModal .modal-header button:hover {
+    color: rgba(55, 65, 81, 1); /* hover:text-gray-700 */
+}
+
+#userDetailModal .modal-body {
+    display: flex; /* flex */
+    width: 100%;
+    margin-bottom: 1rem; /* Add some space below the body */
+    
+}
+
+#userDetailModal .modal-body .left-section {
+    width: 100%; /* Adjust the width */
+    display: flex;
+    flex-direction: column;
+    text-align: justify;
+    padding-right: 1rem; /* Add some space to the right */
+}
+
+
+#userDetailModal .modal-body .left-section h3 {
+    font-size: 1.25rem; /* text-xl */
+    margin-bottom: 0.5rem; /* Add some space below the name */
+}
+
+#userDetailModal .modal-body .left-section p {
+    font-size: 1.125rem; /* text-sm */
+    margin-bottom: 0.5rem; /* Add some space below the text */
+}
+
+#userDetailModal .modal-body .right-section {
+    width: 70%; /* Adjust the width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-left: 1rem;
+    margin-top: -2rem; /* Move the right section up */
+    
+}
+
+#userDetailModal .modal-body .right-section h3 {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: bold; /* font-bold */
+    margin-bottom: 1rem; /* Add some space below the title */
+    
+}
+
+#userDetailModal .modal-body .right-section .role-buttons {
+    display: flex; /* flex */
+    flex-direction: column; /* flex-col */
+    gap: 0.5rem; /* space-y-2 */
+    width: 100%; /* Make buttons full width */
+    
+}
+
+#userDetailModal .modal-body .right-section .role-buttons button {
+    background-color: #e5e7eb; /* bg-gray-200 */
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.25rem; /* rounded */
+    cursor: pointer;
+    width: 100%; /* Make buttons full width */
+    text-align: center; 
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center text horizontally */
+    gap: 0.5rem; /* Add space between icon and text */
+}
+
+#userDetailModal .modal-body .right-section .role-buttons button:hover {
+    background-color: #d1d5db; /* hover:bg-gray-300 */
+}
+
+
+
+#userDetailModal .modal-body .right-section .action-buttons {
+    display: flex; /* flex */
+    gap: 1rem; /* space-x-4 */
+    margin-top: 1rem; /* mt-4 */
+}
+
+.role-button, .approve-button, .reject-button {
+    padding: 0.625rem; /* py-2 px-4 */
+    border: none;
+    border-radius: 0.25rem; /* rounded */
+    cursor: pointer;
+}
+
+
+.approve-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+.approve-button:hover {
+    background-color: lightgreen;
+}
+
+.reject-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.reject-button:hover {
+    background-color: lightcoral;
+}
+
+
+/*Start of About us Styles*/
+/*About us section*/
+#aboutUs {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+}
+
+#aboutUs.shifted {
+    margin-left: 16rem;
+}
+
+/* About Us Section */
+.about-us-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+/* About Us Header */
+.about-us-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-toggle {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    margin-right: 0.5rem; /* Equivalent to mr-2 */
+    cursor: pointer;
+}
+
+.about-us-title {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/* About Us Content */
+.about-us-content {
+    background-color: #ffffff; /* Equivalent to bg-white */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-md */
+    border-radius: 0.5rem; /* Equivalent to rounded-lg */
+    padding: 2rem; /* Equivalent to p-8 */
+    position: relative;
+}
+
+.content-title {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: bold;
+    text-align: left;
+    margin-bottom: 1.5rem; /* Equivalent to mb-6 */
+}
+
+.content-paragraph {
+    color: #4a5568; /* Equivalent to text-gray-700 */
+    text-align: left;
+    font-size: 1.125rem; /* Equivalent to text-lg */
+}
+
+.mt-4 {
+    margin-top: 1rem; /* Equivalent to mt-4 */
+}
+
+.mb-8 {
+    margin-bottom: 2rem; /* Equivalent to mb-8 */
+}
+
+/* Profiles Section */
+.profiles-container {
+    display: flex;
+    justify-content: center;
+    gap: 3rem; /* Equivalent to space-x-12 */
+}
+
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-image {
+    width: 8rem; /* Equivalent to w-32 */
+    height: 8rem; /* Equivalent to h-32 */
+    border-radius: 50%; /* Equivalent to rounded-full */
+    overflow: hidden;
+    border: 2px solid #6b7280; /* Equivalent to border-2 border-gray-500 */
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Equivalent to object-cover */
+}
+
+.profile-name {
+    margin-top: 0.75rem; /* Equivalent to mt-3 */
+    text-align: center;
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+/*End of About us Styles*/
+
+/* Start of Footer */
+footer {
+    background-color: #1e3a8a;
+    position: absolute;
+    color: #ffffff;
+    width: 100%;
+    transition: all 0.3s;
+    z-index: 70; /* Ensure the footer is above other elements */
+    padding: 1rem 0;
+    bottom: 0%;
+    margin-top: 1rem;
+
+    
+}
+
+
+.footer-container {
+    max-width: 1200px; /* Example max-width */
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem; /* px-4 */
+}
+
+.footer-text {
+    text-align: left; /* text-left */
+    color: white; /* Example text color */
+    font-weight: bold;
+
+}
+
+.footer-link {
+    color: #007bff; /* text-blue-300 */
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
+
+footer a {
+    color: #93c5fd;
+}

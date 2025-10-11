@@ -1,0 +1,299 @@
+/* General body styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa; /* Light gray background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    transform: scale(0.8); /* Scale down to 90% */
+    transform-origin: top center; /* Keep scaling centered */
+}
+
+/* Container styling */
+.container {
+    margin-top: 12%;
+    background-color: #ffffff;
+    border: 2px solid #ffa500; /* Orange border */
+    border-radius: 15px;
+    padding: 30px 40px;
+    max-width: 90%;
+    width: 400px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    text-align: center;
+}
+
+/* Style for the back button container */
+.back-button-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Style for the back button */
+.back-button {
+    background-color: #ffa500; /* Orange background */
+    color: #ffffff; /* White text */
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100px; /* Fixed width for consistency */
+}
+
+.back-button:hover {
+    background-color: #e69500; /* Darker orange on hover */
+}
+
+/* Form title styling */
+.form-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333333; /* Darker text for contrast */
+    margin-bottom: 25px;
+}
+
+/* Input group styling */
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+    text-align: left;
+}
+
+.input-group i {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #666666; /* Neutral icon color */
+    font-size: 16px;
+}
+
+.input-group input {
+    width: 87%;
+    padding: 12px 12px 12px 40px; /* Space for the icon */
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    align-self: center;
+}
+
+.input-group select {
+    width: 100%;
+    padding: 12px 12px 12px 40px; /* Space for the icon */
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    align-self: center;
+}
+
+.input-group input:focus {
+    border-color: #007bff; /* Blue border on focus */
+    outline: none;
+}
+
+.input-group label {
+    font-size: 12px;
+    color: #666666;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Style for the role selection dropdown */
+#role_type {
+    width: 30%; /* Make it consistent with other input fields */
+    padding: 10px; /* Add padding for a larger clickable area */
+    font-size: 14px; /* Increase font size slightly */
+    border: 1px solid #cccccc; /* Match the border style of other inputs */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #ffffff; /* White background */
+    transition: border-color 0.3s ease; /* Smooth transition on focus */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+/* Add focus effect for the dropdown */
+#role_type:focus {
+    border-color: #007bff; /* Blue border on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle glow effect */
+    outline: none; /* Remove default outline */
+}
+
+/* Button styling */
+.btn {
+    background-color: #007bff; /* Blue button */
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Links styling */
+.links {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666666;
+}
+
+.links p {
+    margin: 0;
+}
+
+.links a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+/* Recover password link */
+.recover a {
+    font-size: 14px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.recover a:hover {
+    text-decoration: underline;
+}
+
+/* Adjust button styling for secondary buttons */
+button {
+    margin-top: 3%;
+    background-color: transparent;
+    border: 1px solid #ffa500;
+    color: #ffa500;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #ffa500;
+    color: #ffffff;
+}
+
+/* Add specific styles for OTP verification if needed */
+.container p {
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 20px;
+}
+
+#timer {
+    font-weight: bold;
+    color: #ff0000; /* Red for urgency */
+}
+
+/* OTP Container Styling */
+.otp-container {
+    margin-top: 15%;
+    background-color: #fff;
+    border: 2px solid #ffa500; /* Orange border */
+    border-radius: 15px;
+    padding: 30px 40px;
+    max-width: 90%;
+    width: 400px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* OTP Title Styling */
+.otp-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #000; /* Black heading */
+    margin-bottom: 20px;
+}
+
+/* OTP Instructions Styling */
+.otp-instructions {
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 15px;
+}
+
+/* OTP Timer Styling */
+.otp-timer,
+#timer {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffa500; /* Orange for urgency */
+    margin-bottom: 20px;
+}
+
+/* OTP Input Styling */
+.otp-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.otp-input:focus {
+    border-color: #007bff; /* Blue border on focus */
+    outline: none;
+}
+
+/* OTP Submit Button Styling */
+.otp-submit-btn {
+    background-color: #007bff; /* Blue button */
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+.otp-submit-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* OTP Back Button Styling */
+.otp-back-btn {
+    background-color: transparent;
+    border: 1px solid #ffa500;
+    color: #ffa500;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.otp-back-btn:hover {
+    background-color: #ffa500;
+    color: #ffffff;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .otp-container {
+        padding: 20px;
+    }
+}

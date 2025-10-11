@@ -1,0 +1,59 @@
+[25-May-2025 02:52:33 Europe/Berlin] Received data: courseId=8, className=PROGLOD CPE211, termNumber=1, startYear=2021, endYear=2022
+[29-May-2025 01:34:27 Europe/Berlin] Received data: courseId=2, className=testting class name 1, termNumber=1, startYear=2024, endYear=2025
+[29-May-2025 02:30:20 Europe/Berlin] Received data: courseId=37, className=Object Programming, termNumber=2, startYear=2023, endYear=2024
+[29-May-2025 03:03:02 Europe/Berlin] Received data: courseId=8, className=PROGLOD CPE241, termNumber=1, startYear=2024, endYear=2025
+[30-May-2025 19:46:28 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:46:35 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:46:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:46:56 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:47:02 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:47:22 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:47:24 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:48:30 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:48:40 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:49:31 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[30-May-2025 19:49:55 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php:14
+Stack trace:
+#0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
+#1 {main}
+  thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14

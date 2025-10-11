@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="style_admin.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="admin_script.js" defer></script>
+    <style>
+        /* Add some basic styles for the dropdown */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown.show .dropdown-content {
+            display: block;
+        }
+
+        .info-dropdown {
+            display: none;
+            position: fixed; /* Changed to fixed to cover the table */
+            background-color: white;
+            min-width: 300px; /* Adjust width as needed */
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100; /* Ensure it appears above other elements */
+            padding: 20px; /* Add some padding */
+            border-radius: 8px; /* Optional: rounded corners */
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Adjust for centering */
+        }
+
+        .dropdown.show .info-dropdown {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min -h-screen">
+<header class="bg-white shadow-md">
+    <div class="container mx-auto flex justify-between items-center py-2 px-4">
+        <div class="flex items-center">
+            <img alt="College logo" class="h-10 w-10" height="50" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t39.30808-1/309029587_459753179521293_5621644846638556558_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeFir2kR4G3TSgwoXK8CTYwXgMcJ5eEQJR6Axwnl4RAlHh_niM6f3hc9REt9On1Bo0hYDuB602Jje_sH9YjjMMJV&_nc_ohc=TTD306I9niwQ7kNvgEtCZM5&_nc_oc=Adhw3AcB7qiaAsToDKdD3JAhWPWCt2SO61lUdbT6ClMw6jFkF6ND-ny7aVblaIMsf88&_nc_zt=24&_nc_ht=scontent.fmnl17-2.fna&_nc_gid=mW9KxobHMlYlxAve0jPylg&oh=00_AYFa8CFwbvHj3IGVauxhoB8n0ph2y0pJu0_gVvhxt_-kXA&oe=67DD68CC" width="50"/>
+            <div class="ml-2">
+                <h1 class="text-orange-600 font-bold text-sm">ASIA PACIFIC COLLEGE</h1>
+                <h2 class="text-orange-600 text-xs">SCHOOL OF ENGINEERING</h2>
+            </div>
+        </div>
+    </div>
+    <div class="container mx-auto flex justify-between items-center py-2 px-4">
+        <div class="flex items-center space-x-4">
+            <i class="fas fa-home text-xl cursor-pointer" onclick="goToOverviewPage()"></i>
+            <h1 class="text-lg font-bold">E-PORTFOLIO</h1>
+        </div>
+        <div class="relative">
+            <input class="border rounded-full py-1 px-4 pl-8" placeholder="Search" type="text"/>
+            <i class="fas fa-search absolute left-2 top-2 text-gray-500"></i>
+        </div>
+        <div class="flex items-center space-x-4">
+            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleProfileClick()"></i>
+        </div>
+    </div>
+</header>
+<main class="container mx-auto mt-4 px-4 flex-1 flex">
+    <div id="sidebar" class="bg-black text-white p-4 fixed left-0 w-64 h-full z-50">
+        <nav class="flex flex-col space-y-4 mt-4">
+            <a class="text-lg" href="#">User  Lists</a>
+            <a class="text-lg" href="#">Classes</a>
+            <a class="text-lg" href="#">Lists of Students</a>
+            <a class="text-lg" href="#">About us</a>
+        </nav>
+    </div>
+    <div id="mainContent" class="flex-1 transition-all duration-300">
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center">
+                <i class="fas fa-bars text-xl mr-2 cursor-pointer" onclick="toggleSidebar()"></i>
+                <h2 class="text-lg font-bold">Lists of Users</h2>
+            </div>
+        </div>
+        
+        <!-- Search Bar and Filter Icon -->
+        <div class="search-filter-container">
+            <div class="search-bar">
+                <input class="search-input" placeholder="Search Users" type="text"/>
+                <i class="search-icon fas fa-search"></i>
+            </div>
+            <div class="dropdown">
+                <button class="filter-button" onclick="toggleDropdown(this)">
+                    <i class="filter-icon fas fa-filter"></i> <!-- Filter Icon -->
+                </button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="filterUsers('all')">All Users</a>
+                    <a href="#" onclick="filterUsers('admin')">Admin</a>
+                    <a href="#" onclick="filterUsers('executiveDirector')">Executive Director</a>
+                    <a href="#" onclick="filterUsers('programDirector')">Program Director</a>
+                    <a href="#" onclick="filterUsers('professor')">Professor</a>
+                    <a href="#" onclick="filterUsers('student')">Student</a>
+                </div>
+            </div>
+            <div class="dropdown info-dropdown-container">
+                <button class="info-button" onclick="toggleInfoDropdown(this)">
+                    <i class="fas fa-info-circle"></i> <!-- Info Icon -->
+                </button>
+                <div class="info-dropdown">
+                    <p><strong>Executive Director Role</strong><br>Has access to create programs in program management.<br>Assign Program Director in specific program.</p>
+                    <p><strong>Program Directors Role</strong><br>Has access to create courses, lists of student management.<br>Assign Professor in classes.</p>
+                    <p><strong>Professors Role</strong><br>Has access to create courses, classes and define required outputs for academic portfolios.<br>Authorization of students enrolled courses in their classes.</p>
+                    <p><strong>Students Role</strong><br>Has access to folder management and upload portfolios.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!--Start of Content-->
+        <div class="tableContainer">
+            <section class="table__body">
+                <!--Start of Table-->
+                <table>
+                    <thead> 
+                        <tr>
+                            <th class="no-id-column"> No. id </th>
+                            <th> First Name </th>
+                            <th> Last Name </th>
+                            <th> Status </th>
+                            <th> Created Account </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="userRow-1">
+                            <td> 1 </td>
+                            <td> Kim</td>
+                            <td> Chaewon </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(1)">Check User Info</a>
+                                        <a href="#" onclick="removeUser (1)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-2">
+                            <td> 2 </td>
+                            <td> Hong</td>
+                            <td> Eunchae </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(2)">Check User Info</a>
+                                        <a href="#" onclick="removeUser (2)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-3">
+                            <td> 3 </td>
+                            <td> Kazuha</td>
+                            <td> </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(3)">Check User Info</a>
+                                        <a href="#" onclick="removeUser (3)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-4">
+                            <td> 4 </td>
+                            <td> Sakura</td>
+                            <td> Miyawaki </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(4)">Check User Info </a>
+                                        <a href="#" onclick="removeUser  (4)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-5">
+                            <td> 5 </td>
+                            <td> Huh</td>
+                            <td> Yunjin</td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(5)">Check User Info</a>
+                                        <a href="#" onclick="removeUser  (5)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-6">
+                            <td> 6 </td>
+                            <td> Gawr </td>
+                            <td> Gura</td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(6)">Check User Info</a>
+                                        <a href="#" onclick="removeUser(6)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-7">
+                            <td> 7 </td>
+                            <td> Ammelia </td>
+                            <td> Watson </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(7)">Check User Info</a>
+                                        <a href="#" onclick="removeUser  (7)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-8">
+                            <td> 8 </td>
+                            <td> Ninomae </td>
+                            <td> Ina'nis </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(8)">Check User Info</a>
+                                        <a href="#" onclick="removeUser  (8)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-9">
+                            <td> 9 </td>
+                            <td> Takanashi </td>
+                            <td> Kiara </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(9)">Check User Info</a>
+                                        <a href="#" onclick="removeUser(9)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRow-10">
+                            <td> 10 </td>
+                            <td> Mori </td>
+                            <td> Calliope </td>
+                            <td> <span class="status not-verified"> Not Verified</span> </td>
+                            <td> 20/03/2025 </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="checkUserInfo(10)">Check User Info</a>
+                                        <a href="#" onclick="removeUser(10)">Remove User</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+        <div id="userDetailModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>User Details</h2>
+                    <button onclick="closeUserDetailModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="left-section">
+                        <h3 id="userName"></h3>
+                        <p id="userId"></p>
+                        <p id="userEmail"></p>
+                        <p id="userProgram"></p>
+                        <p id="userYearEnroll"></p>
+                        <p id="userIdNumber"></p>
+                        <p id="userSignUpDate"></p>
+                    </div>
+                    <div class="right-section">
+                        <h3>Account Access</h3>
+                        <div class="role-buttons">
+                            <button id="executiveDirectorButton" class="role-button">Executive Director</button>
+                            <button id="programDirectorButton" class="role-button">Program Director</button>
+                            <button id="professorButton" class="role-button">Professor</button>
+                            <button id="studentButton" class="role-button">Student</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="approveButton" class="approve-button">Approve</button>
+                            <button id="rejectButton" class="reject-button">Reject</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--End of Content-->
+    </div>
+</main>
+<footer>
+    <div class="container mx-auto px-4">
+        <p class="text-left">
+            Copyright © 2024 |
+            <a class="text-blue-300" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer> 
+</body>
+</html>

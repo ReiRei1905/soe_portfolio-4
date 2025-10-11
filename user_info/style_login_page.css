@@ -1,0 +1,118 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: lightgray; /* Set background color to light gray */
+    font-family: 'Gill Sans MT', sans-serif;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.text-overlay {
+    color: black;
+    text-align: center;
+    background: white; /* Set background color to white */
+    padding: 20px;
+    border-radius: 50px;
+    width: 15cm; /* Set width to 19.5 cm */
+    height: 10cm; /* Set height to 12.16 cm */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for better visibility */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 5px solid #FBAF41; /* Set border color to #FBAF41 */
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+label {
+    text-align: left; /* Align text to the left */
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+input[type="email"], input[type="password"] {
+    font-size: 18px;
+    font-family: 'Gill Sans MT', sans-serif;
+    width: 100%;
+    height: 50px;
+    padding: 10px 10px 10px 65px; /* Add padding to the left for the icon */
+    margin: 5px 0;
+    box-sizing: border-box;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    background-repeat: no-repeat;
+    background-position: 10px center; /* Position the icon */
+    background-size: 1cm;
+}
+
+input[type="email"] {
+    background-image: url('images/mail.png'); /* Replace with the actual path to the email icon */
+    font-size: 18px;
+    font-family: 'Gill Sans MT', sans-serif;
+}
+
+input[type="password"] {
+    background-image: url('images/unlock.png'); /* Replace with the actual path to the password icon */
+    font-size: 18px;
+    font-family: 'Gill Sans MT', sans-serif;
+}
+
+button {
+    background-color: #0044cc;
+    color: white;
+    width: 150px;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 18px;
+    font-family: 'Gill Sans MT', sans-serif;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #003399;
+}
+
+.links {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 30px;
+}
+
+.links a {
+    color: #0044cc;
+    text-decoration: none;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.links a:first-child {
+    margin-right: 50px; /* Add space to the right of the first link */
+}
+
+.links a:last-child {
+    margin-left: 50px; /* Add space to the left of the last link */
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
