@@ -9,7 +9,9 @@
     <link rel="stylesheet" href="style.css"> <!-- Link to external CSS file for styling -->
 </head>
 <body>
+
     <!-- Student Sign-Up -->
+    <!--harhar-->
     <div class="container" id="studentSignUp" style="display: none;">
         <h1 class="form-title">Student Sign-Up</h1>
         <form method="post" action="register.php">

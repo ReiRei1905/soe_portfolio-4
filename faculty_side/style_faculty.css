@@ -1299,12 +1299,20 @@ main {
     color: #343a40; /* Darker gray on hover */
 }
 
-.dropdown {
-    position: absolute;
+.class-item .dropdown {
+    position: absolute; /* Position relative to the .class-item */
+    top: 100%;
+    right: 0; /* Align to the right edge of the parent */
     background-color: white;
-    border: 1px solid #ccc;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+    padding: 0.5rem;
+    z-index: 1100; /* Slightly higher to appear above other parts */
+    display: flex; /* Use flexbox like other lists */
+    flex-direction: column;
+    gap: 0.5rem;
+    white-space: nowrap; /* Prevent buttons from wrapping */
 }
 
 /*Start of Class handling styles:*/
