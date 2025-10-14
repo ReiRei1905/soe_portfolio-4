@@ -19,12 +19,14 @@ $searchTerm = '%' . $searchTerm . '%'; // Add wildcard here
 
 if (!empty($programId)) {
     // Fetch courses for the given program ID and search term
-    $stmt = $conn->prepare("SELECT course_id AS id, course_name AS name FROM courses WHERE program_id = ? AND course_name LIKE ?");
-    $stmt->bind_param("is", $programId, $searchTerm);
+    // Search both course_name and course_code so users can search by either
+    $stmt = $conn->prepare("SELECT course_id AS id, course_name AS name, course_code FROM courses WHERE program_id = ? AND (course_name LIKE ? OR course_code LIKE ?)");
+    $stmt->bind_param("iss", $programId, $searchTerm, $searchTerm);
 } else {
     // Fetch courses for all program IDs if no program ID is provided
-    $stmt = $conn->prepare("SELECT course_id AS id, course_name AS name FROM courses WHERE course_name LIKE ?");
-    $stmt->bind_param("s", $searchTerm);
+    // Search both course_name and course_code so users can search by either
+    $stmt = $conn->prepare("SELECT course_id AS id, course_name AS name, course_code FROM courses WHERE course_name LIKE ? OR course_code LIKE ?");
+    $stmt->bind_param("ss", $searchTerm, $searchTerm);
 }
 
 $stmt->execute();

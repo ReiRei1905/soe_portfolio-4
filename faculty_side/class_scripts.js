@@ -97,9 +97,12 @@ document.addEventListener("DOMContentLoaded", () => {
         courses.forEach((course) => {
             const item = document.createElement("div");
             item.className = "course-item";
-            item.textContent = course.name;
+            // Prefer showing the course_code when available, otherwise show the name
+            const displayLabel = course.course_code && course.course_code.trim() !== "" ? course.course_code : course.name;
+            item.textContent = displayLabel;
             item.addEventListener("click", () => {
-                courseSearchInput.value = course.name; // Set the input value
+                // When selecting, set the input to the same label (code if exists, else name)
+                courseSearchInput.value = displayLabel; // Set the input value
                 courseDropdown.classList.add("hidden"); // Hide the dropdown
             });
             courseDropdown.appendChild(item);
@@ -116,28 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderDropdown(courses);
     });
 
-    // Fetch and render courses in dropdown
-    courseSearchInput.addEventListener("input", async () => {
-        const searchTerm = courseSearchInput.value.trim();
-        const response = await fetch(`fetch_courses.php?searchTerm=${encodeURIComponent(searchTerm)}`);
-        const courses = await response.json();
-        courseDropdown.innerHTML = "";
-        if (courses.length > 0) {
-            courses.forEach((course) => {
-                const item = document.createElement("div");
-                item.className = "course-item";
-                item.textContent = course.name;
-                item.addEventListener("click", () => {
-                    courseSearchInput.value = course.name;
-                    courseDropdown.classList.add("hidden");
-                });
-                courseDropdown.appendChild(item);
-            });
-            courseDropdown.classList.remove("hidden");
-        } else {
-            courseDropdown.classList.add("hidden");
-        }
-    });
+    // (Use the unified input listener above which calls fetchCourses + renderDropdown)
 
     // Hide dropdown when clicking outside
     document.addEventListener("click", (event) => {
@@ -186,10 +168,16 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
     
-        // Fetch the course ID based on the course name
-        const response = await fetch(`fetch_courses.php?searchTerm=${encodeURIComponent(courseName)}`);
-        const courses = await response.json();
-        const course = courses.find((c) => c.name === courseName);
+    // Fetch possible matching courses based on the entered value (could be name or code)
+    const response = await fetch(`fetch_courses.php?searchTerm=${encodeURIComponent(courseName)}`);
+    const courses = await response.json();
+    // Try to find exact match by course_code first, then by name (case-insensitive)
+    const normalizedInput = courseName.toLowerCase();
+    const course = courses.find((c) => {
+        const code = c.course_code ? String(c.course_code).toLowerCase() : "";
+        const name = c.name ? String(c.name).toLowerCase() : "";
+        return (code && code === normalizedInput) || name === normalizedInput;
+    });
     
         if (!course) {
             alert("Course not found.");

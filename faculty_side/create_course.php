@@ -11,26 +11,28 @@ if ($connection->connect_error) {
 // Get data from POST request
 $programId = $_POST['programId'] ?? '';
 $courseName = $_POST['courseName'] ?? '';
+$courseCode = $_POST['courseCode'] ?? '';
 
 // Debugging: Log received data
-error_log("Received programId: $programId, courseName: $courseName");
+error_log("Received programId: $programId, courseName: $courseName, courseCode: $courseCode");
 
 if (!empty($programId) && !empty($courseName)) {
-    $stmt = $connection->prepare("INSERT INTO courses (program_id, course_name) VALUES (?, ?)");
+    // Use a query that includes course_code. Ensure the column exists in the database.
+    $stmt = $connection->prepare("INSERT INTO courses (program_id, course_name, course_code) VALUES (?, ?, ?)");
     if (!$stmt) {
         error_log("Prepare failed: " . $connection->error);
         echo json_encode(["success" => false, "message" => "Failed to prepare statement"]);
         exit;
     }
 
-    $stmt->bind_param("is", $programId, $courseName);
+    $stmt->bind_param("iss", $programId, $courseName, $courseCode);
 
     if ($stmt->execute()) {
         error_log("Course created successfully");
         echo json_encode(["success" => true, "message" => "Course created successfully"]);
     } else {
         error_log("Failed to create course: " . $stmt->error);
-        echo json_encode(["success" => false, "message" => "Failed to create course"]);
+        echo json_encode(["success" => false, "message" => "Failed to create course: " . $stmt->error]);
     }
 
     $stmt->close();

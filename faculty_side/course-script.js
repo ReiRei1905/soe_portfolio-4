@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const createCourseBtn = document.getElementById("createCourseBtn");
     const courseInputContainer = document.getElementById("courseInputContainer");
     const courseItemTemplate = document.getElementById("courseItemTemplate");
+    const courseCodeInput = document.getElementById("courseCodeInput");
 
     // For course search logic:
     const courseSearchInput = document.getElementById("courseSearchInput");
@@ -88,11 +89,18 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log("Confirm button clicked");
         console.log(`Program ID inside click event: ${programId}`);
 
-        const courseName = courseInput.value.trim();
+            const courseName = courseInput.value.trim();
+            const courseCode = (courseCodeInput.value || "").trim().toUpperCase();
 
         if (!courseName) {
             alert("Please enter a valid course name.");
             return;
+        }
+
+        if (!courseCode) {
+            if (!confirm("No course code provided. Continue without a code?")) {
+                return;
+            }
         }
 
         if (!programId) {
@@ -107,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
-            body: `programId=${encodeURIComponent(programId)}&courseName=${encodeURIComponent(courseName)}`,
+            body: `programId=${encodeURIComponent(programId)}&courseName=${encodeURIComponent(courseName)}&courseCode=${encodeURIComponent(courseCode)}`,
         })
             .then((response) => response.json())
             .then((data) => {
@@ -139,7 +147,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (Array.isArray(courses) && courses.length > 0) {
                     courses.forEach((course) => {
                         const courseItem = courseItemTemplate.content.cloneNode(true);
-                        courseItem.querySelector(".course-name").textContent = course.name;
+                        // If the backend returns a course_code, display as: Name [CODE]
+                        const displayName = course.course_code && course.course_code.trim() !== "" ? `${course.name} [${course.course_code}]` : course.name;
+                        courseItem.querySelector(".course-name").textContent = displayName;
     
                         const editButton = courseItem.querySelector(".edit-btn");
                         editButton.setAttribute("onclick", `editCourse(this, ${course.id})`);

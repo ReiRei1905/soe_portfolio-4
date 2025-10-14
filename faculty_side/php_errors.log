@@ -57,3 +57,7 @@ Stack trace:
 #0 C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php(14): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'soe_portfolio')
 #1 {main}
   thrown in C:\xampp\htdocs\soe_portfolio\faculty_side\fetch_classes.php on line 14
+[14-Oct-2025 08:38:57 Europe/Berlin] Received data: courseId=34, className=har, termNumber=1, startYear=2010, endYear=2011
+[14-Oct-2025 09:07:26 Europe/Berlin] Received data: courseId=37, className=OBJPROG CpE-231, termNumber=2, startYear=2023, endYear=2024
+[14-Oct-2025 09:24:03 Europe/Berlin] Received data: courseId=43, className=Programming Logic and Design CpE-231, termNumber=1, startYear=2023, endYear=2024
+[14-Oct-2025 09:26:29 Europe/Berlin] Received data: courseId=44, className=OBJPROG CpE-231, termNumber=2, startYear=2023, endYear=2024
