@@ -61,3 +61,7 @@ Stack trace:
 [14-Oct-2025 09:07:26 Europe/Berlin] Received data: courseId=37, className=OBJPROG CpE-231, termNumber=2, startYear=2023, endYear=2024
 [14-Oct-2025 09:24:03 Europe/Berlin] Received data: courseId=43, className=Programming Logic and Design CpE-231, termNumber=1, startYear=2023, endYear=2024
 [14-Oct-2025 09:26:29 Europe/Berlin] Received data: courseId=44, className=OBJPROG CpE-231, termNumber=2, startYear=2023, endYear=2024
+[03-Nov-2025 07:54:51 Europe/Berlin] Received data: courseId=44, className=Object Oriented Programming, termNumber=2, startYear=2023, endYear=2024
+[03-Nov-2025 07:57:42 Europe/Berlin] Received data: courseId=44, className=OBJPROG CpE-231, termNumber=2, startYear=2023, endYear=2024
+[03-Nov-2025 08:08:19 Europe/Berlin] Received data: courseId=44, className=OBJPROG CpE-231, termNumber=2, startYear=2023, endYear=2024
+[03-Nov-2025 08:29:27 Europe/Berlin] Received data: courseId=49, className=CpE-231, termNumber=1, startYear=2024, endYear=2025

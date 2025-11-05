@@ -1,35 +1,10 @@
-function goToOverviewPage() {
-    /*// Scroll to the top of the page
-    window.scrollTo({ top: 0, behavior: 'smooth' });*/
-    // Redirect to the overview page
-    window.location.href = "faculty_homepage.html";
-}
-
-function handleProfileClick() {
-    alert('Profile button clicked!');
-}
-
-/*Toggle sidebar in overview section */
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('overview') 
-    || document.getElementById('aboutUs') 
-    || document.getElementById('programs')
-    || document.getElementById('courses')
-    || document.getElementById('classes')
-    || document.getElementById('listsStudents');
-    // Toggle the sidebar visibility
-    sidebar.classList.toggle('active');
-    // Adjust the main content position
-    mainContent.classList.toggle('shifted');
-
-}
+// Course-specific script only. Shared UI (navigation, sidebar, dropdown) is in faculty_scripts.js
 
 document.addEventListener("DOMContentLoaded", function() {
     console.log("Course script loaded");
     const header = document.querySelector('header');
     const sidebar = document.getElementById('sidebar');
-    sidebar.style.top = `${header.offsetHeight}px`;
+    if (header && sidebar) sidebar.style.top = `${header.offsetHeight}px`;
 
     const confirmBtn = document.getElementById("confirmCourseBtn");
     let programId = null;
@@ -63,8 +38,8 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    fetch("fetch_programs.php")
-            .then((response) => response.json())
+    fetch("program_management/fetch_programs.php")
+        .then((response) => response.json())
             .then((programs) => {
                 const program = programs.find((p) => p.name === decodeURIComponent(programName));
                 if (program) {
@@ -168,41 +143,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
 });
 
-// Toggle dropdown menu
-function toggleDropdown(icon) {
-    const dropdown = icon.nextElementSibling;
-    dropdown.classList.toggle('hidden');
-}
-
-// Toggle dropdown menu
-function toggleDropdown(icon) {
-    console.log("Toggling dropdown for:", icon);
-   const dropdown = icon.nextElementSibling;
-
-   // Close any other open dropdowns
-   document.querySelectorAll('.dropdown').forEach((menu) => {
-       if (menu !== dropdown) {
-           menu.classList.add('hidden');
-       }
-   });
-
-   dropdown.classList.toggle('hidden');
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', (event) => {
-    const isDropdown = event.target.closest('.dropdown');
-    const isProgramsOptionsIcon = event.target.closest('.program-options');
-    const isCoursesOptionsIcon = event.target.closest('.course-options');
-
-    if (!isDropdown && !isProgramsOptionsIcon && !isCoursesOptionsIcon) {
-        document.querySelectorAll('.dropdown').forEach((menu) => {
-            menu.classList.add('hidden');
-        });
-    }
-
-    
-});
+// Course script relies on shared toggleDropdown and global click handlers defined in faculty_scripts.js
 
 function removeCourse(button, courseId) {
     const courseItem = button.closest('.course-item');
