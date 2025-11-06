@@ -1,4 +1,26 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Compute a robust API base path by finding the <script> tag that loaded this file.
+    // Earlier logic used `document.currentScript` or the last script tag which can pick
+    // up unrelated scripts (e.g. bootstrap) when scripts are deferred — causing incorrect
+    // base paths like /npm/bootstrap@.../dist/js/.
+    let API_BASE = '';
+    try {
+        const scripts = Array.from(document.querySelectorAll('script[src]'));
+        // Prefer an exact match for this file name; fallback to any script that contains 'class_scripts' if needed
+        let scriptEl = scripts.find(s => s.src && s.src.split('/').pop() === 'class_scripts.js')
+            || scripts.find(s => s.src && s.src.indexOf('class_scripts') !== -1);
+        if (scriptEl && scriptEl.src) {
+            const url = new URL(scriptEl.src, window.location.href);
+            API_BASE = url.pathname.replace(/\/[^\/]*$/, '');
+        } else {
+            // fallback: assume script lives under /faculty_side relative to site root
+            // this keeps behavior predictable on the dev server
+            const candidate = window.location.pathname.split('/').slice(0, -1).join('/');
+            API_BASE = candidate || '';
+        }
+    } catch (e) {
+        API_BASE = '';
+    }
     const createClassBtn = document.getElementById("createClassBtn");
     const classInputContainer = document.getElementById("classInputContainer");
     const confirmClassBtn = document.getElementById("confirmClassBtn");
@@ -17,15 +39,30 @@ document.addEventListener("DOMContentLoaded", () => {
         classInputContainer.classList.remove("hidden");
         classInput.focus();
     });
+    
 
+
+    // Toggle verbose debug logging (helps when console filters hide messages)
+    const DEBUG_LOGS = true;
 
     const fetchCourses = async (searchTerm = "") => {
         try {
-            // Remove the hardcoded programId
-            const response = await fetch(`fetch_courses.php?searchTerm=${encodeURIComponent(searchTerm)}`);
+            // Build fetch URL relative to the script location so pages in other folders still work
+            const fetchUrl = (API_BASE ? API_BASE + '/course_management/fetch_courses.php' : 'course_management/fetch_courses.php') + `?searchTerm=${encodeURIComponent(searchTerm)}`;
+            const response = await fetch(fetchUrl);
             if (!response.ok) throw new Error("Failed to fetch courses");
             const courses = await response.json();
-            console.log("Fetched courses:", courses); // Debugging log
+            if (DEBUG_LOGS) {
+                try {
+                    console.groupCollapsed(`Course fetch — term: "${searchTerm}" (${courses.length || 0} results)`);
+                    console.log(courses);
+                    if (Array.isArray(courses) && courses.length) console.table(courses);
+                    console.groupEnd();
+                } catch (e) {
+                    console.log('Fetched courses (raw):', courses);
+                }
+            }
+            // (no on-page debug panel — logs are printed to the Console only)
             return courses;
         } catch (error) {
             console.error(error);
@@ -114,8 +151,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Event listener for input changes
     courseSearchInput.addEventListener("input", async () => {
         const searchTerm = courseSearchInput.value.trim();
-        console.log("Search term:", searchTerm); // Debugging log
+        if (DEBUG_LOGS) console.log("Search term:", searchTerm);
         const courses = await fetchCourses(searchTerm);
+        if (DEBUG_LOGS) {
+            try {
+                console.groupCollapsed(`Course search input — "${searchTerm}" (${courses.length || 0} results)`);
+                console.log('Search results (from input):', courses);
+                if (Array.isArray(courses) && courses.length) console.table(courses);
+                console.groupEnd();
+            } catch (e) {
+                console.log('Search results (from input):', courses);
+            }
+        }
         renderDropdown(courses);
     });
 
@@ -169,8 +216,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     
     // Fetch possible matching courses based on the entered value (could be name or code)
-    const response = await fetch(`fetch_courses.php?searchTerm=${encodeURIComponent(courseName)}`);
+    const fetchUrl2 = (API_BASE ? API_BASE + '/course_management/fetch_courses.php' : 'course_management/fetch_courses.php') + `?searchTerm=${encodeURIComponent(courseName)}`;
+    const response = await fetch(fetchUrl2);
     const courses = await response.json();
+    console.log("Create-class matched courses:", courses); // show which courses were returned when creating a class
     // Try to find exact match by course_code first, then by name (case-insensitive)
     const normalizedInput = courseName.toLowerCase();
     const course = courses.find((c) => {

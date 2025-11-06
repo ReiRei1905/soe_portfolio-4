@@ -1,7 +1,6 @@
 <?php
 header('Content-Type: application/json');
 
-// Database connection
 $connection = new mysqli("localhost", "root", "", "soe_portfolio");
 
 if ($connection->connect_error) {
@@ -9,7 +8,6 @@ if ($connection->connect_error) {
     exit;
 }
 
-// Get course ID and new course name from POST request
 $courseId = isset($_POST['courseId']) ? intval($_POST['courseId']) : 0;
 $newCourseName = isset($_POST['newCourseName']) ? trim($_POST['newCourseName']) : "";
 

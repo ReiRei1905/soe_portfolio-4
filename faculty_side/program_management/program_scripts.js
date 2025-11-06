@@ -119,10 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (itemElement) {
                         itemElement.addEventListener('click', () => {
                             const programSlug = encodeURIComponent(program.name);
-                            // programs.html is now inside program_management/, so
-                            // navigate up one level to the courses page which
-                            // lives at faculty_side/courses.html
-                            window.location.href = `../courses.html?program=${programSlug}`;
+                            // programs.html is inside program_management/, courses page now lives in course_management/
+                            window.location.href = `../course_management/courses.html?program=${programSlug}`;
                         });
                     }
 
