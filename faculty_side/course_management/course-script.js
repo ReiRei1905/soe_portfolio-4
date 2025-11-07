@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         courseList.appendChild(courseItem);
                     });
                 } else {
-                    courseList.innerHTML = "<p>No courses available.</p>";
+                    courseList.innerHTML = "<p>No courses available har.</p>";
                 }
             })
             .catch((error) => console.error('Error fetching courses:', error));
