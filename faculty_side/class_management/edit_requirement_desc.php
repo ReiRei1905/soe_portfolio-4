@@ -1,12 +1,12 @@
 <?php
 $conn = new mysqli("localhost", "root", "", "soe_portfolio");
 
-$class_id = $_POST['class_id'] ?? null;
-$deadline_at = $_POST['deadline_at'] ?? null;
+$requirement_id = $_POST['requirement_id'] ?? null;
+$requirement_desc = $_POST['requirement_desc'] ?? '';
 
-if ($class_id && $deadline_at) {
-    $stmt = $conn->prepare("UPDATE classes SET deadline_at = ? WHERE class_id = ?");
-    $stmt->bind_param("si", $deadline_at, $class_id);
+if ($requirement_id && $requirement_desc !== '') {
+    $stmt = $conn->prepare("UPDATE requirements SET requirement_desc = ?, updated_at = NOW() WHERE requirement_id = ?");
+    $stmt->bind_param("si", $requirement_desc, $requirement_id);
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {

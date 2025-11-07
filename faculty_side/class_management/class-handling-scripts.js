@@ -16,9 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
         createOutputContainer.classList.add('hidden');
     });
 
-    // ...existing code...
-    // ...existing code...
-
     function fetchAndDisplayOutputs(classId) {
         fetch(`fetch_class_outputs.php?class_id=${encodeURIComponent(classId)}`)
             .then(response => response.json())
@@ -27,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success && data.outputs.length > 0) {
                     data.outputs.forEach(output => {
                         const listItem = document.createElement('li');
-                        listItem.dataset.outputId = output.output_id; // <-- Add this line
+                        listItem.dataset.outputId = output.output_id;
                         listItem.innerHTML = `
                             <span>${output.output_name} (Total Score: ${output.total_score})</span>
                             <div class="input-and-buttons">
@@ -44,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // ...existing code...
     confirmOutputBtn.addEventListener('click', () => {
         const outputName = document.getElementById('outputName').value.trim();
         const totalScore = document.getElementById('totalScore').value.trim();
@@ -77,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         } else {
-            // Add new output (existing code)
+            // Add new output
             fetch('add_class_output.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -96,8 +92,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     });
-    
-    // ...existing code...
 
     // Use event delegation for Edit and Delete buttons
     outputsList.addEventListener('click', (event) => {
@@ -106,23 +100,23 @@ document.addEventListener("DOMContentLoaded", () => {
         // Handle Edit button click
         if (target.classList.contains('editOutput-btn')) {
             const listItem = target.closest('li');
-            const outputId = listItem.dataset.outputId; // Make sure to set this in your fetchAndDisplayOutputs!
+            const outputId = listItem.dataset.outputId;
             const outputDetails = listItem.querySelector('span').textContent;
             const [outputName, totalScore] = outputDetails
                 .match(/^(.*) \(Total Score: (\d+)\)$/)
                 .slice(1);
-    
+
             // Populate the input fields with the existing values
             document.getElementById('outputName').value = outputName;
             document.getElementById('totalScore').value = totalScore;
-    
+
             // Show the create output container for editing
             createOutputContainer.classList.remove('hidden');
-    
+
             // Save the outputId for editing
             confirmOutputBtn.dataset.editingOutputId = outputId;
         }
-    
+
         // Handle Delete button click
         if (target.classList.contains('delete-btn')) {
             const listItem = target.closest('li');
@@ -150,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const setDeadlineContainer = document.querySelector('.set-deadline-container');
     const confirmDeadlineBtn = document.getElementById('confirmDeadlineBtn');
     const cancelDeadlineBtn = document.getElementById('cancelDeadlineBtn');
-    
 
     // Show the set deadline container
     setDeadlineBtn.addEventListener('click', () => {
@@ -161,8 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelDeadlineBtn.addEventListener('click', () => {
         setDeadlineContainer.classList.add('hidden');
     });
-
-    
 
     const showRequirementInputBtn = document.getElementById("showRequirementInputBtn");
     const addRequirementContainer = document.querySelector(".add-requirement-container");
@@ -258,7 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
     
-        // ...existing code...
     if (classId) {
         fetchAndDisplayOutputs(classId);
         // Fetch class details and display them
@@ -285,7 +275,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         
                     `;
 
-                    // ...existing code...
                     const deadlineDisplay = document.getElementById('deadlineDisplay');
                     if (details.deadline_at && details.deadline_at !== '0000-00-00 00:00:00') {
                         const deadline = new Date(details.deadline_at.replace(' ', 'T'));
@@ -300,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
     
                     // Fetch requirements from backend and display them
-                                        
+                    
                     fetch(`fetch_requirement_desc.php?class_id=${classId}`)
                         .then(response => response.json())
                         .then(reqData => {
@@ -321,8 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 });
                             }
                         });
-                    // ...existing code...
-    
+
                     // Re-select and re-attach event listeners for requirements
                     const showRequirementInputBtn = document.getElementById("showRequirementInputBtn");
                     const addRequirementContainer = document.querySelector(".add-requirement-container");
@@ -330,13 +318,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     const addRequirementBtn = document.getElementById("addRequirementBtn");
                     const requirementsList = document.getElementById("requirementsList");
                     let editingRequirement = null;
-    
+
                     showRequirementInputBtn.addEventListener("click", () => {
                         addRequirementContainer.classList.remove("hidden");
                         showRequirementInputBtn.classList.add("hidden");
                     });
-    
-                                        // ...existing code...
+
                     requirementsList.addEventListener("click", (event) => {
                         const target = event.target;
                     
@@ -428,7 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             });
                         }
                     });
-                    
+
 
                     confirmDeadlineBtn.addEventListener('click', () => {
                     const deadlineDate = document.getElementById('deadlineDate').value;
@@ -478,6 +465,4 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
-    // ...existing code...
-
-});
+    });

@@ -6,11 +6,6 @@ error_reporting(E_ALL); // Report all errors
 ini_set('error_log', 'php_errors.log'); // Log errors to a file
 
 // Database connection
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "soe_portfolio";
-
 $conn = new mysqli("localhost", "root", "", "soe_portfolio");
 
 if ($conn->connect_error) {

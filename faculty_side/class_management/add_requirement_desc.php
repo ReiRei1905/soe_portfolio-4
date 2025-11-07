@@ -1,10 +1,5 @@
 <?php
 // Database connection
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "soe_portfolio";
-
 $conn = new mysqli("localhost", "root", "", "soe_portfolio");
 
 $class_id = $_POST['class_id'] ?? null;
