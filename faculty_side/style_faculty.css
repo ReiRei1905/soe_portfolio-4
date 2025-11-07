@@ -272,10 +272,7 @@ main {
     margin-bottom: 0.5rem; /* Equivalent to mb-2 */
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-}
+
 
 .sidebar-toggle {
     font-size: 1.25rem; /* Equivalent to text-xl */
@@ -570,7 +567,7 @@ main {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     border-radius: 0.5rem; /* Rounded corners */
     padding: 1.5rem; /* Padding around content */
-    margin-top: 1rem; /* Space from the header */
+    margin-top: 4rem; /* Space from the header */
     margin-bottom: 2rem; /* Add space to prevent cutoff */
 }
 
@@ -789,11 +786,19 @@ main {
 
 }
 
-/* Header styling */
-.programs-title {
-    font-size: 1.125rem;
-    font-weight: bold;
 
+/* Keep programs header burger slightly indented from the left edge when it's in the header */
+.programs-header .sidebar-toggle,
+.header-actions .sidebar-toggle {
+    margin-left: 0.75rem; /* nudge right so it's not flush with the very left */
+    margin-right: 0.5rem; /* small gap to title */
+}
+
+@media (max-width: 768px) {
+    .programs-header .sidebar-toggle,
+    .header-actions .sidebar-toggle {
+        margin-left: 0.5rem;
+    }
 }
 
 /*End of Programs Styles*/
@@ -818,8 +823,23 @@ main {
 }
 
 .courses-title {
+    margin-top: 1rem; /* Space above the title */
     font-size: 1.125rem; /* Equivalent to text-lg */
     font-weight: bold;
+}
+
+/* Keep programs header burger slightly indented from the left edge when it's in the header */
+.courses-header .sidebar-toggle,
+.header-actions .sidebar-toggle {
+    margin-left: 0.75rem; /* nudge right so it's not flush with the very left */
+    margin-right: 0.5rem; /* small gap to title */
+}
+
+@media (max-width: 768px) {
+    .courses-header  .sidebar-toggle,
+    .header-actions .sidebar-toggle {
+        margin-left: 0.5rem;
+    }
 }
 
 /* Courses Content */
@@ -1043,6 +1063,8 @@ main {
 .course-title {
     font-size: 1.125rem;
     font-weight: bold;
+    align-items: center;
+    display: flex;
 
 }
 
@@ -1067,7 +1089,22 @@ main {
     transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
 }
 
+/* Keep programs header burger slightly indented from the left edge when it's in the header */
+.classes-header .sidebar-toggle,
+.header-actions .sidebar-toggle {
+    margin-left: 0.75rem; /* nudge right so it's not flush with the very left */
+    margin-right: 0.5rem; /* small gap to title */
+}
+
+@media (max-width: 768px) {
+    .classes-header .sidebar-toggle,
+    .header-actions .sidebar-toggle {
+        margin-left: 0.5rem;
+    }
+}
+
 .classes-title {
+    margin-top: 1rem; /* Space above the title */
     font-size: 1.125rem; /* Equivalent to text-lg */
     font-weight: bold;
 }
@@ -1078,7 +1115,7 @@ main {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     border-radius: 0.5rem; /* Rounded corners */
     padding: 1.5rem; /* Padding around content */
-    margin-top: 1rem; /* Space from the header */
+    margin-top: 4rem; /* Space from the header */
     margin-bottom: 2rem; /* Add space to prevent cutoff */
 }
 .classes-content h3 {
@@ -1316,6 +1353,10 @@ main {
 }
 
 /*Start of Class handling styles:*/
+.classes-handling-content {
+    margin-top: 4rem; /* Space above the section */
+}
+
 .breadcrumb-container {
     display: flex; /* Use Flexbox to align items horizontally */
     align-items: center; /* Vertically center the items */
@@ -1655,6 +1696,7 @@ main {
 }
 
 .listsStudents-title {
+    margin-top: 1rem; /* Space above the title */
     font-size: 1.125rem; /* Equivalent to text-lg */
     font-weight: bold;
 }
@@ -1677,41 +1719,53 @@ footer {
     background-color: #1e3a8a;
     color: #ffffff;
     width: 100%;
-    z-index: 70;  
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 1000; 
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
-    min-height: 7%; /* Ensure a minimum height */
-    position : relative; /* Change to relative for normal flow */
-
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+    box-sizing: border-box;
+    position: relative; /* keep in normal flow so page layout (flex) pushes it to bottom */
+    z-index: 1200; /* put footer above fixed sidebar (sidebar z-index is 50) so it's not overlapped */
 }
 
 .footer-container {
-    max-width: 1200px; /* Example max-width */
-    padding-left: 1rem; /* px-4 */
-    padding-right: 1rem; /* px-4 */
+    width: 100%;
+    max-width: none; /* make full width so content can align to the left */
+    margin: 0; /* remove auto-centering */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep content at the left */
+    gap: 1rem;
+    /* padding: horizontal 1rem, vertical 0.25rem; left padding nudges content away from edge */
+    padding: 0.25rem 1rem;
 }
 
 .footer-text {
-    text-align: left; /* text-left */
-    color: white; /* Example text color */
-    font-weight: bold;
-    margin-top: 1rem; /* mt-4 */
-
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: left; /* ensure text centered inside container */
 }
 
 .footer-link {
-    color: #007bff; /* text-blue-300 */
+    color: #93c5fd;
     text-decoration: none;
+    margin-left: 0.35rem;
 }
 
 .footer-link:hover {
     text-decoration: underline;
 }
 
-footer a {
-    color: #93c5fd;
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0.75rem 0;
+        padding-left: 0; /* remove desktop offset on small screens */
+    }
+    .footer-text {
+        font-size: 0.9rem;
+    }
 }
+
 /* End of Footer styles */
