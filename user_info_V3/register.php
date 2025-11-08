@@ -2,7 +2,17 @@
 ob_start();
 session_start();
 include 'connect.php';
-require 'vendor/autoload.php';
+
+$mailerAvailable = false;
+$autoloadPath = __DIR__ . '/vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+    require_once $autoloadPath;
+    $mailerAvailable = true;
+} else {
+    error_log("PHPMailer autoload not found at: $autoloadPath. Run 'composer install' in project root.");
+    echo "Notice: PHPMailer not installed. OTP emails will not be sent. Run 'composer install' in the project root.";
+}
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -153,14 +163,21 @@ if (isset($_POST['signIn'])) {
         exit();
     }
 
-    // Only select users who are verified (status = 1)
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND status = 1");
+    // CHANGED: select user by email only so we can show clear verification message
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows === 1) {
         $row = $result->fetch_assoc();
+
+        // check verification status explicitly
+        if ((int)$row['status'] !== 1) {
+            echo "Account not verified. Please check your email for the OTP and complete verification before signing in.";
+            exit();
+        }
+
         if (password_verify($password, $row['password'])) {
             session_regenerate_id(true);
             $_SESSION['email'] = $row['email'];
@@ -187,7 +204,7 @@ if (isset($_POST['signIn'])) {
             echo " Invalid email or password!";
         }
     } else {
-        echo " Invalid email or password or account not verified!";
+        echo " Invalid email or password!";
     }
 }
 ?>
