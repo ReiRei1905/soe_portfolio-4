@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const DEBUG_LOGS = true;
+    // Cache courses client-side to avoid repeated network requests while typing
+    let cachedCourses = null;
+    let coursesPrefetching = false;
 
     const fetchCourses = async (searchTerm = "") => {
         try {
@@ -74,7 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // { changed code }
             // Build a display string that avoids repeating course_name/class_name or term/year if already present.
             function buildClassDisplay(ci) {
-                const course = (ci.course_name || "").trim();
+                // Prefer course_code for class-item display (so created classes show the code)
+                const course = (ci.course_code || ci.course_name || "").trim();
                 const cls = (ci.class_name || "").trim();
                 const termNum = ci.term_number;
                 const startY = ci.start_year;
@@ -147,7 +151,8 @@ document.addEventListener("DOMContentLoaded", () => {
         courses.forEach((course) => {
             const item = document.createElement("div");
             item.className = "course-item";
-            const displayLabel = course.course_code && course.course_code.trim() !== "" ? course.course_code : course.name;
+            // Show the full course name in the dropdown (user asked for this)
+            const displayLabel = course.name || course.course_name || (course.course_code || '');
             item.textContent = displayLabel;
             item.addEventListener("click", () => {
                 courseSearchInput.value = displayLabel;
@@ -159,21 +164,56 @@ document.addEventListener("DOMContentLoaded", () => {
         courseDropdown.classList.remove("hidden");
     };
 
-    courseSearchInput.addEventListener("input", async () => {
-        const searchTerm = courseSearchInput.value.trim();
-        if (DEBUG_LOGS) console.log("Search term:", searchTerm);
-        const courses = await fetchCourses(searchTerm);
-        if (DEBUG_LOGS) {
+    // Prefetch courses on focus (so typing doesn't issue new network requests)
+    courseSearchInput.addEventListener('focus', async () => {
+        if (cachedCourses === null && !coursesPrefetching) {
+            coursesPrefetching = true;
             try {
-                console.groupCollapsed(`Course search input — "${searchTerm}" (${courses.length || 0} results)`);
-                console.log('Search results (from input):', courses);
-                if (Array.isArray(courses) && courses.length) console.table(courses);
-                console.groupEnd();
+                cachedCourses = await fetchCourses('');
             } catch (e) {
-                console.log('Search results (from input):', courses);
+                cachedCourses = [];
+            } finally {
+                coursesPrefetching = false;
             }
         }
-        renderDropdown(courses);
+    });
+
+    courseSearchInput.addEventListener("input", async () => {
+        const searchTerm = courseSearchInput.value.trim();
+    if (DEBUG_LOGS) console.log("class-search: Search term:", searchTerm);
+
+        // Ensure we have a cached copy (fallback to one-time fetch if not prefetched)
+        if (cachedCourses === null) {
+            // this will perform a single network request; after this we filter locally
+            cachedCourses = await fetchCourses('');
+        }
+
+        // Filter locally (no additional network requests)
+        const norm = searchTerm.toLowerCase();
+        const matches = (Array.isArray(cachedCourses) ? cachedCourses.filter(c => {
+            const code = c.course_code ? String(c.course_code).toLowerCase() : '';
+            const name = (c.name || c.course_name || '').toLowerCase();
+            return code.includes(norm) || name.includes(norm);
+        }) : []);
+
+        // Friendly console log showing matches (concise)
+        try {
+            const labels = matches.map(c => (c.course_code && String(c.course_code).trim() !== "") ? c.course_code : (c.name || c.course_name || '')).filter(Boolean);
+            if (DEBUG_LOGS) console.log(`class-search: Search term: "${searchTerm}" -> matches: ${labels.length ? labels.join(', ') : 'none'}`);
+        } catch (e) { /* ignore */ }
+
+        if (DEBUG_LOGS) {
+            try {
+                console.groupCollapsed(`class-search (local) — "${searchTerm}" (${matches.length || 0} results)`);
+                console.log('class-search results (local):', matches);
+                if (Array.isArray(matches) && matches.length) console.table(matches);
+                console.groupEnd();
+            } catch (e) {
+                console.log('Search results (local):', matches);
+            }
+        }
+
+        renderDropdown(matches);
     });
 
     document.addEventListener("click", (event) => {

@@ -241,9 +241,30 @@ document.addEventListener("DOMContentLoaded", () => {
                     const classItem = data.classes.find(c => c.class_id == classId);
                     if (classItem) {
                         // Format the class name as you want it to appear
-                        const classNameDisplay = `${classItem.course_name} ${classItem.class_name} Term ${classItem.term_number} ${classItem.start_year}-${classItem.end_year}`;
-                        // Update the breadcrumb
-                        document.querySelector('.breadcrumb-container .class-name').textContent = classNameDisplay;
+                            // Avoid duplication: some backends already include the course name, term, or years
+                            const buildClassName = (ci) => {
+                                // Start with the raw class_name
+                                let base = String(ci.class_name || '').trim();
+
+                                // If course_name is not already part of class_name, prepend it
+                                if (ci.course_name && !base.includes(ci.course_name)) {
+                                    base = `${ci.course_name} ${base}`.trim();
+                                }
+
+                                // If class_name already contains 'Term' or the years, don't append them again
+                                const hasTerm = /Term\s*\d+/i.test(base);
+                                const hasYears = base.includes(`${ci.start_year}-${ci.end_year}`);
+                                if (!hasTerm && !hasYears) {
+                                    base = `${base} Term ${ci.term_number} ${ci.start_year}-${ci.end_year}`.trim();
+                                }
+
+                                return base;
+                            };
+
+                            const classNameDisplay = buildClassName(classItem);
+                            // Update the breadcrumb
+                            const bcEl = document.querySelector('.breadcrumb-container .class-name');
+                            if (bcEl) bcEl.textContent = classNameDisplay;
                     }
                 }
             });

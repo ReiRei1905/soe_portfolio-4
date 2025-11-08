@@ -13,9 +13,9 @@ if ($conn->connect_error) {
     die(json_encode(["success" => false, "message" => "Connection failed: " . $conn->connect_error]));
 }
 
-// Fetch classes from the database
-$query = "SELECT c.class_id, c.class_name, c.term_number, c.start_year, c.end_year, co.course_name 
-          FROM classes c 
+// Fetch classes from the database (include course_code so client can display code)
+$query = "SELECT c.class_id, c.class_name, c.term_number, c.start_year, c.end_year, co.course_name, co.course_code
+          FROM classes c
           JOIN courses co ON c.course_id = co.course_id";
 
 $result = $conn->query($query);
