@@ -71,7 +71,48 @@ document.addEventListener("DOMContentLoaded", () => {
             const template = document.getElementById("classItemTemplate");
             const item = template.content.cloneNode(true);
 
-            item.querySelector(".class-name").textContent = `${classItem.course_name} ${classItem.class_name} Term ${classItem.term_number} ${classItem.start_year}-${classItem.end_year}`;
+            // { changed code }
+            // Build a display string that avoids repeating course_name/class_name or term/year if already present.
+            function buildClassDisplay(ci) {
+                const course = (ci.course_name || "").trim();
+                const cls = (ci.class_name || "").trim();
+                const termNum = ci.term_number;
+                const startY = ci.start_year;
+                const endY = ci.end_year;
+
+                // Normalize for comparisons
+                const courseLower = course.toLowerCase();
+                const clsLower = cls.toLowerCase();
+                const yearRange = `${startY}-${endY}`;
+
+                let base = "";
+
+                if (course && cls) {
+                    // If class name already contains the course text, prefer class name only.
+                    if (clsLower.includes(courseLower)) {
+                        base = cls;
+                    } else if (courseLower.includes(clsLower)) {
+                        base = course;
+                    } else {
+                        base = `${course} ${cls}`;
+                    }
+                } else {
+                    base = course || cls || "";
+                }
+
+                const baseLower = base.toLowerCase();
+
+                // If base already includes Term X or the year range, don't append term/year again.
+                if (baseLower.includes(`term ${String(termNum).toLowerCase()}`) || baseLower.includes(yearRange)) {
+                    return base;
+                }
+
+                // Append term/year if not present
+                const termPart = `Term ${termNum} ${startY}-${endY}`;
+                return `${base} ${termPart}`.trim();
+            }
+
+            item.querySelector(".class-name").textContent = buildClassDisplay(classItem);
 
             item.querySelector(".class-item").addEventListener("click", () => {
                 // class-handling is now in the same folder (class_management)
@@ -270,28 +311,40 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentClassName = classNameSpan.textContent;
         const newClassName = prompt("Edit class name:", currentClassName);
 
-        if (newClassName && newClassName.trim() !== currentClassName.trim()) {
-            fetch('edit_class.php', {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `classId=${encodeURIComponent(classId)}&newClassName=${encodeURIComponent(newClassName.trim())}`,
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.success) {
-                        alert(data.message);
-                        classNameSpan.textContent = newClassName.trim();
-                    } else {
-                        alert(data.message || "Failed to update class name.");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error editing class:", error);
-                    alert("An error occurred while updating the class name.");
-                });
-        } else if (newClassName.trim() === currentClassName.trim()) {
-            alert("The class name is unchanged.");
+        // { changed code }
+        if (newClassName === null) {
+            // user cancelled
+            return;
         }
+        const trimmedName = newClassName.trim();
+        if (trimmedName === "") {
+            alert("Class name cannot be empty.");
+            return;
+        }
+        if (trimmedName === currentClassName.trim()) {
+            alert("The class name is unchanged.");
+            return;
+        }
+
+        fetch('edit_class.php', {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `classId=${encodeURIComponent(classId)}&newClassName=${encodeURIComponent(trimmedName)}`,
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    // Re-fetch authoritative list to avoid any duplicated/concatenated display text.
+                    fetchClasses();
+                    alert(data.message);
+                } else {
+                    alert(data.message || "Failed to update class name.");
+                }
+            })
+            .catch((error) => {
+                console.error("Error editing class:", error);
+                alert("An error occurred while updating the class name.");
+            });
     }
 
     window.editClass = editClass;
@@ -306,9 +359,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.success) {
+                        // { changed code }
+                        // Refresh the list so the UI always matches server state.
+                        fetchClasses();
                         alert(data.message);
-                        const classItem = button.closest('.class-item');
-                        classItem.remove();
                     } else {
                         alert(data.message || "Failed to delete class.");
                     }
