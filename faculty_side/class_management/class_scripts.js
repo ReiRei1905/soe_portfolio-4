@@ -51,11 +51,54 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Render a dropdown of matching courses (used by the create-class course search)
+    function renderDropdown(matches) {
+        try {
+            courseDropdown.innerHTML = '';
+            if (!Array.isArray(matches) || matches.length === 0) {
+                courseDropdown.classList.add('hidden');
+                return;
+            }
+
+            // Limit suggestions to a reasonable number
+            // Attach data attributes so the UI can directly carry the selected course id
+            matches.slice(0, 20).forEach((c) => {
+                const label = (c.course_code && String(c.course_code).trim() !== '') ? `${c.course_code} ${c.name || c.course_name || ''}`.trim() : (c.name || c.course_name || '');
+                const row = document.createElement('div');
+                row.className = 'course-item';
+                row.textContent = label;
+                // Store useful values on the DOM node for easy retrieval on click
+                row.dataset.courseId = c.id || c.course_id || '';
+                row.dataset.courseCode = c.course_code || '';
+                row.dataset.courseName = c.name || c.course_name || '';
+                row.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Set the visible input to the friendly label, but also keep the selected id
+                    courseSearchInput.value = label;
+                    // Set hidden selectedCourseId so creation uses the exact ID (avoids string matching issues)
+                    try {
+                        const sel = document.getElementById('selectedCourseId');
+                        if (sel) sel.value = row.dataset.courseId || '';
+                    } catch (err) { /* ignore */ }
+                    courseDropdown.classList.add('hidden');
+                });
+                courseDropdown.appendChild(row);
+            });
+
+            courseDropdown.classList.remove('hidden');
+        } catch (err) {
+            console.error('renderDropdown error', err);
+        }
+    }
+
     const fetchClasses = async () => {
         try {
             const response = await fetch("fetch_classes.php");
             if (!response.ok) throw new Error("Failed to fetch classes");
             const data = await response.json();
+            console.debug('fetchClasses response:', data);
+
+            // (debug panel removed) — keep console.debug for development
 
             if (data.success) {
                 console.log("Fetched classes:", data.classes);
@@ -135,33 +178,105 @@ document.addEventListener("DOMContentLoaded", () => {
             item.querySelector(".edit-btn").setAttribute("onclick", `editClass(this, ${classItem.class_id})`);
             item.querySelector(".remove-btn").setAttribute("onclick", `removeClass(this, ${classItem.class_id})`);
 
-            classList.appendChild(item);
-        });
-    };
+            // inline edit wiring
+            const inlineEdit = item.querySelector('.inline-edit');
+            const editInput = inlineEdit.querySelector('.edit-input');
+            const saveBtn = inlineEdit.querySelector('.save-edit-btn');
+            const cancelBtn = inlineEdit.querySelector('.cancel-edit-btn');
+            const editBtn = item.querySelector('.edit-btn');
+            const itemEl = item.querySelector('.class-item');
 
-    fetchClasses();
+            if (editBtn) {
+                // When user clicks the Edit button in the dropdown, open the inline editor
+                // and make absolutely sure the dropdown is hidden. Stop propagation so
+                // the row click doesn't navigate.
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    try {
+                        const classItemEl = editBtn.closest('.class-item') || item.querySelector('.class-item');
 
-    const renderDropdown = (courses) => {
-        courseDropdown.innerHTML = "";
-        if (courses.length === 0) {
-            courseDropdown.classList.add("hidden");
-            return;
-        }
+                        // Hide all dropdowns first to avoid any remaining visible menu
+                        document.querySelectorAll('.dropdown').forEach((menu) => {
+                            menu.classList.add('hidden');
+                        });
 
-        courses.forEach((course) => {
-            const item = document.createElement("div");
-            item.className = "course-item";
-            // Show the full course name in the dropdown (user asked for this)
-            const displayLabel = course.name || course.course_name || (course.course_code || '');
-            item.textContent = displayLabel;
-            item.addEventListener("click", () => {
-                courseSearchInput.value = displayLabel;
-                courseDropdown.classList.add("hidden");
+                        // Also hide the dropdown that belongs to this item (if any)
+                        if (classItemEl) {
+                            const localDd = classItemEl.querySelector('.dropdown');
+                            if (localDd) {
+                                localDd.classList.add('hidden');
+                            }
+                        }
+
+                        // Show inline editor for this item
+                        const localInline = classItemEl ? classItemEl.querySelector('.inline-edit') : inlineEdit;
+                        const localInput = localInline ? localInline.querySelector('.edit-input') : editInput;
+                        if (localInline) {
+                            localInline.classList.remove('hidden');
+                            if (localInput) {
+                                localInput.value = (classItemEl ? (classItemEl.querySelector('.class-name') && classItemEl.querySelector('.class-name').textContent) : item.querySelector('.class-name').textContent).trim();
+                                localInput.focus();
+                            }
+                        }
+                    } catch (err) {
+                        // Fallback: show the existing inline editor variable
+                        inlineEdit.classList.remove('hidden');
+                        editInput.value = item.querySelector('.class-name').textContent.trim();
+                        editInput.focus();
+                    }
+                });
+            }
+
+
+            // Prevent clicks inside inline editor from triggering item navigation
+            inlineEdit.addEventListener('click', (e) => e.stopPropagation());
+            editInput.addEventListener('click', (e) => e.stopPropagation());
+
+            saveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newName = editInput.value.trim();
+                if (!newName) { alert('Class name cannot be empty.'); return; }
+                if (newName === itemEl.querySelector('.class-name').textContent.trim()) { inlineEdit.classList.add('hidden'); return; }
+
+                fetch('edit_class.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `classId=${encodeURIComponent(classItem.class_id)}&newClassName=${encodeURIComponent(newName)}`
+                }).then(async (r) => {
+                    const text = await r.text();
+                    try {
+                        const data = JSON.parse(text);
+                        if (data.success) {
+                            itemEl.querySelector('.class-name').textContent = newName;
+                            inlineEdit.classList.add('hidden');
+                            if (data.message) alert(data.message);
+                                // Ensure dropdown is hidden after save
+                                try { item.querySelector('.dropdown').classList.add('hidden'); } catch (e) {}
+                        } else {
+                            console.error('Server returned failure JSON:', data);
+                            alert(data.message || 'Error updating class');
+                        }
+                    } catch (parseErr) {
+                        if (r.ok) {
+                            // backend responded non-JSON but HTTP OK — treat as success
+                            itemEl.querySelector('.class-name').textContent = newName;
+                            inlineEdit.classList.add('hidden');
+                        } else {
+                            console.error('Non-JSON server response:', text);
+                            alert('Error updating class');
+                        }
+                    }
+                }).catch(err => { console.error('Error editing class:', err); alert('Error updating class'); });
             });
-            courseDropdown.appendChild(item);
+
+            cancelBtn.addEventListener('click', (e) => { e.stopPropagation(); inlineEdit.classList.add('hidden'); try { item.querySelector('.dropdown').classList.add('hidden'); } catch (e) {} });
+
+            // end of per-item wiring
+            // append the cloned template (DocumentFragment) to the list
+            classList.appendChild(item);
+
         });
 
-        courseDropdown.classList.remove("hidden");
     };
 
     // Prefetch courses on focus (so typing doesn't issue new network requests)
@@ -179,6 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     courseSearchInput.addEventListener("input", async () => {
+        // If the user manually types, clear any previously-selected course id
+        try { document.getElementById('selectedCourseId').value = ''; } catch (e) {}
         const searchTerm = courseSearchInput.value.trim();
     if (DEBUG_LOGS) console.log("class-search: Search term:", searchTerm);
 
@@ -259,23 +376,34 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const fetchUrl2 = '../course_management/fetch_courses.php' + `?searchTerm=${encodeURIComponent(courseName)}`;
-        const response = await fetch(fetchUrl2);
-        const courses = await response.json();
-        console.log("Create-class matched courses:", courses);
-        const normalizedInput = courseName.toLowerCase();
-        const course = courses.find((c) => {
-            const code = c.course_code ? String(c.course_code).toLowerCase() : "";
-            const name = c.name ? String(c.name).toLowerCase() : "";
-            return (code && code === normalizedInput) || name === normalizedInput;
-        });
+        // Prefer the selected course id saved when user clicked a dropdown item (more reliable)
+        let courseId = '';
+        try {
+            const sel = document.getElementById('selectedCourseId');
+            if (sel && sel.value) courseId = sel.value;
+        } catch (err) { /* ignore */ }
 
-        if (!course) {
-            alert("Course not found.");
-            return;
+        // Fallback: if no selectedCourseId (user typed and didn't click a suggestion), try to resolve by searching
+        if (!courseId) {
+            const fetchUrl2 = '../course_management/fetch_courses.php' + `?searchTerm=${encodeURIComponent(courseName)}`;
+            const response = await fetch(fetchUrl2);
+            const courses = await response.json();
+            console.log("Create-class matched courses (fallback search):", courses);
+            const normalizedInput = courseName.toLowerCase();
+            const course = courses.find((c) => {
+                const code = c.course_code ? String(c.course_code).toLowerCase() : "";
+                const name = c.name ? String(c.name).toLowerCase() : "";
+                // allow either exact matches or inputs that start with the code (e.g. "PROGLOD ...")
+                return (code && (code === normalizedInput || normalizedInput.startsWith(code))) || name === normalizedInput;
+            });
+
+            if (!course) {
+                alert("Course not found.");
+                return;
+            }
+
+            courseId = course.id;
         }
-
-        const courseId = course.id;
 
         try {
             console.log("Sending data:", { courseId, className, termNumber, startYear, endYear });
@@ -292,6 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.success) {
                 classInput.value = "";
                 courseSearchInput.value = "";
+                try { document.getElementById('selectedCourseId').value = ''; } catch (e) {}
                 termNumberSelect.value = "";
                 startYearSelect.value = "";
                 endYearSelect.value = "";
@@ -313,7 +442,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.dropdown').forEach((menu) => {
             if (menu !== dropdown) menu.classList.add('hidden');
         });
-        dropdown.classList.toggle('hidden');
+        // If the dropdown is currently hidden, show it and clear any inline
+        // style that might keep it invisible. If it's visible, hide it.
+        const willShow = dropdown.classList.contains('hidden');
+        if (willShow) {
+            dropdown.classList.remove('hidden');
+            try { dropdown.style.display = ''; } catch (e) { /* ignore */ }
+        } else {
+            dropdown.classList.add('hidden');
+        }
     }
 
     window.toggleDropdown = toggleDropdown;
@@ -345,46 +482,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function editClass(button, classId) {
-        console.log("editClass called with classId:", classId);
-        const classItem = button.closest('.class-item');
-        const classNameSpan = classItem.querySelector('.class-name');
-        const currentClassName = classNameSpan.textContent;
-        const newClassName = prompt("Edit class name:", currentClassName);
+    // Open the inline editor directly for the given item instead of
+    // triggering a click on the edit button (which could cause recursion
+    // or ordering issues). Also ensure dropdowns are hidden.
+        try {
+            const classItem = button.closest('.class-item');
+            if (!classItem) return;
 
-        // { changed code }
-        if (newClassName === null) {
-            // user cancelled
-            return;
-        }
-        const trimmedName = newClassName.trim();
-        if (trimmedName === "") {
-            alert("Class name cannot be empty.");
-            return;
-        }
-        if (trimmedName === currentClassName.trim()) {
-            alert("The class name is unchanged.");
-            return;
-        }
-
-        fetch('edit_class.php', {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `classId=${encodeURIComponent(classId)}&newClassName=${encodeURIComponent(trimmedName)}`,
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    // Re-fetch authoritative list to avoid any duplicated/concatenated display text.
-                    fetchClasses();
-                    alert(data.message);
-                } else {
-                    alert(data.message || "Failed to update class name.");
-                }
-            })
-            .catch((error) => {
-                console.error("Error editing class:", error);
-                alert("An error occurred while updating the class name.");
+            // Hide all dropdowns
+            document.querySelectorAll('.dropdown').forEach((menu) => {
+                menu.classList.add('hidden');
             });
+
+            const inline = classItem.querySelector('.inline-edit');
+            const input = inline ? inline.querySelector('.edit-input') : null;
+            if (inline) {
+                inline.classList.remove('hidden');
+                if (input) {
+                    input.value = (classItem.querySelector('.class-name') && classItem.querySelector('.class-name').textContent || '').trim();
+                    input.focus();
+                }
+            }
+        } catch (e) {
+            console.error('editClass fallback error', e);
+        }
     }
 
     window.editClass = editClass;
@@ -415,4 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.removeClass = removeClass;
+
+    // Initial load: fetch classes so the list is populated when the page opens
+    fetchClasses();
 });

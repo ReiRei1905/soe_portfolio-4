@@ -10,10 +10,12 @@ if ($connection->connect_error) {
 
 $courseId = isset($_POST['courseId']) ? intval($_POST['courseId']) : 0;
 $newCourseName = isset($_POST['newCourseName']) ? trim($_POST['newCourseName']) : "";
+$newCourseCode = isset($_POST['newCourseCode']) ? trim($_POST['newCourseCode']) : "";
 
 if ($courseId > 0 && !empty($newCourseName)) {
-    $stmt = $connection->prepare("UPDATE courses SET course_name = ? WHERE course_id = ?");
-    $stmt->bind_param("si", $newCourseName, $courseId);
+    // Update both name and code. Allow code to be empty string if not provided.
+    $stmt = $connection->prepare("UPDATE courses SET course_name = ?, course_code = ? WHERE course_id = ?");
+    $stmt->bind_param("ssi", $newCourseName, $newCourseCode, $courseId);
 
     if ($stmt->execute()) {
         echo json_encode(["success" => true, "message" => "Course updated successfully."]);

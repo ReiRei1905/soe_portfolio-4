@@ -1288,6 +1288,7 @@ main {
     transition: background-color 0.3s ease;
     width: 70%; /* Match the width of program-item and course-item */
     margin: 0 auto; /* Center horizontally */
+    height: 3rem; /* Fixed height to match programs/courses and prevent resizing when inline editor appears */
 }
 
 .class-item:hover {
@@ -1769,3 +1770,46 @@ footer {
 }
 
 /* End of Footer styles */
+
+/* Inline edit small UI used by program/course/class item templates */
+.inline-edit {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.inline-edit.hidden { display: none !important; }
+
+.inline-edit .edit-input {
+    border: 1px solid #ced4da;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+    min-width: 300px;
+    
+}
+
+.inline-edit .save-edit-btn,
+.inline-edit .cancel-edit-btn {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.25rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.inline-edit .save-edit-btn {
+    background-color: #28a745; /* green */
+    color: white;
+}
+
+.inline-edit .cancel-edit-btn {
+    background-color: #6c757d; /* gray */
+    color: white;
+}
+
+/* Ensure inline editor doesn't push layout on small screens */
+@media (max-width: 768px) {
+    .inline-edit .edit-input { min-width: 140px; }
+}

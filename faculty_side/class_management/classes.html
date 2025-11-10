@@ -76,6 +76,8 @@
                         <input id="courseSearchInput" class="search-input" placeholder="Search courses..." type="text" />
                         <i class="fas fa-search"></i>
                         <div id="courseDropdown" class="course-lists hidden"></div> <!-- Dropdown container -->
+                        <!-- Holds the id of the selected course (set when user clicks a dropdown item) -->
+                        <input type="hidden" id="selectedCourseId" name="selectedCourseId" value="" />
                     </div>
                 </span>
             </h3>
@@ -104,7 +106,7 @@
         </div>
         
         <h3>Classes Available:</h3>
-        <div id="classList" class="class-list"></div>
+    <div id="classList" class="class-list"></div>
     </div>
     <!-- End of Content Hatdog-->
 
@@ -112,10 +114,16 @@
     <template id="classItemTemplate">
       <div class="class-item">
         <span class="class-name"></span>
+                <div class="inline-edit hidden">
+                        <input class="edit-input" type="text" />
+                        <button class="save-edit-btn">Save</button>
+                        <button class="cancel-edit-btn">Cancel</button>
+                </div>
         <i class="fas fa-ellipsis-v class-options"></i>
         <div class="dropdown hidden">
-          <button class="edit-btn">Edit class</button>
-          <button class="remove-btn">Delete class</button>
+            <button class="assign-Prof-btn">Assign Professor</button>
+            <button class="edit-btn">Edit class</button>
+            <button class="remove-btn">Delete class</button>
         </div>
       </div>
     </template>

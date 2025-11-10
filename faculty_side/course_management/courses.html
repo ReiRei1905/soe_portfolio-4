@@ -77,6 +77,12 @@
     <template id="courseItemTemplate">
         <div class="course-item">
             <span class="course-name"></span>
+            <div class="inline-edit hidden">
+                <input class="edit-input" type="text" placeholder="Course name" />
+                <input class="edit-code-input" type="text" placeholder="Code e.g. PROGLOD" style="width:7rem; text-transform:uppercase; margin-left:0.5rem;" />
+                <button class="save-edit-btn">Save</button>
+                <button class="cancel-edit-btn">Cancel</button>
+            </div>
             <span class="course-options" onclick="toggleDropdown(this)">
             <i class="fas fa-ellipsis-v"></i>
             </span>

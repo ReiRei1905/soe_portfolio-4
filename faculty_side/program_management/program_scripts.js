@@ -47,28 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function editProgram(button) {
+        // legacy function kept for compatibility when called directly; prefer inline handlers
         const programItem = button.closest('.program-item');
-        const programNameSpan = programItem.querySelector('.program_name');
-        const programId = programItem.dataset.programId;
-        const newProgramName = prompt('Edit program name:', programNameSpan.textContent);
-
-        if (!newProgramName) return;
-
-        fetch(`${API_BASE}edit_program.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `programId=${encodeURIComponent(programId)}&newProgramName=${encodeURIComponent(newProgramName.trim())}`
-        })
-            .then((r) => r.json())
-            .then((data) => {
-                if (data.success) {
-                    alert(data.message || 'Program updated');
-                    programNameSpan.textContent = newProgramName.trim();
-                } else {
-                    alert(data.message || 'Failed to update program');
-                }
-            })
-            .catch((err) => console.error('Error editing program:', err));
+        const inlineEdit = programItem.querySelector('.inline-edit');
+        const editInput = inlineEdit.querySelector('.edit-input');
+        inlineEdit.classList.remove('hidden');
+        editInput.value = programItem.querySelector('.program_name').textContent.trim();
+        editInput.focus();
     }
 
     function deleteProgram(programId) {
@@ -99,12 +84,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 programs.forEach((program) => {
                     const programItem = programItemTemplate.content.cloneNode(true);
                     programItem.querySelector('.program_name').textContent = program.name;
-                    programItem.querySelector('.program-item').dataset.programId = program.id;
+                    const itemEl = programItem.querySelector('.program-item');
+                    itemEl.dataset.programId = program.id;
 
+                    // inline edit elements
                     const editButton = programItem.querySelector('.edit-btn');
+                    const inlineEdit = programItem.querySelector('.inline-edit');
+                    const editInput = inlineEdit.querySelector('.edit-input');
+                    const saveBtn = inlineEdit.querySelector('.save-edit-btn');
+                    const cancelBtn = inlineEdit.querySelector('.cancel-edit-btn');
+
                     if (editButton) {
-                        editButton.addEventListener('click', function (e) { e.stopPropagation(); editProgram(this); });
+                        editButton.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            // show inline editor
+                            inlineEdit.classList.remove('hidden');
+                            editInput.value = program.name;
+                            editInput.focus();
+                            // close dropdown if open
+                            const dropdown = this.closest('.dropdown');
+                            if (dropdown) dropdown.classList.add('hidden');
+                        });
                     }
+
+                    // prevent clicks inside the inline editor from bubbling to the item (which navigates)
+                    inlineEdit.addEventListener('click', (e) => { e.stopPropagation(); });
+                    editInput.addEventListener('click', (e) => { e.stopPropagation(); });
+
+                    // save handler
+                    saveBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const newName = editInput.value.trim();
+                        if (!newName) { alert('Program name cannot be empty.'); return; }
+                        if (newName === program.name) { inlineEdit.classList.add('hidden'); return; }
+                        fetch(`${API_BASE}edit_program.php`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `programId=${encodeURIComponent(program.id)}&newProgramName=${encodeURIComponent(newName)}`
+                        })
+                        .then(async (r) => {
+                            const text = await r.text();
+                            try {
+                                const data = JSON.parse(text);
+                                if (data.success) {
+                                    // update the actual appended element
+                                    itemEl.querySelector('.program_name').textContent = newName;
+                                    // keep the in-memory `program` object in sync so subsequent edits
+                                    // will prefill the correct (updated) name instead of the old one
+                                    program.name = newName;
+                                    inlineEdit.classList.add('hidden');
+                                    // show success silently (no error alerts); keep an optional confirmation
+                                } else {
+                                    console.error('Server returned failure JSON:', data);
+                                    // show only console error to avoid false UX alerts
+                                }
+                            } catch (e) {
+                                // Non-JSON response (PHP warnings/newlines). If HTTP OK, treat as success.
+                                if (r.ok) {
+                                    itemEl.querySelector('.program_name').textContent = newName;
+                                    program.name = newName;
+                                    inlineEdit.classList.add('hidden');
+                                } else {
+                                    console.error('Non-JSON server response:', text);
+                                }
+                            }
+                        })
+                        .catch(err => { console.error('Error editing program:', err); alert('Error updating program'); });
+                    });
+
+                    cancelBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        inlineEdit.classList.add('hidden');
+                    });
 
                     const removeButton = programItem.querySelector('.remove-btn');
                     if (removeButton) {
