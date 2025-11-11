@@ -57,23 +57,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function deleteProgram(programId) {
-        if (!confirm('Are you sure you want to delete this program?')) return;
-
-        fetch(`${API_BASE}delete_program.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `programId=${encodeURIComponent(programId)}`
-        })
+        // First check whether there are courses or faculty tied to this program
+        fetch(`${API_BASE}check_program_usage.php?programId=${encodeURIComponent(programId)}`)
             .then((r) => r.json())
-            .then((data) => {
-                if (data.success) {
-                    alert(data.message || 'Program deleted');
-                    fetchPrograms();
-                } else {
-                    alert(data.message || 'Failed to delete program');
+            .then((info) => {
+                if (!info || !info.success) {
+                    alert(info && info.message ? info.message : 'Failed to check program usage.');
+                    return;
                 }
+
+                const courseCount = parseInt(info.courses || 0, 10);
+                const facultyCount = parseInt(info.faculty || 0, 10);
+
+                if (courseCount > 0 || facultyCount > 0) {
+                    let parts = [];
+                    if (courseCount > 0) parts.push(`${courseCount} course(s)`);
+                    if (facultyCount > 0) parts.push(`${facultyCount} faculty member(s)`);
+                    alert(`Cannot delete program: it is used by ${parts.join(' and ')}. Please remove or reassign these before deleting the program.`);
+                    return;
+                }
+
+                // Safe to delete
+                if (!confirm('Are you sure you want to delete this program? This action cannot be undone.')) return;
+
+                fetch(`${API_BASE}delete_program.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `programId=${encodeURIComponent(programId)}`
+                })
+                    .then((r) => r.json())
+                    .then((data) => {
+                        if (data.success) {
+                            alert(data.message || 'Program deleted');
+                            fetchPrograms();
+                        } else {
+                            alert(data.message || 'Failed to delete program');
+                        }
+                    })
+                    .catch((err) => console.error('Error deleting program:', err));
             })
-            .catch((err) => console.error('Error deleting program:', err));
+            .catch((err) => {
+                console.error('Error checking program usage:', err);
+                alert('Failed to check program usage. Try again later.');
+            });
     }
 
     function fetchPrograms() {
