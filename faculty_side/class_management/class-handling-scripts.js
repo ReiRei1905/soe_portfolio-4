@@ -16,25 +16,68 @@ document.addEventListener("DOMContentLoaded", () => {
         createOutputContainer.classList.add('hidden');
     });
 
+    // Determine which view to render: 'professor' or 'student'. Relies on optional window.PAGE_USER
+    function getViewRole() {
+        // PAGE_USER can be injected server-side, e.g. { role: 'professor'|'student'|'superadmin', isAssignedProfessor: true }
+        const pageUser = window.PAGE_USER || null;
+        if (pageUser) {
+            if (pageUser.role === 'student') return 'student';
+            if (pageUser.role === 'professor' && pageUser.isAssignedProfessor) return 'professor';
+            if (pageUser.role === 'superadmin') {
+                // superadmin can preview via window.previewRole (set by toggle UI)
+                return window.previewRole || 'professor';
+            }
+        }
+        // fallback to previewRole if set (useful when backend doesn't inject PAGE_USER during testing)
+        return window.previewRole || 'professor';
+    }
+
+    function applyRoleView() {
+        const view = getViewRole();
+        // Hide/show professor-only elements
+        document.querySelectorAll('.prof-only').forEach(el => {
+            el.style.display = (view === 'professor') ? '' : 'none';
+        });
+        // Re-fetch outputs to render appropriate controls
+        const urlParams = new URLSearchParams(window.location.search);
+        const classIdLocal = urlParams.get('class_id');
+        if (classIdLocal) fetchAndDisplayOutputs(classIdLocal);
+    }
+
     function fetchAndDisplayOutputs(classId) {
         fetch(`fetch_class_outputs.php?class_id=${encodeURIComponent(classId)}`)
             .then(response => response.json())
             .then(data => {
                 outputsList.innerHTML = '';
                 if (data.success && data.outputs.length > 0) {
+                    const view = getViewRole();
                     data.outputs.forEach(output => {
                         const listItem = document.createElement('li');
                         listItem.dataset.outputId = output.output_id;
-                        listItem.innerHTML = `
-                            <span>${output.output_name} (Total Score: ${output.total_score})</span>
-                            <div class="input-and-buttons">
-                                <input type="number" placeholder="Enter your score" class="user-score" disabled />
-                                <div class="button-group">
-                                    <button class="editOutput-btn">Edit</button>
-                                    <button class="delete-btn">Delete</button>
+                        if (view === 'professor') {
+                            listItem.innerHTML = `
+                                <span>${output.output_name} (Total Score: ${output.total_score})</span>
+                                <div class="input-and-buttons">
+                                    <input type="number" placeholder="Enter your score" class="user-score" disabled />
+                                    <div class="button-group">
+                                        <button class="editOutput-btn">Edit</button>
+                                        <button class="delete-btn">Delete</button>
+                                    </div>
                                 </div>
-                            </div>
-                        `;
+                            `;
+                        } else {
+                            // student view: enable input and show Submit/Undo buttons
+                            listItem.innerHTML = `
+                                <span>${output.output_name} (Total Score: ${output.total_score})</span>
+                                <div class="input-and-buttons">
+                                    <input type="number" placeholder="Enter your score" class="user-score" />
+                                    <div class="button-group">
+                                        <button class="student-submit-btn">Submit</button>
+                                        <button class="student-undo-btn" style="display:none">Undo Turn in</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
                         outputsList.appendChild(listItem);
                     });
                 }
@@ -93,11 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Use event delegation for Edit and Delete buttons
+    // Use event delegation for Edit/Delete (professor) and Submit/Undo (student) buttons
     outputsList.addEventListener('click', (event) => {
         const target = event.target;
-    
-        // Handle Edit button click
+
+        // Handle Edit button click (professor)
         if (target.classList.contains('editOutput-btn')) {
             const listItem = target.closest('li');
             const outputId = listItem.dataset.outputId;
@@ -117,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
             confirmOutputBtn.dataset.editingOutputId = outputId;
         }
 
-        // Handle Delete button click
+        // Handle Delete button click (professor)
         if (target.classList.contains('delete-btn')) {
             const listItem = target.closest('li');
             const outputId = listItem.dataset.outputId;
@@ -136,6 +179,63 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
             }
+        }
+
+        // Handle Student Submit
+        if (target.classList.contains('student-submit-btn')) {
+            const listItem = target.closest('li');
+            const input = listItem.querySelector('.user-score');
+            const score = input.value.trim();
+            if (score === '') {
+                alert('Please enter a score before submitting.');
+                return;
+            }
+            const outputId = listItem.dataset.outputId;
+            // Call backend submit endpoint
+            fetch('submit_output.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `output_id=${encodeURIComponent(outputId)}&student_score=${encodeURIComponent(score)}`
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if (resp && resp.success) {
+                    // reflect UI changes
+                    input.disabled = true;
+                    target.style.display = 'none';
+                    const undoBtn = listItem.querySelector('.student-undo-btn');
+                    if (undoBtn) undoBtn.style.display = '';
+                    listItem.dataset.submitted = 'true';
+                } else {
+                    alert((resp && resp.error) ? resp.error : 'Failed to submit score.');
+                }
+            })
+            .catch(() => alert('Network error while submitting.'));
+        }
+
+        // Handle Student Undo
+        if (target.classList.contains('student-undo-btn')) {
+            const listItem = target.closest('li');
+            const input = listItem.querySelector('.user-score');
+            const outputId = listItem.dataset.outputId;
+            fetch('undo_submit.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `output_id=${encodeURIComponent(outputId)}`
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if (resp && resp.success) {
+                    input.disabled = false;
+                    target.style.display = 'none';
+                    const submitBtn = listItem.querySelector('.student-submit-btn');
+                    if (submitBtn) submitBtn.style.display = '';
+                    delete listItem.dataset.submitted;
+                } else {
+                    alert((resp && resp.error) ? resp.error : 'Failed to undo submission.');
+                }
+            })
+            .catch(() => alert('Network error while undoing submission.'));
         }
     });
 
@@ -287,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <h3>REQUIREMENTS</h3>
                         <p>List here the ff. requirements:</p>
                         <ul id="requirementsList"></ul>
-                        <button id="showRequirementInputBtn" class="action-btn">Add Requirement</button>
+                        <button id="showRequirementInputBtn" class="action-btn prof-only">Add Requirement</button>
                         <div class="add-requirement-container hidden">
                             <input type="text" id="requirementInput" placeholder="Type a requirement" />
                             <button id="addRequirementBtn" class="action-btn">Add</button>
@@ -317,18 +417,17 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (reqData.success) {
                                 const requirementsList = document.getElementById("requirementsList");
                                 requirementsList.innerHTML = ""; // <-- Clear the list first!
-                                reqData.requirements.forEach(req => {
-                                    const listItem = document.createElement("li");
-                                    listItem.dataset.requirementId = req.requirement_id;
-                                    listItem.innerHTML = `
-                                        <span class="requirement-text">${req.requirement_desc}</span>
-                                        <div class="requirement-actions">
-                                            <button class="edit-requirement-btn">Edit</button>
-                                            <button class="delete-requirement-btn">Delete</button>
-                                        </div>
-                                    `;
-                                    requirementsList.appendChild(listItem);
-                                });
+                                        reqData.requirements.forEach(req => {
+                                            const listItem = document.createElement("li");
+                                            listItem.dataset.requirementId = req.requirement_id;
+                                            const view = getViewRole();
+                                            let inner = `<span class="requirement-text">${req.requirement_desc}</span>`;
+                                            if (view === 'professor') {
+                                                inner += `\n                                        <div class="requirement-actions">\n                                            <button class="edit-requirement-btn">Edit</button>\n                                            <button class="delete-requirement-btn">Delete</button>\n                                        </div>`;
+                                            }
+                                            listItem.innerHTML = inner;
+                                            requirementsList.appendChild(listItem);
+                                        });
                             }
                         });
 
@@ -419,13 +518,12 @@ document.addEventListener("DOMContentLoaded", () => {
                                 if (result.success) {
                                     const listItem = document.createElement("li");
                                     listItem.dataset.requirementId = result.requirement_id;
-                                    listItem.innerHTML = `
-                                        <span class="requirement-text">${requirementText}</span>
-                                        <div class="requirement-actions">
-                                            <button class="edit-requirement-btn">Edit</button>
-                                            <button class="delete-requirement-btn">Delete</button>
-                                        </div>
-                                    `;
+                                    const view = getViewRole();
+                                    let inner = `<span class="requirement-text">${requirementText}</span>`;
+                                    if (view === 'professor') {
+                                        inner += `\n                                        <div class="requirement-actions">\n                                            <button class="edit-requirement-btn">Edit</button>\n                                            <button class="delete-requirement-btn">Delete</button>\n                                        </div>`;
+                                    }
+                                    listItem.innerHTML = inner;
                                     requirementsList.appendChild(listItem);
                                     requirementInput.value = "";
                                     addRequirementContainer.classList.add("hidden");
@@ -486,4 +584,116 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
-    });
+    
+    // Wire up preview toggle buttons (client-side only). These let a superadmin preview views.
+    const previewProfessorBtn = document.getElementById('previewProfessorBtn');
+    const previewStudentBtn = document.getElementById('previewStudentBtn');
+    const previewClearBtn = document.getElementById('previewClearBtn');
+    const rolePreviewDiv = document.getElementById('rolePreviewToggle');
+    const rpHeader = document.getElementById('rpHeader');
+    const rpBody = document.getElementById('rpBody');
+    const rpMinimizeBtn = document.getElementById('rpMinimizeBtn');
+    const rpCloseBtn = document.getElementById('rpCloseBtn');
+
+    // Show the preview toggle only when a class_id is present in the URL (i.e., we're viewing a class-item)
+    try {
+        const urlParamsCheck = new URLSearchParams(window.location.search);
+        const classIdCheck = urlParamsCheck.get('class_id');
+        if (rolePreviewDiv) rolePreviewDiv.style.display = classIdCheck ? '' : 'none';
+    } catch (e) {
+        // ignore
+    }
+
+    if (previewProfessorBtn && previewStudentBtn && previewClearBtn) {
+        previewProfessorBtn.addEventListener('click', () => {
+            window.previewRole = 'professor';
+            applyRoleView();
+        });
+        previewStudentBtn.addEventListener('click', () => {
+            window.previewRole = 'student';
+            applyRoleView();
+        });
+        previewClearBtn.addEventListener('click', () => {
+            window.previewRole = null;
+            applyRoleView();
+        });
+    }
+
+    // Minimize/restore behavior
+    function setMinimized(min) {
+        if (!rolePreviewDiv) return;
+        if (min) {
+            rolePreviewDiv.classList.add('rp-minimized');
+            if (rpBody) rpBody.style.display = 'none';
+            rolePreviewDiv.style.width = '160px';
+            localStorage.setItem('rpMinimized', '1');
+        } else {
+            rolePreviewDiv.classList.remove('rp-minimized');
+            if (rpBody) rpBody.style.display = '';
+            rolePreviewDiv.style.width = '320px';
+            localStorage.removeItem('rpMinimized');
+        }
+    }
+
+    if (rpMinimizeBtn) {
+        rpMinimizeBtn.addEventListener('click', () => {
+            const isMin = !!localStorage.getItem('rpMinimized');
+            setMinimized(!isMin);
+        });
+    }
+
+    // Close (hide) the preview widget temporarily
+    if (rpCloseBtn && rolePreviewDiv) {
+        rpCloseBtn.addEventListener('click', () => {
+            rolePreviewDiv.style.display = 'none';
+        });
+    }
+
+    // Restore minimize state from localStorage
+    if (localStorage.getItem('rpMinimized') === '1') {
+        setMinimized(true);
+    }
+
+    // Make the preview widget draggable by its header
+    if (rpHeader && rolePreviewDiv) {
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let origLeft = 0;
+        let origTop = 0;
+
+        rpHeader.addEventListener('mousedown', (e) => {
+            // don't drag when minimized
+            if (rolePreviewDiv.classList.contains('rp-minimized')) return;
+            isDragging = true;
+            const rect = rolePreviewDiv.getBoundingClientRect();
+            // switch from right positioning to left/top for absolute positioning
+            rolePreviewDiv.style.right = 'auto';
+            rolePreviewDiv.style.left = rect.left + 'px';
+            rolePreviewDiv.style.top = rect.top + 'px';
+            startX = e.clientX;
+            startY = e.clientY;
+            origLeft = rect.left;
+            origTop = rect.top;
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            rolePreviewDiv.style.left = (origLeft + dx) + 'px';
+            rolePreviewDiv.style.top = (origTop + dy) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            document.body.style.userSelect = '';
+        });
+    }
+
+    // Apply initial role view on load (uses PAGE_USER if available or previewRole otherwise)
+    applyRoleView();
+
+});

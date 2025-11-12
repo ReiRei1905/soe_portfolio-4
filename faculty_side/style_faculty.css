@@ -36,20 +36,32 @@ header {
 }
 
 .college-header{
-    height: 2.5rem;
-    width: 2.5rem;
-
+     /* Logo sizing:
+         - Increase --logo-height to change the displayed height.
+         - width:auto preserves the image aspect ratio.
+         - object-fit keeps the image from stretching.
+         If the logo still looks blurry, provide a higher-resolution image or an SVG.
+     */
+     --logo-height: 3.5rem; /* change this value to increase/decrease logo size */
+     height: var(--logo-height);
+     width: auto;
+     max-height: var(--logo-height);
+     display: block;         /* avoid inline spacing issues */
+     object-fit: contain;    /* preserve aspect ratio */
+     -webkit-font-smoothing: antialiased;
+     image-rendering: -webkit-optimize-contrast; /* best-effort for raster scaling */
 }
 
+/*
 .college-info {
     margin-left: 0.5rem;
-    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 */
+    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 
 }
 
 .college-info h1 {
     font-weight: bold;
-    font-size: 0.875rem; /* 14px */
-}
+    font-size: 0.875rem; /* 14px 
+}*/
 
 .college-info h2 {
     font-size: 0.75rem; /* 12px */

@@ -16,11 +16,11 @@
 <header>
     <div class="header-container">
         <div class="header-display">
-            <img alt="College logo" class="college-header" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t39.30808-1/309029587_459753179521293_5621644846638556558_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeFir2kR4G3TSgwoXK8CTYwXgMcJ5eEQJR6Axwnl4RAlHh_niM6f3hc9REt9On1Bo0hYDuB602Jje_sH9YjjMMJV&_nc_ohc=TTD306I9niwQ7kNvgEtCZM5&_nc_oc=Adhw3AcB7qiaAsToDKdD3JAhWPWCt2SO61lUdbT6ClMw6jFkF6ND-ny7aVblaIMsf88&_nc_zt=24&_nc_ht=scontent.fmnl17-2.fna&_nc_gid=mW9KxobHMlYlxAve0jPylg&oh=00_AYFa8CFwbvHj3IGVauxhoB8n0ph2y0pJu0_gVvhxt_-kXA&oe=67DD68CC"/>
-            <div class="college-info">
+            <img alt="College logo" class="college-header" src="../../images/soe apc logo.png"/>
+            <!--<div class="college-info">
                 <h1>ASIA PACIFIC COLLEGE</h1>
                 <h2>SCHOOL OF ENGINEERING</h2>
-            </div>
+            </div>-->
         </div>
     </div>
     <div class="header-actions">
@@ -99,8 +99,8 @@
                     </ul>
                     
 
-                    <!-- Input field and button for adding requirements -->
-                    <button id="showRequirementInputBtn" class="action-btn">Add Requirement</button>
+                    <!-- Input field and button for adding requirements (professor-only) -->
+                    <button id="showRequirementInputBtn" class="action-btn prof-only">Add Requirement</button>
                     <div class="add-requirement-container hidden">
                         <input type="text" id="requirementInput" placeholder="Type a requirement" />
                         <button id="addRequirementBtn" class="action-btn">Add</button>
@@ -108,7 +108,7 @@
                     <!-- Add this below the "List here the ff. requirements:" paragraph -->
                     <p id="deadlineDisplay"><strong>Deadline:</strong> Not set</p>
                 </div>
-                <div class="create-output-container hidden">
+                <div class="create-output-container hidden prof-only">
                     <h3>Create Required Output</h3>
                     <label for="outputName">Output Name:</label>
                     <input type="text" id="outputName" placeholder="Enter output name" />
@@ -126,7 +126,7 @@
                 </div>
 
                 <!-- Add this container inside the class-details-container -->
-                <div class="set-deadline-container hidden">
+                <div class="set-deadline-container hidden prof-only">
                     <h3>Set Deadline</h3>
                     <label for="deadlineDate">Date:</label>
                     <input type="date" id="deadlineDate" />
@@ -139,8 +139,8 @@
                 </div>
                 
                 <div class="class-actions">
-                    <button id="createOutputBtn" class="action-btn">Create Required output</button>
-                    <button id="setDeadlineBtn" class="action-btn">Set Portfolio Deadline</button>
+                    <button id="createOutputBtn" class="action-btn prof-only">Create Required output</button>
+                    <button id="setDeadlineBtn" class="action-btn prof-only">Set Portfolio Deadline</button>
                 </div>
             </div>
         </div>
@@ -159,5 +159,29 @@
         </p>
     </div>
 </footer> 
+</footer> 
+
+<!-- Role preview toggle (client-side only). Small floating control to preview Student/Professor views. -->
+<div id="rolePreviewToggle" style="position:fixed;top:90px;right:12px;z-index:9999;background:#fff;border:1px solid #ddd;padding:0;border-radius:6px;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.08);width:320px;overflow:hidden;">
+    <div id="rpHeader" style="display:flex;justify-content:space-between;align-items:center;cursor:move;padding:8px;border-bottom:1px solid #f0f0f0;background:#fff;">
+        <div style="font-weight:600;font-size:13px;">Preview role</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+            <button id="rpMinimizeBtn" title="Minimize" style="padding:4px 8px;background:#f3f4f6;border-radius:4px;border:none;cursor:pointer">_</button>
+            <button id="rpCloseBtn" title="Close" style="padding:4px 8px;background:#f3f4f6;border-radius:4px;border:none;cursor:pointer">×</button>
+        </div>
+    </div>
+    <div id="rpBody" style="padding:8px;">
+        <div style="display:flex;gap:6px;align-items:center;">
+            <button id="previewProfessorBtn" style="padding:6px 8px;background:#1d4ed8;color:#fff;border-radius:4px;border:none;cursor:pointer">Professor</button>
+            <button id="previewStudentBtn" style="padding:6px 8px;background:#10b981;color:#fff;border-radius:4px;border:none;cursor:pointer">Student</button>
+            <button id="previewClearBtn" title="Clear preview" style="padding:6px 8px;background:#e5e7eb;border-radius:4px;border:none;cursor:pointer">Clear</button>
+        </div>
+        <div style="font-size:11px;color:#666;margin-top:8px;">This toggles the client-side view only. Server permissions are enforced on the backend.</div>
+    </div>
+</div>
+<script>
+    // Basic client-side preview state. Backend should still enforce permissions.
+    window.previewRole = null; // 'professor' or 'student' or null
+</script>
 </body>
 </html>
