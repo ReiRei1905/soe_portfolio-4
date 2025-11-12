@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="../style_student.css" rel="stylesheet"/>
+    <script src="../student_homepage/homepage_scripts.js" defer></script>
+</head>
+<body class="page-layout">
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="../../images/soe apc logo.png"/>
+        </div>
+    </div>
+    <div class="header-actions">
+        <div class="header-home">
+            <i class="fas fa-home" onclick="goToStudentOverviewPage()"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="header-profile">
+            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleStudentProfileClick()"></i>
+        </div>
+    </div>
+    <div class="homepage-header">
+        <div class="header-left">
+            <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+            <h2 class="homepage-title">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                <li class="breadcrumb-item" aria-current="page"><a href="../student_homepage/student_homepage.html"></a>Homepage</li>
+                </ol>
+            </nav>
+            </h2>
+        </div>
+    </div>
+</header>
+<main class = "main-content">  
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="./assessments.html">Assessments</a>
+            <a class="text-lg" href="../projects.html">Projects</a>
+            <a class="text-lg" href="../certificates/awards.html">Certificates/Awards</a>
+            <a class="text-lg" href="../classes.html">Classes</a>
+            <a class="text-lg" href="../faculty_about_us.html">About us</a>
+        </nav>
+    </div>
+
+<div id = "homepage" class = "homepage-section"> 
+
+</div>
+</main>
+<footer class="footer-content">
+    <div class="footer-container">
+        <p class="footer-text">
+            Copyright © 2024 |
+            <a class="footer-link" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer>
+</body>
+</html>

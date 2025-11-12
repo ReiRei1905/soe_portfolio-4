@@ -1,0 +1,392 @@
+.page-layout {
+    background-color: #f7fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+}
+
+/* Start of Header styles */
+
+header {
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Ensures it stays above other elements */
+}
+
+.header-container {
+    flex: 1;
+    max-width: 1280px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.header-display {
+    display: flex;
+    align-items: center;
+}
+
+.college-header{
+     /* Logo sizing:
+         - Increase --logo-height to change the displayed height.
+         - width:auto preserves the image aspect ratio.
+         - object-fit keeps the image from stretching.
+         If the logo still looks blurry, provide a higher-resolution image or an SVG.
+     */
+     --logo-height: 3.5rem; /* change this value to increase/decrease logo size */
+     height: var(--logo-height);
+     width: auto;
+     max-height: var(--logo-height);
+     display: block;         /* avoid inline spacing issues */
+     object-fit: contain;    /* preserve aspect ratio */
+     -webkit-font-smoothing: antialiased;
+     image-rendering: -webkit-optimize-contrast; /* best-effort for raster scaling */
+}
+
+/*
+.college-info {
+    margin-left: 0.5rem;
+    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 
+}
+
+.college-info h1 {
+    font-weight: bold;
+    font-size: 0.875rem; /* 14px 
+}
+
+.college-info h2 {
+    font-size: 0.75rem; /* 12px 
+}*/
+
+/* End of Header*/
+
+main {
+    margin-top: calc(120px); /* Add space for the header */
+    margin-bottom: calc(70px); /* Add space for the fixed footer */
+    padding: 1rem; /* Optional: Add padding for better spacing */
+    overflow-y: auto; /* Allow scrolling for the content */
+    height: 100vh; /* Ensure the content fits within the viewport */
+    box-sizing: border-box; /* Include padding and border in height calculation */
+}
+
+/*Header-actions*/
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: -10px 20px;
+    width: 100%;
+    border-top: 4px solid #FBAF41; /* Add this line */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.header-home, .header-profile {
+    display: flex;
+    align-items: center;
+}
+
+.header-actions .header-home {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Equivalent to space-x-4 */
+    
+}
+
+.header-actions .header-home i {
+    font-size: 1.25rem; /*20px*/
+    cursor: pointer;
+
+}
+
+.header-actions .header-home h1 {
+    font-size: 1.125rem; /* 18px */
+    font-weight: bold;
+}
+
+.header-actions .header-search {
+    position: relative;
+}
+
+.search-input {
+    border: 1px solid #e2e8f0; /* Equivalent to border */
+    border-radius: 9999px; /* Equivalent to rounded-full */
+    padding-top: 0.25rem; /* Equivalent to py-1 */
+    padding-bottom: 0.25rem; /* Equivalent to py-1 */
+    padding-left: 2rem; /* Equivalent to pl-8 */
+    padding-right: 1rem; /* Equivalent to px-4 */
+}
+
+.header-actions .header-search i {
+    position: absolute;
+    left: 0.5rem; /* Equivalent to left-2 */
+    top: 0.5rem; /* Equivalent to top-2 */
+    color: #6b7280; /* Equivalent to text-gray-500 */
+}
+
+/* Notification Icon */
+.header-notifications {
+    position: relative;
+    align-items: center;
+    display: flex;
+    margin-left: auto; /* Remove any large margins */
+    margin-right: 0.5rem; /* Add spacing between notification and profile icons */
+}
+
+.header-notifications i {
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.header-notifications i:hover {
+    color: #007bff;
+}
+
+/* Keep programs header burger slightly indented from the left edge when it's in the header */
+.homepage-header .sidebar-toggle,
+.header-actions .sidebar-toggle {
+    margin-left: 0.75rem; /* nudge right so it's not flush with the very left */
+    margin-right: 0.5rem; /* small gap to title */
+}
+
+@media (max-width: 768px) {
+    .homepage-header .sidebar-toggle,
+    .header-actions .sidebar-toggle {
+        margin-left: 0.5rem;
+    }
+}
+
+/* Notification Dropdown */
+#notificationDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    z-index: 10;
+    width: 300px;
+}
+
+#notificationDropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#notificationDropdown ul li {
+    padding: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#notificationDropdown ul li:last-child {
+    border-bottom: none;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    display: none; /* Initially hidden */
+}
+
+.header-actions .header-profile{
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Equivalent to space-x-4 */
+
+}
+
+.header-actions .header-profile i{
+    font-size: 1.25rem; /* 20px */
+    cursor: pointer;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid black; /* Add this line */
+    
+}
+
+/*End of Header actions*/
+
+/* Start of Main content styles */
+.main-content {
+    max-width: 100%;
+    margin-top: 1rem; /* mt-4 */
+    margin-bottom: 16px;
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem; /* px-4 */
+    flex: 1;
+    display: flex;
+}
+
+#sidebar {
+    background-color: #4a4a4a;
+    color: #ffffff;
+    padding: 1rem;
+    position: fixed;
+    left: 0;
+    width: 16rem;
+    height: 80%;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    top: 0; /* Start from the top */
+    height: 100vh; /* Full height of the viewport */
+    overflow-y: auto; /* Add scrolling if content overflows */
+}
+
+.sidebar-toggle {
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    margin-right: 0.5rem; /* Equivalent to mr-2 */
+    cursor: pointer;
+    border-bottom: 2px solid black; /* Add this line */
+}
+
+#sidebar.active {
+    transform: translateX(0);
+}
+
+#sidebar nav {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem; /* Space between links */
+}
+
+#sidebar nav a {
+    color: #ffffff; /* Link color */
+    font-weight: bold;
+    text-decoration: none; /* Remove underline */
+    font-size: 1.25rem; /* Font size */
+    /* Make each link a full-width flexbox so its text is perfectly centered
+       horizontally and vertically regardless of content length. Using
+       box-sizing keeps padding included in the width calculation. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem 2rem; /* Padding for links */
+    /*background-color: #6c757d; /* Background color for links */
+    border-radius: 0.5rem; /* Rounded corners */
+    white-space: nowrap; /* Prevent accidental wrapping */
+    transition: background-color 0.3s ease; /* Transition for background color */
+}
+
+#sidebar nav a:hover {
+    background-color: #6c757d; /* Darker background color on hover */
+}
+
+/*Start of Homepage*/
+.breadcrumb-container {
+    display: flex; /* Use Flexbox to align items horizontally */
+    align-items: center; /* Vertically center the items */
+    gap: 1rem; /* Add spacing between [Name of Class] and the navigation links */
+}
+
+#homepage {
+    flex: 1;
+    transition: all 0.3s;
+    margin-left: 0;
+    margin-top: 6rem;
+}
+
+#programs.shifted {
+    margin-left: 16rem;
+}
+
+/* Programs Section */
+.homepage-section {
+    flex: 1;
+    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+}
+
+.homepage-title {
+    margin-top: 1rem; /* Space above the title */
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: bold;
+}
+
+.mt-4 {
+    margin-top: 1rem; /* Equivalent to mt-4 */
+}
+
+.mb-8 {
+    margin-bottom: 2rem; /* Equivalent to mb-8 */
+}
+
+
+/*Start of footer*/
+footer {
+    background-color: #1e3a8a;
+    color: #ffffff;
+    width: 100%;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+    box-sizing: border-box;
+    position: relative; /* keep in normal flow so page layout (flex) pushes it to bottom */
+    z-index: 1200; /* put footer above fixed sidebar (sidebar z-index is 50) so it's not overlapped */
+}
+
+.footer-container {
+    width: 100%;
+    max-width: none; /* make full width so content can align to the left */
+    margin: 0; /* remove auto-centering */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep content at the left */
+    gap: 1rem;
+    /* padding: horizontal 1rem, vertical 0.25rem; left padding nudges content away from edge */
+    padding: 0.25rem 1rem;
+}
+
+.footer-text {
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: left; /* ensure text centered inside container */
+}
+
+.footer-link {
+    color: #93c5fd;
+    text-decoration: none;
+    margin-left: 0.35rem;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0.75rem 0;
+        padding-left: 0; /* remove desktop offset on small screens */
+    }
+    .footer-text {
+        font-size: 0.9rem;
+    }
+}
+
+/* End of Footer styles */

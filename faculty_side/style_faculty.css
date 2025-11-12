@@ -61,11 +61,11 @@ header {
 .college-info h1 {
     font-weight: bold;
     font-size: 0.875rem; /* 14px 
-}*/
+}
 
 .college-info h2 {
-    font-size: 0.75rem; /* 12px */
-}
+    font-size: 0.75rem; /* 12px 
+}*/
 
 /* End of Header*/
 main {
