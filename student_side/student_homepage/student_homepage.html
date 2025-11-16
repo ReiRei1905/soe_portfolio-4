@@ -54,7 +54,97 @@
         </nav>
     </div>
 
-<div id = "homepage" class = "homepage-section"> 
+<div id="homepage" class="homepage-section">
+
+    <!-- Profile card: shows the logged-in student's name and avatar.
+         The name is populated by JavaScript below. If you render server-side (PHP),
+         you can pass the student name into the page using a data attribute on <body>:
+         Example (PHP):
+         <body data-student-name="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>">
+         The script will prefer localStorage value ('studentName') if present, then
+         body.dataset.studentName, then a fallback placeholder.
+    -->
+    <section class="profile-card" aria-label="student profile">
+        <div class="profile-info">
+            <!-- ID used by JS to set the logged-in student's name -->
+            <h2 id="studentName" class="profile-name">Student Name</h2>
+            <p class="profile-bio">About the user</p>
+        </div>
+        <div class="profile-avatar" role="img" aria-label="student avatar">
+            <!-- Prefer a simple emoji fallback so the UI works without Font Awesome. -->
+            <i class="fas fa-user" aria-hidden="true"></i>
+            <span class="avatar-icon">👤</span>
+        </div>
+    </section>
+
+    <!-- Quick access grid: Top projects / certificates / assessments -->
+    <section class="quick-access" aria-label="quick access">
+        <div class="quick-access-grid">
+            <button onclick="openFileManagement('fileManagementModal','projects')" class="quick-card" type="button">
+                <!-- If you have a local image, replace the <i> fallback with <img src="..."> -->
+                <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
+                <h3 class="quick-title">Top projects</h3>
+            </button>
+
+            <button onclick="openFileManagement('fileManagementModal','certificates')" class="quick-card" type="button">
+                <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
+                <h3 class="quick-title">Top certificates/awards</h3>
+            </button>
+
+            <button onclick="openFileManagement('fileManagementModal','assessments')" class="quick-card" type="button">
+                <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
+                <h3 class="quick-title">Top assessments</h3>
+            </button>
+        </div>
+    </section>
+
+    <!-- Simple modals (projects/certificates/assessments) were used previously but are
+         now superseded by the centralized `fileManagementModal` (w-2/3, populated
+         dynamically). They're commented out below as a reversible cleanup step.
+    -->
+    <!--
+    <div id="projectsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="projectsModalTitle">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('projectsModal')">&times;</button>
+            <h2 id="projectsModalTitle">Top projects</h2>
+            <p>Placeholder content — list your top projects here.</p>
+        </div>
+    </div>
+
+    <div id="certificatesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="certificatesModalTitle">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('certificatesModal')">&times;</button>
+            <h2 id="certificatesModalTitle">Top certificates / awards</h2>
+            <p>Placeholder content — list certificates or awards here.</p>
+        </div>
+    </div>
+
+    <div id="assessmentsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="assessmentsModalTitle">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('assessmentsModal')">&times;</button>
+            <h2 id="assessmentsModalTitle">Top assessments</h2>
+            <p>Placeholder content — show recent assessments here.</p>
+        </div>
+    </div>
+    -->
+
+    <!-- File management modal (full featured) -->
+    <div id="fileManagementModal" class="modal hidden file-management" role="dialog" aria-modal="true" aria-labelledby="fileManagementTitle">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeFileManagement()">&times;</button>
+            <h2 id="fileManagementTitle">Manage Files</h2>
+            <div id="fileTileContainer" class="file-tile-container">
+                <!-- Sample tiles; in practice populate dynamically or replace with server-rendered content -->
+                <div class="file-tile"><a class="file-link" href="#">Sample File 1</a></div>
+                <div class="file-tile"><a class="file-link" href="#">Sample File 2</a></div>
+                <div class="file-tile"><a class="file-link" href="#">Sample File 3</a></div>
+                <div class="file-tile"><a class="file-link" href="#">Sample File 4</a></div>
+            </div>
+            <div style="margin-top:1rem;">
+                <button onclick="closeFileManagement()" class="modal-action-close">Close</button>
+            </div>
+        </div>
+    </div>
 
 </div>
 </main>

@@ -69,6 +69,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+
+    // Populate the student name in the profile card if present.
+    // Priority: localStorage 'studentName' -> body[data-student-name] -> fallback text.
+    const studentNameEl = document.getElementById('studentName');
+    if (studentNameEl) {
+        const fromStorage = localStorage.getItem('studentName');
+        const fromBody = document.body ? document.body.dataset.studentName : null;
+        studentNameEl.textContent = fromStorage || fromBody || 'Student Name';
+    }
 });
 
 // Canonical dropdown toggle (shared)
@@ -83,5 +92,84 @@ function toggleDropdown(icon) {
     });
 
     dropdown.classList.toggle('hidden');
+}
+
+/* Quick-access modal helpers used by the homepage cards */
+function openFileManagement(modalId, type) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return console.warn('Modal not found:', modalId);
+    modal.classList.remove('hidden');
+    // Prevent background scrolling while modal is open
+    document.body.style.overflow = 'hidden';
+
+    // If this is the file management modal, populate tiles (sample behavior)
+    if (modalId === 'fileManagementModal') {
+        const container = document.getElementById('fileTileContainer');
+        const title = document.getElementById('fileManagementTitle');
+        if (title) {
+            // Set a contextual title based on requested type
+            if (type === 'projects') title.textContent = 'Top projects';
+            else if (type === 'certificates') title.textContent = 'Top certificates / awards';
+            else if (type === 'assessments') title.textContent = 'Top assessments';
+            else title.textContent = 'Manage Files';
+        }
+
+        if (container) {
+            container.innerHTML = '';
+            // Provide sample items per type so the modal feels populated
+            let sampleFiles = ['Sample File 1', 'Sample File 2'];
+            if (type === 'projects') sampleFiles = ['Project - Final', 'Project - Prototype'];
+            if (type === 'certificates') sampleFiles = ['Certificate - Course A', 'Award - Hackathon'];
+            if (type === 'assessments') sampleFiles = ['Assessment - Quiz 1', 'Assessment - Lab 2'];
+
+            sampleFiles.forEach(name => container.appendChild(createFileTile(name)));
+        }
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// Close modal when clicking outside modal-content
+document.addEventListener('click', (e) => {
+    const openModals = document.querySelectorAll('.modal:not(.hidden)');
+    openModals.forEach((m) => {
+        if (!m.contains(e.target)) return;
+        // If the click target is the modal overlay itself (not modal-content), close
+        const content = m.querySelector('.modal-content');
+        if (e.target === m) closeModal(m.id);
+        // If click was on a close button inside modal-content it's already handled by onclick
+    });
+});
+
+// Convenience wrappers for the file-management modal used elsewhere in the code
+function openFileManagementModal() {
+    openFileManagement('fileManagementModal');
+}
+
+function closeFileManagement() {
+    // clear tiles then close
+    const container = document.getElementById('fileTileContainer');
+    if (container) container.innerHTML = '';
+    closeModal('fileManagementModal');
+}
+
+// Create a DOM tile for a file (matches the Tailwind-like markup used elsewhere)
+function createFileTile(name) {
+    const tile = document.createElement('div');
+    tile.className = 'file-tile'; // CSS maps to border rounded p-4 flex-col bg-gray-50 shadow-md
+
+    const a = document.createElement('a');
+    a.className = 'file-link';
+    a.href = '#';
+    a.textContent = name;
+    a.addEventListener('click', (e) => { e.preventDefault(); alert(`Viewing: ${name}`); });
+
+    tile.appendChild(a);
+    return tile;
 }
 

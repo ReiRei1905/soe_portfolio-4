@@ -307,10 +307,21 @@ main {
     flex: 1;
     transition: all 0.3s;
     margin-left: 0;
-    margin-top: 6rem;
+    /* Increase top margin so fixed header does not overlap page content.
+       The header in this layout is taller than a single row; 10rem (160px)
+       gives comfortable spacing for the header + breadcrumb area. */
+    margin-top: 10rem;
 }
 
 #programs.shifted {
+    margin-left: 16rem;
+}
+
+/* Ensure homepage shifts when sidebar toggles. Other pages use
+   #programs.shifted, #mainContent.shifted, etc. The JS toggles
+   the 'shifted' class on the element with id 'homepage' for this page,
+   so provide the corresponding rule here. */
+#homepage.shifted {
     margin-left: 16rem;
 }
 
@@ -390,3 +401,260 @@ footer {
 }
 
 /* End of Footer styles */
+
+/* --------------------------------------------------------------------------
+   Profile card styles (replaces Tailwind utilities used in the original snippet)
+
+   HTML classes used:
+     - .profile-card        -> container (border, padding, rounded, flex)
+     - .profile-info        -> left column (name + short bio)
+     - #studentName/.profile-name -> student name element (populated by JS)
+     - .profile-avatar      -> circular avatar area on the right
+     - .avatar-icon         -> fallback avatar (emoji) shown when Font Awesome not available
+
+   Mapping to Tailwind utilities (for reference):
+     border border-black      -> border: 1px solid #000;
+     rounded-lg               -> border-radius: 0.5rem;
+     p-4                      -> padding: 1rem;
+     mb-4                     -> margin-bottom: 1rem;
+     flex justify-between     -> display:flex; justify-content:space-between;
+     items-center             -> align-items:center;
+     w-16 h-16                -> 64px by 64px
+     border-2 border-orange-500 -> 2px solid #fb923c
+     text-3xl                 -> ~1.875rem (30px)
+ -------------------------------------------------------------------------- */
+
+.profile-card {
+    border: 1px solid #000; /* border border-black */
+    border-radius: 0.5rem;  /* rounded-lg */
+    padding: 1rem;          /* p-4 */
+    margin-bottom: 1rem;    /* mb-4 */
+    display: flex;          /* flex */
+    justify-content: space-between; /* justify-between */
+    align-items: center;    /* items-center */
+    background: #ffffff;    /* keep same background as header/content */
+}
+
+/* Make the profile card a centered, readable column on wide screens
+   while remaining fluid on small screens. Adjust max-width as needed. */
+.profile-card {
+    width: calc(100% - 2rem); /* small horizontal breathing room */
+    max-width: 900px;         /* limit width on large screens (changeable) */
+    margin: 0 auto 1rem auto; /* center horizontally, keep bottom margin */
+    box-sizing: border-box;   /* include padding in width calculation */
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-name {
+    margin: 0 0 0.25rem 0;
+    font-weight: 700;       /* font-bold */
+    font-size: 1.125rem;    /* text-lg ~ 18px */
+}
+
+.profile-bio {
+    margin: 0;
+    color: #4b5563; /* gray-600 equivalent */
+}
+
+.profile-avatar {
+    width: 56px; /* slightly smaller avatar for compact look */
+    height: 56px;
+    border: 2px solid #fb923c; /* border-2, orange-500 */
+    border-radius: 50%; /* rounded-full */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+}
+
+.avatar-icon {
+    font-size: 1.875rem; /* text-3xl approx */
+    line-height: 1;
+}
+
+@media (max-width: 480px) {
+    /* Reduce padding and avatar size on very small screens */
+    .profile-card {
+        padding: 0.75rem;
+    }
+    .profile-avatar {
+        width: 48px;
+        height: 48px;
+    }
+    .profile-name {
+        font-size: 1rem;
+    }
+}
+
+/* Quick-access grid and modal styles for homepage cards */
+.quick-access-grid {
+    /* Keep grid responsive but constrain overall row width so cards don't stretch too wide
+       on very large screens. Center the grid inside the page. */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    align-items: stretch;
+    max-width: 1200px; /* change to taste (e.g. 1000px / 1400px) */
+    margin: 0 auto;
+    padding: 0 1rem; /* small side padding so cards don't touch viewport edges */
+    box-sizing: border-box;
+}
+
+/* medium+ screens: give each card a sensible minimum width so they form columns
+   instead of becoming extremely wide single columns on large displays */
+@media (min-width: 768px) {
+    .quick-access-grid {
+        /* each column will be at least 260px but grow to fill available space */
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+    }
+}
+
+.quick-card {
+    border: 1px solid #10b981; /* green-500 border */
+    border-radius: 0.5rem;
+    padding: 1.25rem; /* reduced padding for denser content */
+    text-align: center;
+    width: 130%;
+    box-sizing: border-box;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    min-height: 140px; /* make cards visually consistent height */
+    flex: 1; /* allow cards to stretch equally in their grid cells */
+}
+.quick-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
+
+.folder-fa { color: #3b82f6; font-size: 2rem; margin-bottom: 0.5rem; }
+.quick-title { margin: 0; font-weight: 700; color: #1e3a8a; }
+
+/* Modal overlay */
+.modal.hidden { display: none; }
+.modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.modal-content {
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: 8px;
+    max-width: 720px;
+    width: 90%;
+    box-sizing: border-box;
+}
+.modal-close {
+    float: right;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* File management modal specific sizing and tile styles */
+.modal.file-management .modal-content {
+    /* Match Tailwind: bg-white p-6 rounded-lg w-2/3 max-h-[90vh] overflow-y-auto */
+    background: #fff;
+    padding: 1.5rem; /* p-6 approx */
+    border-radius: 0.5rem; /* rounded-lg */
+    width: 66.666667%; /* w-2/3 */
+    max-width: calc(100% - 2rem);
+    max-height: 90vh; /* max-h-[90vh] */
+    overflow-y: auto;
+    box-sizing: border-box;
+    position: relative; /* for close button positioning */
+    box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+}
+
+.file-tile-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* grid-cols-2 */
+    gap: 0.75rem; /* gap-4 approx */
+    margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .file-tile-container { grid-template-columns: repeat(3, 1fr); }
+}
+
+.file-tile {
+    border: 1px solid #e5e7eb; /* gray-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 1rem; /* p-4 */
+    background: #f9fafb; /* bg-gray-50 */
+    display: flex;
+    flex-direction: column; /* flex-col */
+    align-items: flex-start;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(2,6,23,0.06); /* shadow-md */
+}
+
+
+.file-link { color: #2563eb; text-decoration: none; font-weight: 600; }
+.file-link:hover { text-decoration: underline; }
+
+.modal-action-close {
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* py-2 equivalent */
+    border-radius: 0.375rem; /* rounded-md */
+    background: #6b7280; /* gray-500 */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Position the small × close icon in the top-right of the modal like the Tailwind example */
+.modal-content .modal-close {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* Make the file-management modal responsive: full width on small screens */
+@media (max-width: 960px) {
+    .modal.file-management .modal-content {
+        width: 90%;
+        max-height: 90vh;
+    }
+}
+
+
+
+/* Hide the emoji fallback when Font Awesome is available (best-effort). If Font Awesome
+   is not loaded, the <i> element will be empty and the emoji provides a visible avatar. */
+.profile-avatar .fas {
+    /* Make the Font Awesome icon block-level and centered inside the circle */
+    display: block;
+    font-size: 1.875rem; /* match the desired icon size */
+    line-height: 1;
+    width: 1em;
+    height: 1em;
+    text-align: center;
+}
+
+/* Hide the emoji fallback by default to avoid a duplicated icon when
+   Font Awesome is available. If you later prefer to detect FA absence
+   and show the emoji, we can move this logic into JS. */
+.profile-avatar .avatar-icon {
+    display: none;
+}
