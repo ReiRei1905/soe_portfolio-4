@@ -492,34 +492,25 @@ footer {
 
 /* Quick-access grid and modal styles for homepage cards */
 .quick-access-grid {
-    /* Keep grid responsive but constrain overall row width so cards don't stretch too wide
-       on very large screens. Center the grid inside the page. */
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
     align-items: stretch;
-    max-width: 1200px; /* change to taste (e.g. 1000px / 1400px) */
-    margin: 0 auto;
-    padding: 0 1rem; /* small side padding so cards don't touch viewport edges */
-    box-sizing: border-box;
 }
 
-/* medium+ screens: give each card a sensible minimum width so they form columns
-   instead of becoming extremely wide single columns on large displays */
+/* three columns on medium+ screens */
 @media (min-width: 768px) {
     .quick-access-grid {
-        /* each column will be at least 260px but grow to fill available space */
-        grid-template-columns: repeat(3, minmax(260px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 .quick-card {
     border: 1px solid #10b981; /* green-500 border */
     border-radius: 0.5rem;
-    padding: 1.25rem; /* reduced padding for denser content */
+    padding: 2.5rem; /* p-16 equivalent spacing feel */
     text-align: center;
-    width: 130%;
-    box-sizing: border-box;
+    width: 100%;
     background: #fff;
     display: flex;
     flex-direction: column;
@@ -527,8 +518,6 @@ footer {
     justify-content: center;
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.12s ease;
-    min-height: 140px; /* make cards visually consistent height */
-    flex: 1; /* allow cards to stretch equally in their grid cells */
 }
 .quick-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
 
