@@ -17,6 +17,24 @@
             <img alt="College logo" class="college-header" src="../../images/soe apc logo.png"/>
         </div>
     </div>
+
+    <!-- Floating customize controls: placed OUTSIDE the profile-wrapper as a sibling
+         so they are not inside the section but still visualized at the top-right
+         area near the profile card. Positioning is handled by CSS (absolute
+         relative to #homepage). -->
+    <div id="customizeControls" class="customize-controls floating-customize-controls hidden" aria-hidden="true" aria-label="Customize controls">
+        <button id="addFileBtn" title="Add new category" class="control-btn control-add" type="button" onclick="addCategory()">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <button title="Delete category" class="control-btn control-delete" type="button" onclick="deleteCategory()">
+            <i class="fas fa-trash"></i>
+        </button>
+
+        <button title="Go back" class="control-btn control-back" type="button" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
     <div class="header-actions">
         <div class="header-home">
             <i class="fas fa-home" onclick="goToStudentOverviewPage()"></i>
@@ -64,7 +82,7 @@
                     </div>
                     <div id="profileDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
                         <a href="#" class="block menu-item"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
-                        <a href="../customize_portfolio.html" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
+                        <a href="#" onclick="toggleCustomize(); return false;" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
                         <a href="#" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
                         <a href="#" class="block menu-item"><i class="fas fa-question-circle mr-2"></i> Help</a>
                         <div style="text-align:center;margin-top:0.5rem;">
@@ -109,18 +127,25 @@
          The script will prefer localStorage value ('studentName') if present, then
          body.dataset.studentName, then a fallback placeholder.
     -->
-    <section class="profile-card" aria-label="student profile">
-        <div class="profile-info">
-            <!-- ID used by JS to set the logged-in student's name -->
-            <h2 id="studentName" class="profile-name">Student Name</h2>
-            <p class="profile-bio">About the user</p>
-        </div>
-        <div class="profile-avatar" role="img" aria-label="student avatar">
-            <!-- Prefer a simple emoji fallback so the UI works without Font Awesome. -->
-            <i class="fas fa-user" aria-hidden="true"></i>
-            <span class="avatar-icon">👤</span>
-        </div>
-    </section>
+    <!-- Wrap the profile card and floating controls so the controls can be
+         positioned outside the <section> but aligned to its top-right. -->
+    <div class="profile-wrapper">
+        <section class="profile-card" aria-label="student profile">
+            <div class="profile-info">
+                <!-- ID used by JS to set the logged-in student's name -->
+                <h2 id="studentName" class="profile-name">Student Name</h2>
+                <p class="profile-bio">About the user</p>
+            </div>
+            <div class="profile-right">
+                <div class="profile-avatar" role="img" aria-label="student avatar">
+                    <!-- Prefer a simple emoji fallback so the UI works without Font Awesome. -->
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <span class="avatar-icon">👤</span>
+                </div>
+            </div>
+        </section>
+
+    </div>
 
     <!-- Quick access grid: Top projects / certificates / assessments -->
     <section class="quick-access" aria-label="quick access">

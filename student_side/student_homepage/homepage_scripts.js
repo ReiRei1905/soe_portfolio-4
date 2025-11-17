@@ -142,6 +142,61 @@ function zoomOut() {
     setZoom(current - 10);
 }
 
+/* ---------- Customize controls (header) ---------- */
+function toggleCustomize() {
+    const controls = document.getElementById('customizeControls');
+    if (!controls) return;
+
+    // Close other dropdowns first
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.add('hidden'));
+    // Toggle visibility and aria attributes
+    const isHidden = controls.classList.contains('hidden');
+    if (isHidden) {
+        controls.classList.remove('hidden');
+        controls.classList.add('show');
+        controls.setAttribute('aria-hidden', 'false');
+    } else {
+        controls.classList.add('hidden');
+        controls.classList.remove('show');
+        controls.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function addCategory() {
+    // Front-end placeholder: prompt for a category and append a simple visual button
+    const name = prompt('Enter name for the new category:');
+    if (!name || !name.trim()) return alert('Category name cannot be empty.');
+    // Find the file category grid on the page (if present) and append a button
+    const grid = document.getElementById('fileTileContainer') || document.getElementById('fileCategoryGrid');
+    if (grid) {
+        const btn = document.createElement('div');
+        btn.className = 'file-tile';
+        btn.textContent = name.trim();
+        grid.appendChild(btn);
+    }
+    alert(`Category "${name.trim()}" added (front-end only).`);
+}
+
+function deleteCategory() {
+    // Placeholder: confirm and inform user. Real deletion requires server-side data.
+    if (confirm('This will remove a category on the front-end only. Continue?')) {
+        alert('Category removed (front-end only).');
+    }
+}
+
+function goBack() {
+    // If customize controls are visible, hide them; otherwise do nothing (could navigate back)
+    const controls = document.getElementById('customizeControls');
+    if (controls && !controls.classList.contains('hidden')) {
+        controls.classList.add('hidden');
+        controls.classList.remove('show');
+        controls.setAttribute('aria-hidden', 'true');
+        return;
+    }
+    // default fallback: navigate back to a previous page if desired
+    // window.history.back();
+}
+
 /* Quick-access modal helpers used by the homepage cards */
 function openFileManagement(modalId, type) {
     const modal = document.getElementById(modalId);
