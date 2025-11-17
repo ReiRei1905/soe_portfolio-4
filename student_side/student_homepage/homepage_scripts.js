@@ -163,25 +163,96 @@ function toggleCustomize() {
 }
 
 function addCategory() {
-    // Front-end placeholder: prompt for a category and append a simple visual button
-    const name = prompt('Enter name for the new category:');
+    // Prompt user for a new quick-access category name and add a quick-card to
+    // the homepage quick-access grid. This runs on the front-end only.
+    const name = prompt('Enter name for the new quick-access category:');
     if (!name || !name.trim()) return alert('Category name cannot be empty.');
-    // Find the file category grid on the page (if present) and append a button
-    const grid = document.getElementById('fileTileContainer') || document.getElementById('fileCategoryGrid');
-    if (grid) {
-        const btn = document.createElement('div');
-        btn.className = 'file-tile';
-        btn.textContent = name.trim();
-        grid.appendChild(btn);
+    const trimmed = name.trim();
+
+    const grid = document.querySelector('.quick-access-grid');
+    if (!grid) {
+        // Fallback: if the standard grid isn't available, try the fileTileContainer
+        const fallback = document.getElementById('fileTileContainer') || document.getElementById('fileCategoryGrid');
+        if (fallback) {
+            const div = document.createElement('div');
+            div.className = 'file-tile';
+            div.textContent = trimmed;
+            fallback.appendChild(div);
+            alert(`Category "${trimmed}" added (front-end only).`);
+            return;
+        }
+        return alert('Quick-access area not found on this page.');
     }
-    alert(`Category "${name.trim()}" added (front-end only).`);
+
+    // Create and append the quick-card button
+    const card = createQuickCard(trimmed);
+    grid.appendChild(card);
+    // Provide feedback
+    alert(`Quick-access category "${trimmed}" added.`);
 }
 
 function deleteCategory() {
-    // Placeholder: confirm and inform user. Real deletion requires server-side data.
-    if (confirm('This will remove a category on the front-end only. Continue?')) {
-        alert('Category removed (front-end only).');
+    // Front-end deletion helper: show available quick-access categories and allow
+    // the user to choose one to remove.
+    const grid = document.querySelector('.quick-access-grid');
+    if (!grid) return alert('No quick-access area found on this page.');
+
+    const cards = Array.from(grid.querySelectorAll('.quick-card'));
+    if (cards.length === 0) return alert('There are no categories to delete.');
+
+    const names = cards.map((c, idx) => {
+        const h = c.querySelector('.quick-title');
+        return h ? h.textContent.trim() : `Item ${idx + 1}`;
+    });
+
+    // Build a numbered list for the prompt
+    const listText = names.map((n, i) => `${i + 1}) ${n}`).join('\n');
+    const input = prompt(`Choose a category to delete (enter number or exact name):\n\n${listText}`);
+    if (!input) return; // cancelled
+
+    let chosenIndex = -1;
+    const asNum = parseInt(input, 10);
+    if (!Number.isNaN(asNum) && asNum >= 1 && asNum <= names.length) {
+        chosenIndex = asNum - 1;
+    } else {
+        // Match by exact (case-insensitive) name
+        const normalized = input.trim().toLowerCase();
+        chosenIndex = names.findIndex(n => n.toLowerCase() === normalized);
     }
+
+    if (chosenIndex === -1) return alert('No matching category found.');
+
+    const toDelete = cards[chosenIndex];
+    const toDeleteName = names[chosenIndex];
+    if (!confirm(`Delete quick-access category "${toDeleteName}"? This is front-end only.`)) return;
+
+    toDelete.remove();
+    alert(`Category "${toDeleteName}" deleted.`);
+}
+
+// Helper: create a quick-card DOM node that matches the homepage markup
+function createQuickCard(title) {
+    const slug = slugify(title);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-card';
+    btn.setAttribute('onclick', `openFileManagement('fileManagementModal','${slug}')`);
+
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-folder folder-fa';
+    icon.setAttribute('aria-hidden', 'true');
+
+    const h3 = document.createElement('h3');
+    h3.className = 'quick-title';
+    h3.textContent = title;
+
+    btn.appendChild(icon);
+    btn.appendChild(h3);
+    return btn;
+}
+
+function slugify(str) {
+    return str.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
 }
 
 function goBack() {

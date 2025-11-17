@@ -70,11 +70,14 @@ header {
 /* End of Header*/
 
 main {
-    margin-top: calc(120px); /* Add space for the header */
-    margin-bottom: calc(70px); /* Add space for the fixed footer */
+    /* Reserve space for the fixed header and footer so content won't be
+       hidden underneath them. Use min-height so the content can grow
+       beyond viewport height and allow the page to scroll normally. */
+    margin-top: var(--header-height);
+    margin-bottom: var(--footer-height);
     padding: 1rem; /* Optional: Add padding for better spacing */
     overflow-y: auto; /* Allow scrolling for the content */
-    height: 100vh; /* Ensure the content fits within the viewport */
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
     box-sizing: border-box; /* Include padding and border in height calculation */
 }
 
@@ -269,18 +272,18 @@ main {
 .customize-controls {
     /* Hidden by default; JS toggles the 'show' class to display */
     display: none;
-
     /* Anchor the controls to the top-right of the centered profile area.
-       This uses the --profile-max-width variable declared on #homepage so
-       the control stays aligned with the profile card regardless of
-       viewport width. Avoids brittle fixed margin values like 'margin-left:97rem'. */
-    position: absolute;
-    margin-top: 11rem;
-    margin-left: 97rem;
-    right: calc((100% - var(--profile-max-width)) / 2 - 0.5rem);
+       Previously a large fixed `margin-right: 70rem` was used which
+       made horizontal adjustments with `margin-left` behave unpredictably
+       (and was conflicting with the absolute positioning used by the
+       floating rules below). Remove the hard-coded margin and use the
+       `.floating-customize-controls` positioning instead.
 
+       To adjust horizontal placement, change the `--customize-offset`
+       variable (positive moves the controls left, negative moves them right
+       relative to the centered content). See `.floating-customize-controls`.
+    */
     gap: 0.5rem;
-    align-items: center;
     z-index: 1100; /* keep above most page elements */
 }
 .customize-controls.show { display: flex; }
@@ -288,15 +291,7 @@ main {
 /* Mobile fallback: on narrow screens place controls in the normal flow so they
    don't overflow or get clipped. This matches the responsive pattern used
    elsewhere in the stylesheet for floating controls. */
-@media (max-width: 640px) {
-    .customize-controls {
-        position: static;
-        display: none; /* still controlled by JS via .show */
-        margin-top: 0.5rem;
-        right: auto;
-    }
-    .customize-controls.show { display: flex; justify-content: flex-end; }
-}
+
 
 .control-btn {
     width: 40px;
@@ -317,10 +312,7 @@ main {
 .control-back { background: #9ca3af; /* gray */ color: #111827; }
 .control-back:hover { filter: brightness(0.95); }
 
-/* Small responsive tweak: stack controls on narrow screens */
-@media (max-width: 480px) {
-    .customize-controls { flex-direction: row; gap: 0.5rem; }
-}
+
 
 /*End of Header actions*/
 
@@ -429,7 +421,7 @@ main {
     margin-left: 16rem;
 }
 
-/* Programs Section */
+/* Homepage Section */
 .homepage-section {
     flex: 1;
     transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
@@ -457,6 +449,21 @@ footer {
     width: 100%;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
     padding: 0.75rem 1rem;
+
+/* Make footer content vertically centered and match faculty visuals */
+footer { display: flex; align-items: center; }
+
+.footer-container {
+    width: 100%;
+    max-width: none; /* make full width so content can align to the left */
+    margin: 0; /* remove auto-centering */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep content at the left */
+    gap: 1rem;
+    padding: 0.25rem 1rem;
+    box-sizing: border-box;
+}
     box-sizing: border-box;
     position: relative; /* keep in normal flow so page layout (flex) pushes it to bottom */
     z-index: 1200; /* put footer above fixed sidebar (sidebar z-index is 50) so it's not overlapped */
@@ -606,8 +613,12 @@ footer {
        the centered profile card. Uses the --profile-max-width variable. */
     position: absolute;
     top: 0.5rem; /* adjust if you'd like it moved up/down */
-    /* place at the right edge of the centered content area */
-    right: calc((100% - var(--profile-max-width)) / 2 - 0.5rem);
+    /* place at the right edge of the centered content area.
+       Use --customize-offset to nudge left/right from that anchor.
+       Positive offset moves the controls left (farther from page edge).
+       Negative offset moves them right (closer to page edge). */
+    --customize-offset: -16rem; /* tweak this value to move controls horizontally */
+    right: calc((100% - var(--profile-max-width)) / 2 + var(--customize-offset));
     display: flex;
     gap: 0.5rem;
     align-items: center;
@@ -812,3 +823,30 @@ footer {
 .profile-avatar .avatar-icon {
     display: none;
 }
+
+/* ------------------------------------------------------------------
+   Footer override (last rules) — Ensure footer stays fixed at the
+   bottom of the viewport even if other styles are copied later.
+   This uses an explicit !important override so it wins over any
+   previously defined `footer` declarations (such as a copied
+   faculty stylesheet that sets `position: relative`).
+   Adjust --footer-height at the top of this file if the footer
+   visual height needs to change.
+   ------------------------------------------------------------------ */
+html, body { height: 100%; }
+footer {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: var(--footer-height) !important;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1) !important;
+    z-index: 1200 !important;
+}
+
+/* Ensure the page content reserves space for the fixed footer. If
+   other pages use different layout containers, they should also
+   respect the bottom margin equal to --footer-height. The main
+   rule earlier already applies margin-bottom using that variable.
+*/
