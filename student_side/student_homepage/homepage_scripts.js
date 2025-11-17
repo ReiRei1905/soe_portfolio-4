@@ -78,6 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const fromBody = document.body ? document.body.dataset.studentName : null;
         studentNameEl.textContent = fromStorage || fromBody || 'Student Name';
     }
+    // Restore saved page zoom if user changed it previously
+    const savedZoom = parseInt(localStorage.getItem('studentPageZoom'), 10);
+    if (savedZoom && typeof setZoom === 'function') setZoom(savedZoom);
 });
 
 // Canonical dropdown toggle (shared)
@@ -86,12 +89,57 @@ function toggleDropdown(icon) {
     const dropdown = icon.nextElementSibling;
     if (!dropdown) return;
 
-    // Close other open dropdowns
+    // Close other open dropdowns and reset aria-expanded on their triggers
     document.querySelectorAll('.dropdown').forEach((menu) => {
-        if (menu !== dropdown) menu.classList.add('hidden');
+        if (menu !== dropdown) {
+            menu.classList.add('hidden');
+            const trigger = menu.previousElementSibling;
+            if (trigger && trigger.setAttribute) trigger.setAttribute('aria-expanded', 'false');
+        }
     });
 
     dropdown.classList.toggle('hidden');
+    // reflect state on the triggering element for accessibility
+    const expanded = !dropdown.classList.contains('hidden');
+    if (icon && icon.setAttribute) icon.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+
+function closeUploadModal() {
+    const upload = document.getElementById('uploadDropdown');
+    if (upload) upload.classList.add('hidden');
+}
+
+function addFile() {
+    const selected = document.querySelector('#uploadDropdown input[name="category"]:checked');
+    if (!selected) {
+        alert('Please choose a category before continuing.');
+        return;
+    }
+    // Placeholder behavior: show a message and close dropdown. Replace with real upload logic.
+    alert(`Files will be added to: ${selected.value}`);
+    closeUploadModal();
+}
+
+// Simple zoom in/out controls that update the page zoom percentage shown in the profile dropdown
+function setZoom(percent) {
+    const clamped = Math.max(50, Math.min(200, percent));
+    document.body.style.zoom = clamped / 100;
+    const el = document.getElementById('zoomPercentage');
+    if (el) el.textContent = clamped + '%';
+    // persist for next navigation
+    try { localStorage.setItem('studentPageZoom', String(clamped)); } catch (e) { /* ignore */ }
+}
+
+function zoomIn() {
+    const el = document.getElementById('zoomPercentage');
+    const current = el ? parseInt(el.textContent, 10) || 100 : (parseInt(localStorage.getItem('studentPageZoom')) || 100);
+    setZoom(current + 10);
+}
+
+function zoomOut() {
+    const el = document.getElementById('zoomPercentage');
+    const current = el ? parseInt(el.textContent, 10) || 100 : (parseInt(localStorage.getItem('studentPageZoom')) || 100);
+    setZoom(current - 10);
 }
 
 /* Quick-access modal helpers used by the homepage cards */

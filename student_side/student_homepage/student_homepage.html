@@ -27,7 +27,52 @@
             <i class="fas fa-search"></i>
         </div>
         <div class="header-profile">
-            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleStudentProfileClick()"></i>
+            <!-- Notifications / Upload / Profile (dropdowns) -->
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="relative header-notifications">
+                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <div id="notificationDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                    </div>
+                </div>
+
+                <div class="relative header-upload">
+                    <i class="fas fa-cloud-upload-alt text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <div id="uploadDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <div style="display:flex;gap:0.5rem;">
+                            <button class="btn-upload" type="button">Add Custom Folder</button>
+                            <button class="btn-upload" type="button">Use Existing Folder</button>
+                        </div>
+                        <div style="margin-top:0.5rem;">
+                            <label style="font-weight:600;">Select Category:</label>
+                            <div style="margin-top:0.25rem;">
+                                <label style="display:block;"><input type="radio" name="category" value="assessment" class="mr-1"> Assessment</label>
+                                <label style="display:block;"><input type="radio" name="category" value="projects" class="mr-1"> Projects</label>
+                                <label style="display:block;"><input type="radio" name="category" value="certificates" class="mr-1"> Certificate &amp; Awards</label>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+                            <button class="btn-cancel" type="button" onclick="closeUploadModal()">Cancel</button>
+                            <button class="btn-done" type="button" onclick="addFile()">Done</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative header-profile-menu">
+                    <div class="w-10 h-10 profile-avatar-btn" onclick="toggleDropdown(this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div id="profileDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <a href="#" class="block menu-item"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
+                        <a href="../customize_portfolio.html" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
+                        <a href="#" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
+                        <a href="#" class="block menu-item"><i class="fas fa-question-circle mr-2"></i> Help</a>
+                        <div style="text-align:center;margin-top:0.5rem;">
+                            <a href="#" class="logout-link"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="homepage-header">

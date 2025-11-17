@@ -225,6 +225,44 @@ main {
     
 }
 
+/* Dropdowns used in header-actions (notifications / upload / profile) */
+.hidden { display: none !important; }
+
+.header-actions .dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 8px 20px rgba(2,6,23,0.08);
+    padding: 0.75rem;
+    z-index: 1500;
+    min-width: 16rem;
+}
+
+.header-actions .header-notifications .dropdown { min-width: 14rem; }
+.header-actions .header-upload .dropdown { min-width: 20rem; }
+.header-actions .header-profile-menu .dropdown { min-width: 18rem; }
+
+.header-actions .dropdown p { margin: 0; color: #6b7280; }
+.btn-upload {
+    background: #f59e0b; /* amber-500 */
+    color: #000;
+    border: 1px solid #2563eb; /* blue-600 border to mimic original */
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+.btn-upload:hover { filter: brightness(0.95); }
+.btn-cancel { background: #6b7280; color: #fff; padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; }
+.btn-done { background: rgb(63, 212, 63); color: #fff; padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; }
+
+.profile-avatar-btn { width: 40px; height: 40px; border: 2px solid #fb923c; border-radius: 50%; display:flex;align-items:center;justify-content:center; background:#fff; cursor:pointer; }
+.menu-item { display:block; padding:0.5rem 0.25rem; color:#111827; text-decoration:none; }
+.menu-item:hover { background:#f3f4f6; }
+.logout-link { color:#dc2626; text-decoration:none; font-weight:600; }
+
 /*End of Header actions*/
 
 /* Start of Main content styles */
@@ -490,34 +528,51 @@ footer {
     }
 }
 
-/* Quick-access grid and modal styles for homepage cards */
+/* Quick-access grid and modal styles for homepage cards
+   Added CSS variables for easy tuning and extra side padding so cards
+   don't sit right on the viewport edge. Cards have a min width and
+   consistent min-height so spacing remains even when sizes change. */
 .quick-access-grid {
+    /* tweakable variables */
+    --quick-max-width: 1200px;     /* overall row max width */
+    --quick-card-min: 260px;       /* per-card minimum width */
+    --quick-card-min-height: 140px;/* card height baseline */
+    --quick-card-padding: 1.25rem; /* card inner padding */
+    --quick-grid-gap: 1.25rem;     /* gap between cards */
+
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--quick-grid-gap);
     align-items: stretch;
+    max-width: var(--quick-max-width);
+    margin: 0 auto;           /* center the grid */
+    padding: 0 2rem;         /* keep cards away from viewport edges */
+    box-sizing: border-box;
 }
 
-/* three columns on medium+ screens */
+/* medium+ screens: ensure each column has a sensible minimum so cards
+   don't become overly long. Using minmax keeps them responsive. */
 @media (min-width: 768px) {
     .quick-access-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(var(--quick-card-min), 1fr));
     }
 }
 
 .quick-card {
     border: 1px solid #10b981; /* green-500 border */
     border-radius: 0.5rem;
-    padding: 2.5rem; /* p-16 equivalent spacing feel */
+    padding: var(--quick-card-padding);
     text-align: center;
-    width: 100%;
     background: #fff;
     display: flex;
+    width: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.12s ease;
+    min-height: var(--quick-card-min-height); /* consistent visual height */
+    box-sizing: border-box; /* include padding in sizes */
 }
 .quick-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
 
