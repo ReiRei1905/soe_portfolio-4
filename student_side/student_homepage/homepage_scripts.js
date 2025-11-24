@@ -163,7 +163,7 @@ function toggleCustomize() {
 }
 
 function addCategory() {
-    // Prompt user for a new quick-access category name and add a quick-card to
+    // har Prompt user for a new quick-access category name and add a quick-card to
     // the homepage quick-access grid. This runs on the front-end only.
     const name = prompt('Enter name for the new quick-access category:');
     if (!name || !name.trim()) return alert('Category name cannot be empty.');

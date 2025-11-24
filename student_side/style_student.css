@@ -606,23 +606,38 @@ footer { display: flex; align-items: center; }
 }
 
 /* Floating controls that appear to the top-right of the profile card but
-   are siblings (outside the <section>). Adjust right/top for visual alignment. */
+    are siblings (outside the <section>). Adjust right/top for visual alignment. */
 .floating-customize-controls {
-    /* positioned relative to #homepage so this element can be placed
-       outside the .profile-wrapper but still align to the right edge of
-       the centered profile card. Uses the --profile-max-width variable. */
-    position: absolute;
-    top: 0.5rem; /* adjust if you'd like it moved up/down */
-    /* place at the right edge of the centered content area.
-       Use --customize-offset to nudge left/right from that anchor.
-       Positive offset moves the controls left (farther from page edge).
-       Negative offset moves them right (closer to page edge). */
-    --customize-offset: -16rem; /* tweak this value to move controls horizontally */
-    right: calc((100% - var(--profile-max-width)) / 2 + var(--customize-offset));
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    z-index: 10; /* ensure it sits above the card */
+     /* positioned relative to #homepage so this element can be placed
+         outside the .profile-wrapper but still align to the right edge of
+         the centered profile card. Uses the --profile-max-width variable. */
+     position: absolute;
+     top: 0.5rem; /* adjust if you'd like it moved up/down */
+     /* place at the right edge of the centered content area.
+         Use --customize-offset to nudge left/right from that anchor.
+         Positive offset moves the controls left (farther from page edge).
+         Negative offset moves them right (closer to page edge). */
+     /* Default: place slightly farther right (for wide screens / sidebar closed).
+         When the sidebar is open we override this value so the controls remain
+         visible and don't go out of bounds. */
+     --customize-offset: -22rem;
+     /* Use clamp() to make sure the computed right value never pushes the
+         controls off the viewport. Minimum 0.5rem, preferred calc(), maximum
+         is viewport minus 4rem (so controls never disappear to the left). */
+     right: clamp(0.5rem, calc((100% - var(--profile-max-width)) / 2 + var(--customize-offset)), calc(100% - 4rem));
+     display: flex;
+     gap: 0.5rem;
+     align-items: center;
+     z-index: 10; /* ensure it sits above the card */
+}
+
+/* When the main content is shifted because the sidebar is open, nudge the
+    customize controls back a bit so they remain inside the main-content
+    viewport. This mirrors the safe value you used (-16rem). */
+#homepage.shifted .floating-customize-controls,
+#homepage.shifted + .floating-customize-controls,
+#homepage .floating-customize-controls.shifted {
+     --customize-offset: -16rem;
 }
 
 /* Provide a mobile-friendly fallback: stack controls below the card on narrow screens */
