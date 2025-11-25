@@ -188,7 +188,8 @@ if (isset($_POST['signIn'])) {
             // Redirect based on role or email domain
             if ($row['role_type'] === 'student' || 
                 preg_match('/@student\.apc\.edu\.ph$/', $row['email'])) {
-                header("Location: ../Student%20side%20portfolio%20management/student%20hompage/student_Homepage.html");
+                // Redirect student users to the student-side homepage in `student_side` folder
+                header("Location: ../student_side/student_homepage/student_homepage.php");
                 exit();
             } elseif ($row['role_type'] === 'faculty' ||
                 preg_match('/@apc\.edu\.ph$/', $row['email'])) {

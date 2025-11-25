@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Populate the student name in the profile card if present.
-    // Priority: localStorage 'studentName' -> body[data-student-name] -> fallback text.
+    // Priority: server-rendered content (present on PHP page) -> localStorage 'studentName' -> body[data-student-name] -> fallback text.
     const studentNameEl = document.getElementById('studentName');
     if (studentNameEl) {
         const fromStorage = localStorage.getItem('studentName');
