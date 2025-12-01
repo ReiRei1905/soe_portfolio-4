@@ -74,9 +74,28 @@ document.addEventListener("DOMContentLoaded", () => {
     // Priority: server-rendered content (present on PHP page) -> localStorage 'studentName' -> body[data-student-name] -> fallback text.
     const studentNameEl = document.getElementById('studentName');
     if (studentNameEl) {
-        const fromStorage = localStorage.getItem('studentName');
-        const fromBody = document.body ? document.body.dataset.studentName : null;
-        studentNameEl.textContent = fromStorage || fromBody || 'Student Name';
+        const currentText = (studentNameEl.textContent || '').trim();
+        if (currentText && currentText !== 'Student Name') {
+            // Server already rendered the name (PHP), keep it.
+        } else {
+            const fromStorage = localStorage.getItem('studentName');
+            const fromBody = document.body ? document.body.dataset.studentName : null;
+            // Try server endpoint only if we don't have a name rendered already.
+            fetch('../../user_info_V3/get_student_info.php', { credentials: 'same-origin' })
+                .then(res => res.json())
+                .then(data => {
+                    const serverName = data && (data.name || '').trim();
+                    if (serverName) {
+                        studentNameEl.textContent = serverName;
+                        try { localStorage.setItem('studentName', serverName); } catch (e) { }
+                    } else {
+                        studentNameEl.textContent = fromStorage || fromBody || 'Student Name';
+                    }
+                })
+                .catch(() => {
+                    studentNameEl.textContent = fromStorage || fromBody || 'Student Name';
+                });
+        }
     }
     // Restore saved page zoom if user changed it previously
     const savedZoom = parseInt(localStorage.getItem('studentPageZoom'), 10);
