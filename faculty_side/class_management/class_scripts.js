@@ -340,7 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const currentYear = new Date().getFullYear();
-    const maxStartYear = Math.min(currentYear, 2025);
+    // Use the current year as the maximum start year so the UI reflects present day
+    const maxStartYear = currentYear;
     const minStartYear = 2010;
 
     for (let year = minStartYear; year <= maxStartYear; year++) {
@@ -354,7 +355,8 @@ document.addEventListener("DOMContentLoaded", () => {
         endYearSelect.innerHTML = '<option value="" disabled selected>Select End Year</option>';
 
         const selectedStartYear = parseInt(startYearSelect.value, 10);
-        const maxEndYear = Math.min(selectedStartYear + 10, 2025);
+        // Allow end year up to 10 years after the selected start year
+        const maxEndYear = selectedStartYear + 10;
 
         for (let year = selectedStartYear + 1; year <= maxEndYear; year++) {
             const option = document.createElement("option");
