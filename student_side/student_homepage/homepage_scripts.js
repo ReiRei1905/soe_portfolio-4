@@ -123,19 +123,156 @@ function toggleDropdown(icon) {
     if (icon && icon.setAttribute) icon.setAttribute('aria-expanded', expanded ? 'true' : 'false');
 }
 
+// Array to store custom folders in memory for the front-end simulation
+let customFolders = [];
+let selectedFolderIndex = -1;
+
 function closeUploadModal() {
     const upload = document.getElementById('uploadDropdown');
     if (upload) upload.classList.add('hidden');
+    // Clear input on close
+    const fileNameInput = document.getElementById('uploadFileName');
+    const fileInput = document.getElementById('hiddenFileInput');
+    if (fileNameInput) fileNameInput.value = '';
+    if (fileInput) fileInput.value = ''; // Reset the actual file selection
+    
+    // Also hide custom folder popup if open
+    hideCustomFolderPopup();
+    hideExistingFolderPopup();
+}
+
+function triggerFileExplorer() {
+    const fileInput = document.getElementById('hiddenFileInput');
+    if (fileInput) {
+        fileInput.click();
+    }
+}
+
+function handleFileSelection(input) {
+    const fileNameInput = document.getElementById('uploadFileName');
+    if (input.files && input.files.length > 0) {
+        // Get the name of the first file selected
+        const selectedFileName = input.files[0].name;
+        // Strip the extension if you just want the name, or keep it
+        if (fileNameInput) {
+            fileNameInput.value = selectedFileName;
+        }
+    }
+}
+
+function handleCustomFolder() {
+    // Hide existing folder popup if it's open
+    hideExistingFolderPopup();
+    const popup = document.getElementById('customFolderPopup');
+    if (popup) {
+        popup.classList.toggle('hidden');
+        if (!popup.classList.contains('hidden')) {
+            document.getElementById('customFolderName').focus();
+        }
+    }
+}
+
+function hideCustomFolderPopup() {
+    const popup = document.getElementById('customFolderPopup');
+    const input = document.getElementById('customFolderName');
+    if (popup) popup.classList.add('hidden');
+    if (input) input.value = '';
+}
+
+function createCustomFolder() {
+    const nameInput = document.getElementById('customFolderName');
+    if (nameInput && nameInput.value.trim()) {
+        const folderName = nameInput.value.trim();
+        
+        // Front-end Side logic: Store the folder name
+        customFolders.push(folderName);
+        updateFolderListUI();
+        
+        alert(`Folder "${folderName}" created successfully!`);
+        hideCustomFolderPopup();
+    } else {
+        alert('Please enter a folder name.');
+    }
+}
+
+function handleExistingFolder() {
+    // Hide custom folder popup if it's open
+    hideCustomFolderPopup();
+    const popup = document.getElementById('existingFolderPopup');
+    if (popup) {
+        popup.classList.toggle('hidden');
+    }
+}
+
+function hideExistingFolderPopup() {
+    const popup = document.getElementById('existingFolderPopup');
+    if (popup) popup.classList.add('hidden');
+    selectedFolderIndex = -1;
+    updateFolderListUI();
+}
+
+function updateFolderListUI() {
+    const container = document.getElementById('folderListContainer');
+    if (!container) return;
+
+    if (customFolders.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">No folders created yet.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    customFolders.forEach((folder, index) => {
+        const div = document.createElement('div');
+        div.className = `folder-item ${selectedFolderIndex === index ? 'selected' : ''}`;
+        
+        // Add the folder icon
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-folder';
+        
+        // Add the folder name span
+        const span = document.createElement('span');
+        span.textContent = folder;
+        
+        div.appendChild(icon);
+        div.appendChild(span);
+        
+        div.onclick = () => {
+            selectedFolderIndex = index;
+            updateFolderListUI();
+        };
+        container.appendChild(div);
+    });
+}
+
+function selectFolder() {
+    if (selectedFolderIndex === -1) {
+        alert('Please select a folder from the list first.');
+        return;
+    }
+    const folderName = customFolders[selectedFolderIndex];
+    alert(`Target folder set to: ${folderName}`);
+    hideExistingFolderPopup();
 }
 
 function addFile() {
+    const fileNameInput = document.getElementById('uploadFileName');
     const selected = document.querySelector('#uploadDropdown input[name="category"]:checked');
+    
+    if (!fileNameInput || !fileNameInput.value.trim()) {
+        alert('Please enter a file name.');
+        return;
+    }
+
     if (!selected) {
         alert('Please choose a category before continuing.');
         return;
     }
+    
+    const fileName = fileNameInput.value.trim();
+    const category = selected.value;
+
     // Placeholder behavior: show a message and close dropdown. Replace with real upload logic.
-    alert(`Files will be added to: ${selected.value}`);
+    alert(`File "${fileName}" will be added to: ${category}`);
     closeUploadModal();
 }
 

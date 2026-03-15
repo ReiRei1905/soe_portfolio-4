@@ -245,7 +245,13 @@ main {
 }
 
 .header-actions .header-notifications .dropdown { min-width: 14rem; }
-.header-actions .header-upload .dropdown { min-width: 20rem; }
+.header-actions .header-upload .dropdown { 
+    min-width: 250px; 
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    border: 2px solid #000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
 .header-actions .header-profile-menu .dropdown { min-width: 18rem; }
 
 .header-actions .dropdown p { margin: 0; color: #6b7280; }
@@ -260,6 +266,280 @@ main {
 .btn-upload:hover { filter: brightness(0.95); }
 .btn-cancel { background: #6b7280; color: #fff; padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; }
 .btn-done { background: rgb(63, 212, 63); color: #fff; padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer; }
+
+/* Upload Dropdown Specific Styles (Matches Image 2) */
+.upload-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #1e3a8a;
+    padding-bottom: 0.5rem;
+}
+
+.upload-icon-top {
+    font-size: 1.5rem;
+    color: #000;
+}
+
+.file-name-input {
+    flex: 1;
+    border: 1px solid #000;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.upload-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.btn-upload-outline {
+    border: 1px solid #1e3a8a;
+    background: transparent;
+    color: #000;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.btn-upload-outline:hover {
+    background: #f0f4ff;
+}
+
+/* Custom Folder Popup Styles (Image 3) */
+.custom-folder-popup {
+    position: absolute;
+    left: -220px; /* Position to the left of the dropdown */
+    top: 0;
+    width: 200px;
+    background: #fff;
+    border: 2px solid #1e3a8a;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 1010;
+}
+
+/* Positioning helper for mobile/smaller screens if needed */
+@media (max-width: 640px) {
+    .custom-folder-popup {
+        left: 0;
+        top: 100%;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+.folder-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid #1e3a8a;
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.folder-icon-small {
+    color: #f59e0b; /* Orange/Yellow folder color */
+}
+
+.folder-name-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.85rem;
+}
+
+.folder-popup-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem; /* Add padding to push buttons away from the edge */
+}
+
+.btn-folder-create {
+    background: #1e3a8a;
+    color: #fff;
+    border: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.35rem;
+    font-size: 0.85rem;
+    flex: 1;
+    cursor: pointer;
+}
+
+.btn-folder-cancel {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.35rem;
+    font-size: 0.85rem;
+    flex: 1;
+    cursor: pointer;
+}
+
+/* Existing Folder Popup Styles (Image 4) */
+.existing-folder-popup {
+    position: absolute;
+    left: -220px;
+    top: -50px; /* Slight offset to match image layout */
+    width: 200px;
+    background: #fff;
+    border: 2px solid #000; /* Black border as per image */
+    border-radius: 0.5rem;
+    padding: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 1010;
+    display: flex;
+    flex-direction: column;
+}
+
+.existing-folder-header {
+    border-bottom: 2px solid #000;
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.folder-list-container {
+    min-height: 120px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.folder-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    border: 1px solid #1e3a8a;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.folder-item i {
+    font-size: 1.1rem;
+    color: #000;
+}
+
+.folder-item:hover {
+    background: #f0f4ff;
+    border-color: #1e3a8a;
+}
+
+.folder-item.selected {
+    background: #1e3a8a;
+    color: #fff;
+    border-color: #000;
+}
+
+.folder-item.selected i {
+    color: #fff;
+}
+
+.btn-folder-add {
+    background: #1e3a8a;
+    color: #fff;
+    border: 1px solid #000;
+    padding: 0.35rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    flex: 1;
+    cursor: pointer;
+}
+
+.btn-folder-back {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+    padding: 0.35rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    flex: 1;
+    cursor: pointer;
+}
+
+.category-selection-area {
+    border-top: 1px solid #1e3a8a;
+    border-bottom: 1px solid #1e3a8a;
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+}
+
+.category-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.category-option input[type="radio"] {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid #000;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    position: relative;
+}
+
+.category-option input[type="radio"]:checked::after {
+    content: "";
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #1e3a8a;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.category-label-box {
+    flex: 1;
+    border: 1px solid #1e3a8a;
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.upload-footer-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.btn-upload-done {
+    background: #1e3a8a;
+    color: #fff;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #000;
+    font-weight: bold;
+    flex: 1;
+}
+
+.btn-upload-cancel {
+    background: #fff;
+    color: #000;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #000;
+    flex: 1;
+}
 
 .profile-avatar-btn { width: 40px; height: 40px; border: 2px solid #fb923c; border-radius: 50%; display:flex;align-items:center;justify-content:center; background:#fff; cursor:pointer; }
 .menu-item { display:block; padding:0.5rem 0.25rem; color:#111827; text-decoration:none; }

@@ -41,21 +41,63 @@
                 <div class="relative header-upload">
                     <i class="fas fa-cloud-upload-alt text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
                     <div id="uploadDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
-                        <div style="display:flex;gap:0.5rem;">
-                            <button class="btn-upload" type="button">Add Custom Folder</button>
-                            <button class="btn-upload" type="button">Use Existing Folder</button>
+                        <div class="upload-header">
+                            <i class="fas fa-cloud-upload-alt upload-icon-top cursor-pointer" onclick="triggerFileExplorer()" title="Upload from computer"></i>
+                            <input type="file" id="hiddenFileInput" class="hidden" onchange="handleFileSelection(this)">
+                            <input type="text" class="file-name-input" placeholder="Enter file name" id="uploadFileName">
                         </div>
-                        <div style="margin-top:0.5rem;">
-                            <label style="font-weight:600;">Select Category:</label>
-                            <div style="margin-top:0.25rem;">
-                                <label style="display:block;"><input type="radio" name="category" value="assessment" class="mr-1"> Assessment</label>
-                                <label style="display:block;"><input type="radio" name="category" value="projects" class="mr-1"> Projects</label>
-                                <label style="display:block;"><input type="radio" name="category" value="certificates" class="mr-1"> Certificate &amp; Awards</label>
+
+                        <div class="upload-button-group">
+                            <div class="relative">
+                                <button class="btn-upload-outline" type="button" onclick="handleCustomFolder()">Add Custom Folder</button>
+                                <!-- Custom Folder Popup (Image 3) -->
+                                <div id="customFolderPopup" class="custom-folder-popup hidden">
+                                    <div class="folder-input-wrapper">
+                                        <i class="fas fa-folder folder-icon-small"></i>
+                                        <input type="text" id="customFolderName" class="folder-name-input" placeholder="Enter folder name">
+                                    </div>
+                                    <div class="folder-popup-actions">
+                                        <button class="btn-folder-create" type="button" onclick="createCustomFolder()">Create</button>
+                                        <button class="btn-folder-cancel" type="button" onclick="hideCustomFolderPopup()">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <button class="btn-upload-outline" type="button" onclick="handleExistingFolder()">Use Existing Folder</button>
+                                <!-- Existing Folder Popup (Image 4) -->
+                                <div id="existingFolderPopup" class="existing-folder-popup hidden">
+                                    <div class="existing-folder-header">
+                                        <span>Folders</span>
+                                    </div>
+                                    <div id="folderListContainer" class="folder-list-container">
+                                        <p class="text-gray-400 text-xs text-center py-4">No folders created yet.</p>
+                                    </div>
+                                    <div class="folder-popup-actions">
+                                        <button class="btn-folder-add" type="button" onclick="selectFolder()">Add</button>
+                                        <button class="btn-folder-back" type="button" onclick="hideExistingFolderPopup()">Back</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
-                            <button class="btn-cancel" type="button" onclick="closeUploadModal()">Cancel</button>
-                            <button class="btn-done" type="button" onclick="addFile()">Done</button>
+
+                        <div class="category-selection-area">
+                            <div class="category-option">
+                                <input type="radio" name="category" value="assessment" id="cat-assessment">
+                                <label for="cat-assessment" class="category-label-box">Assessments</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="projects" id="cat-projects">
+                                <label for="cat-projects" class="category-label-box">Projects</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="certificates" id="cat-certificates">
+                                <label for="cat-certificates" class="category-label-box">Certificate/Awards</label>
+                            </div>
+                        </div>
+
+                        <div class="upload-footer-actions">
+                            <button class="btn-upload-done" type="button" onclick="addFile()">Done</button>
+                            <button class="btn-upload-cancel" type="button" onclick="closeUploadModal()">Cancel</button>
                         </div>
                     </div>
                 </div>
