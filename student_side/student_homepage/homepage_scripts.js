@@ -21,6 +21,11 @@ function handleProfileClick() {
     alert('Profile button clicked!');
 }
 
+function goToStudentOverviewPage() {
+    // Redirect to the student homepage
+    window.location.href = "../student_homepage/student_homepage.html";
+}
+
 /* Toggle sidebar in overview section (shared) */
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -100,6 +105,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Restore saved page zoom if user changed it previously
     const savedZoom = parseInt(localStorage.getItem('studentPageZoom'), 10);
     if (savedZoom && typeof setZoom === 'function') setZoom(savedZoom);
+
+    // Create Folder requires a selected category.
+    document.querySelectorAll('#uploadDropdown input[name="category"]').forEach((radio) => {
+        radio.addEventListener('change', updateCreateFolderButtonState);
+    });
+    updateCreateFolderButtonState();
+    updateFolderListUI();
 });
 
 // Canonical dropdown toggle (shared)
@@ -123,9 +135,29 @@ function toggleDropdown(icon) {
     if (icon && icon.setAttribute) icon.setAttribute('aria-expanded', expanded ? 'true' : 'false');
 }
 
-// Array to store custom folders in memory for the front-end simulation
-let customFolders = [];
+// In-memory storage for current session only (no persistence)
+let customFolders = []; // Reset on refresh
+let studentFiles = []; // Reset on refresh
 let selectedFolderIndex = -1;
+
+function getSelectedUploadCategory() {
+    return document.querySelector('#uploadDropdown input[name="category"]:checked');
+}
+
+function updateCreateFolderButtonState() {
+    const createBtn = document.getElementById('btnCreateFolder') || document.querySelector('#customFolderPopup .btn-folder-create');
+    if (!createBtn) return;
+
+    const hasCategory = !!getSelectedUploadCategory();
+    createBtn.disabled = !hasCategory;
+    createBtn.classList.toggle('is-disabled', !hasCategory);
+    createBtn.setAttribute('aria-disabled', hasCategory ? 'false' : 'true');
+}
+
+// (Remove these global storage markers if they were used for identification)
+// let customFolders = JSON.parse(localStorage.getItem('studentCustomFolders') || '[]');
+// let studentFiles = JSON.parse(localStorage.getItem('studentFiles') || '[]');
+
 
 function closeUploadModal() {
     const upload = document.getElementById('uploadDropdown');
@@ -139,6 +171,7 @@ function closeUploadModal() {
     // Also hide custom folder popup if open
     hideCustomFolderPopup();
     hideExistingFolderPopup();
+    updateCreateFolderButtonState();
 }
 
 function triggerFileExplorer() {
@@ -165,6 +198,7 @@ function handleCustomFolder() {
     hideExistingFolderPopup();
     const popup = document.getElementById('customFolderPopup');
     if (popup) {
+        updateCreateFolderButtonState();
         popup.classList.toggle('hidden');
         if (!popup.classList.contains('hidden')) {
             document.getElementById('customFolderName').focus();
@@ -181,15 +215,41 @@ function hideCustomFolderPopup() {
 
 function createCustomFolder() {
     const nameInput = document.getElementById('customFolderName');
+    const selectedCategoryEl = getSelectedUploadCategory();
+
+    if (!selectedCategoryEl) {
+        alert('Please choose a category first (Assessments, Projects, or Certificates/Awards).');
+        updateCreateFolderButtonState();
+        return;
+    }
+
     if (nameInput && nameInput.value.trim()) {
         const folderName = nameInput.value.trim();
-        
-        // Front-end Side logic: Store the folder name
-        customFolders.push(folderName);
+        const category = selectedCategoryEl.value;
+
+        // Keep folder available in the Existing Folder picker.
+        if (!customFolders.includes(folderName)) {
+            customFolders.push(folderName);
+        }
+
+        // Create a folder-only entry immediately in the selected category.
+        const newEntry = {
+            id: Date.now(),
+            name: folderName,
+            category: category,
+            folder: folderName,
+            entryType: 'folder',
+            timestamp: new Date().toLocaleString()
+        };
+        studentFiles.push(newEntry);
+
         updateFolderListUI();
-        
-        alert(`Folder "${folderName}" created successfully!`);
-        hideCustomFolderPopup();
+        alert(`Folder "${folderName}" created in ${category}.`);
+        closeUploadModal();
+
+        if (typeof renderCurrentSection === 'function') {
+            renderCurrentSection();
+        }
     } else {
         alert('Please enter a folder name.');
     }
@@ -256,24 +316,77 @@ function selectFolder() {
 
 function addFile() {
     const fileNameInput = document.getElementById('uploadFileName');
-    const selected = document.querySelector('#uploadDropdown input[name="category"]:checked');
+    const selectedCategoryEl = getSelectedUploadCategory();
+    const customFolderNameInput = document.getElementById('customFolderName');
     
-    if (!fileNameInput || !fileNameInput.value.trim()) {
-        alert('Please enter a file name.');
+    // Check if we have a file name OR we are intending to just create/use a folder
+    const fileName = fileNameInput ? fileNameInput.value.trim() : '';
+    
+    // Logic: User must provide a File Name OR have a folder selected/created
+    // But the user specifically asked: "can upload a folder without a file name"
+    // AND "must not be able to upload if not entering a file OR adding a custom folder"
+    
+    // Use the folder from the input field IF it has a value, regardless of whether "Create" was clicked
+    const customFolderValue = (customFolderNameInput ? customFolderNameInput.value.trim() : '');
+    
+    const hasFolder = (selectedFolderIndex !== -1) || (customFolderValue !== '');
+    const folderName = hasFolder ? 
+        (selectedFolderIndex !== -1 ? customFolders[selectedFolderIndex] : customFolderValue) : 
+        '';
+
+    if (!fileName && !hasFolder) {
+        alert('Please enter a file name or create/select a folder.');
         return;
     }
 
-    if (!selected) {
+    if (!selectedCategoryEl) {
         alert('Please choose a category before continuing.');
         return;
     }
     
-    const fileName = fileNameInput.value.trim();
-    const category = selected.value;
+    const category = selectedCategoryEl.value;
 
-    // Placeholder behavior: show a message and close dropdown. Replace with real upload logic.
-    alert(`File "${fileName}" will be added to: ${category}`);
+    // If there's a custom folder name in the input but it wasn't "Created" yet, 
+    // we should add it now to the list for UI consistency (if you want it to appear in "Existing Folders" later)
+    if (customFolderValue && !customFolders.includes(customFolderValue)) {
+        customFolders.push(customFolderValue);
+        // localStorage.setItem('studentCustomFolders', JSON.stringify(customFolders)); // PERSISTENCE REMOVED
+    }
+
+    // Simulated file/folder storage
+    const newEntry = {
+        id: Date.now(),
+        name: fileName || folderName,
+        category: category,
+        folder: folderName,
+        entryType: fileName ? 'file' : 'folder',
+        timestamp: new Date().toLocaleString()
+    };
+
+    // const allFiles = JSON.parse(localStorage.getItem('studentFiles') || '[]'); // PERSISTENCE REMOVED
+    // allFiles.push(newEntry);
+    // localStorage.setItem('studentFiles', JSON.stringify(allFiles));
+
+    // For this session, we'll store it in the global studentFiles array
+    studentFiles.push(newEntry);
+
+    if (fileName) {
+        alert(`File "${fileName}" uploaded to "${folderName}" in ${category}!`);
+    } else {
+        alert(`Folder "${folderName}" created in ${category}!`);
+    }
+
+    
+    // Reset selection and close
+    selectedFolderIndex = -1;
+    if (customFolderNameInput) customFolderNameInput.value = ''; // Clear input
     closeUploadModal();
+    
+    if (typeof renderCurrentSection === 'function') {
+        renderCurrentSection();
+    } else {
+        location.reload();
+    }
 }
 
 // Simple zoom in/out controls that update the page zoom percentage shown in the profile dropdown

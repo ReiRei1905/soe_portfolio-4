@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="../style_student.css" rel="stylesheet"/>
     <script src="../student_homepage/homepage_scripts.js" defer></script>
+    <script src="projects_scripts.js" defer></script>
 </head>
 <body class="page-layout">
 <header>
@@ -125,135 +126,61 @@
             <h2 class="homepage-title">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                <li class="breadcrumb-item" aria-current="page"><a href="../student_homepage/student_homepage.html"></a>Homepage</li>
+                <li class="breadcrumb-item" aria-current="page"><a href="../projects/projects.html">Projects</a></li>
                 </ol>
             </nav>
             </h2>
         </div>
     </div>
 </header>
-<main class = "main-content">  
+<main class="main-content files-page-main">  
     <div id="sidebar">
         <nav>
             <a class="text-lg" href="../assessment/assessments.html">Assessments</a>
-            <a class="text-lg" href="../projects.html">Projects</a>
-            <a class="text-lg" href="../certificates/awards.html">Certificates/Awards</a>
+            <a class="text-lg active-page" href="../projects/projects.html">Projects</a>
+            <a class="text-lg" href="../certificates/certificates.html">Certificates</a>
             <a class="text-lg" href="../classes.html">Classes</a>
             <a class="text-lg" href="../faculty_about_us.html">About us</a>
         </nav>
     </div>
 
-<div id="homepage" class="homepage-section">
+<div id="projects" class="projects-section">
+    <div class="projects-content">
+        <div class="projects-placeholder flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+            <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg font-medium">No projects added yet.</p>
+            <p class="text-gray-400 text-sm">Click the upload icon above to add your first project!</p>
+        </div>
+    </div>
 
-    <!-- Profile card: shows the logged-in student's name and avatar.
-         The name is populated by JavaScript below. If you render server-side (PHP),
-         you can pass the student name into the page using a data attribute on <body>:
-         Example (PHP):
-         <body data-student-name="<?php echo htmlspecialchars($_SESSION['student_name'] ?? ''); ?>">
-         The script will prefer localStorage value ('studentName') if present, then
-         body.dataset.studentName, then a fallback placeholder.
-    -->
-    <!-- Wrap the profile card and floating controls so the controls can be
-         positioned outside the <section> but aligned to its top-right. -->
-    <div class="profile-wrapper">
-        <section class="profile-card" aria-label="student profile">
-            <div class="profile-info">
-                <!-- ID used by JS to set the logged-in student's name -->
-                <h2 id="studentName" class="profile-name">Student Name</h2>
-                <p class="profile-bio">About the user</p>
-            </div>
-            <div class="profile-right">
-                <div class="profile-avatar" role="img" aria-label="student avatar">
-                    <!-- Prefer a simple emoji fallback so the UI works without Font Awesome. -->
-                    <i class="fas fa-user" aria-hidden="true"></i>
-                    <span class="avatar-icon">👤</span>
+    <template id="projectsGridItemTemplate">
+        <div class="file-grid-item bg-white p-5 border border-green-200 rounded-xl shadow-sm hover:shadow-lg transition-all flex items-start gap-3">
+            <div class="file-entry-main">
+                <i class="file-entry-icon"></i>
+                <div class="file-entry-content">
+                    <div class="file-view-row">
+                        <span class="file-entry-name"></span>
+                        <span class="file-entry-folder-badge hidden"></span>
+                    </div>
+                    <div class="inline-edit hidden">
+                        <input class="edit-input" type="text" />
+                        <button class="save-edit-btn" type="button">Save</button>
+                        <button class="cancel-edit-btn" type="button">Cancel</button>
+                    </div>
+                    <span class="file-entry-date"></span>
                 </div>
             </div>
-        </section>
-    </div>
-    <div id="customizeControls" class="customize-controls floating-customize-controls hidden" aria-hidden="true" aria-label="Customize controls">
-        <button id="addFileBtn" title="Add new category" class="control-btn control-add" type="button" onclick="addCategory()">
-            <i class="fas fa-plus"></i>
-        </button>
 
-        <button title="Delete category" class="control-btn control-delete" type="button" onclick="deleteCategory()">
-            <i class="fas fa-trash"></i>
-        </button>
+            <span class="file-options" role="button" tabindex="0" aria-label="Item options">
+                <i class="fas fa-ellipsis-v"></i>
+            </span>
 
-        <button title="Go back" class="control-btn control-back" type="button" onclick="goBack()">
-            <i class="fas fa-arrow-left"></i>
-        </button>
-    </div>
-
-    <!-- Quick access grid: Top projects / certificates / assessments -->
-    <section class="quick-access" aria-label="quick access">
-        <div class="quick-access-grid">
-            <button onclick="openFileManagement('fileManagementModal','projects')" class="quick-card" type="button">
-                <!-- If you have a local image, replace the <i> fallback with <img src="..."> -->
-                <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
-                <h3 class="quick-title">Top projects</h3>
-            </button>
-
-            <button onclick="openFileManagement('fileManagementModal','certificates')" class="quick-card" type="button">
-                <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
-                <h3 class="quick-title">Top certificates/awards</h3>
-            </button>
-
-            <button onclick="openFileManagement('fileManagementModal','assessments')" class="quick-card" type="button">
-                <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
-                <h3 class="quick-title">Top assessments</h3>
-            </button>
-        </div>
-    </section>
-
-    <!-- Simple modals (projects/certificates/assessments) were used previously but are
-         now superseded by the centralized `fileManagementModal` (w-2/3, populated
-         dynamically). They're commented out below as a reversible cleanup step.
-    -->
-    <!--
-    <div id="projectsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="projectsModalTitle">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal('projectsModal')">&times;</button>
-            <h2 id="projectsModalTitle">Top projects</h2>
-            <p>Placeholder content — list your top projects here.</p>
-        </div>
-    </div>
-
-    <div id="certificatesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="certificatesModalTitle">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal('certificatesModal')">&times;</button>
-            <h2 id="certificatesModalTitle">Top certificates / awards</h2>
-            <p>Placeholder content — list certificates or awards here.</p>
-        </div>
-    </div>
-
-    <div id="assessmentsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="assessmentsModalTitle">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal('assessmentsModal')">&times;</button>
-            <h2 id="assessmentsModalTitle">Top assessments</h2>
-            <p>Placeholder content — show recent assessments here.</p>
-        </div>
-    </div>
-    -->
-
-    <!-- File management modal (full featured) -->
-    <div id="fileManagementModal" class="modal hidden file-management" role="dialog" aria-modal="true" aria-labelledby="fileManagementTitle">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeFileManagement()">&times;</button>
-            <h2 id="fileManagementTitle">Manage Files</h2>
-            <div id="fileTileContainer" class="file-tile-container">
-                <!-- Sample tiles; in practice populate dynamically or replace with server-rendered content -->
-                <div class="file-tile"><a class="file-link" href="#">Sample File 1</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 2</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 3</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 4</a></div>
-            </div>
-            <div style="margin-top:1rem;">
-                <button onclick="closeFileManagement()" class="modal-action-close">Close</button>
+            <div class="file-actions-dropdown hidden">
+                <button class="edit-btn" type="button">Edit</button>
+                <button class="remove-btn" type="button">Delete</button>
             </div>
         </div>
-    </div>
-
+    </template>
 </div>
 </main>
 <footer class="footer-content">

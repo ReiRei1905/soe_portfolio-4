@@ -1,3 +1,8 @@
+:root {
+    --header-height: 11rem;
+    --footer-height: 3rem;
+}
+
 .page-layout {
     background-color: #f7fafc;
     display: flex;
@@ -73,11 +78,11 @@ main {
     /* Reserve space for the fixed header and footer so content won't be
        hidden underneath them. Use min-height so the content can grow
        beyond viewport height and allow the page to scroll normally. */
-    margin-top: var(--header-height);
-    margin-bottom: var(--footer-height);
+    margin-top: var(--header-height, 11rem);
+    margin-bottom: var(--footer-height, 3rem);
     padding: 1rem; /* Optional: Add padding for better spacing */
     overflow-y: auto; /* Allow scrolling for the content */
-    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    min-height: calc(100vh - var(--header-height, 11rem) - var(--footer-height, 3rem));
     box-sizing: border-box; /* Include padding and border in height calculation */
 }
 
@@ -372,6 +377,13 @@ main {
     font-size: 0.85rem;
     flex: 1;
     cursor: pointer;
+}
+
+.btn-folder-create:disabled,
+.btn-folder-create.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: grayscale(0.15);
 }
 
 .btn-folder-cancel {
@@ -699,6 +711,15 @@ main {
    so provide the corresponding rule here. */
 #homepage.shifted {
     margin-left: 16rem;
+}
+
+#assessments.shifted,
+#projects.shifted,
+#certificates.shifted,
+.assessments-content.shifted,
+.projects-content.shifted,
+.certificates-content.shifted {
+    margin-left: 9rem;
 }
 
 /* Homepage Section */
@@ -1098,6 +1119,255 @@ footer { display: flex; align-items: center; }
     }
 }
 
+/* Shared layout for assessments/projects/certificates pages.
+   Empty state stays centered. Files state switches to a scrollable window. */
+.assessments-section,
+.projects-section,
+.certificates-section {
+    width: 100%;
+    display: flex;
+    min-height: 0;
+}
+
+.assessments-content,
+.projects-content,
+.certificates-content {
+    flex: 1;
+    width: 100%;
+    min-height: calc(100vh - var(--header-height, 11rem) - var(--footer-height, 3rem));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 1rem 1.5rem;
+    box-sizing: border-box;
+}
+
+/* Applied by page scripts when there are files to show. */
+.assessments-content.has-files,
+.projects-content.has-files,
+.certificates-content.has-files {
+    justify-content: flex-start;
+    align-items: stretch;
+    min-height: 0;
+    overflow: hidden;
+    padding-right: 0;
+}
+
+/* Placeholder card remains centered and readable. */
+.assessments-placeholder,
+.projects-placeholder,
+.certificates-placeholder {
+    width: min(600px, 100%);
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Scrollable file area for long lists. */
+.files-window {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.files-window .grid {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* File/folder item actions (ellipsis, dropdown, inline edit) */
+.files-window .file-grid-item {
+    position: relative;
+    padding-right: 2.25rem;
+    box-sizing: border-box;
+}
+
+.files-window .file-entry-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.files-window .file-entry-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.files-window .file-view-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.files-window .file-entry-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.files-window .file-options {
+    position: absolute;
+    top: 50%;
+    right: 0.6rem;
+    transform: translateY(-50%);
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 0.35rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.files-window .file-options:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.files-window .file-actions-dropdown {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    min-width: 7rem;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.45rem;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.12);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.files-window .file-actions-dropdown button {
+    border: none;
+    background: #fff;
+    text-align: left;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.83rem;
+    cursor: pointer;
+}
+
+.files-window .file-actions-dropdown button:hover {
+    background: #f3f4f6;
+}
+
+.files-window .file-actions-dropdown .remove-btn {
+    color: #dc2626;
+}
+
+.files-window .inline-edit {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.15rem;
+    align-items: center;
+    width: 100%;
+}
+
+.files-window .inline-edit.hidden {
+    display: none !important;
+}
+
+.files-window .edit-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.35rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.83rem;
+}
+
+.files-window .file-grid-item.is-editing .file-view-row,
+.files-window .file-grid-item.is-editing .file-entry-date,
+.files-window .file-grid-item.is-editing .file-entry-folder-badge,
+.files-window .file-grid-item.is-editing .file-options,
+.files-window .file-grid-item.is-editing .file-actions-dropdown {
+    display: none !important;
+}
+
+.files-window .file-grid-item.is-editing .inline-edit {
+    display: flex !important;
+}
+
+.files-window .save-edit-btn,
+.files-window .cancel-edit-btn {
+    border-radius: 0.35rem;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.files-window .save-edit-btn {
+    background: #2563eb;
+    color: #fff;
+    border: 1px solid #2563eb;
+}
+
+.files-window .cancel-edit-btn {
+    background: #fff;
+    color: #111827;
+    border: 1px solid #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .assessments-content,
+    .projects-content,
+    .certificates-content {
+        min-height: calc(100vh - 11rem);
+        padding: 0.75rem;
+    }
+
+    .files-window {
+        max-height: none;
+        padding: 0.25rem 0 0.25rem 0.25rem;
+    }
+}
+
+/* Assessments/Projects/Certificates pages need real header offset because
+   their main uses .main-content which otherwise sits too high (1rem top). */
+.files-page-main {
+    margin-top: var(--header-height, 11rem);
+    margin-bottom: var(--footer-height, 3rem);
+    height: calc(100vh - var(--header-height, 11rem) - var(--footer-height, 3rem));
+    min-height: 0;
+    overflow: hidden;
+    padding-right: 0;
+}
+
+.files-page-main .assessments-section,
+.files-page-main .projects-section,
+.files-page-main .certificates-section {
+    flex: 1;
+    min-height: 0;
+}
+
+.files-page-main .assessments-content,
+.files-page-main .projects-content,
+.files-page-main .certificates-content {
+    min-height: 100%;
+}
+
+.files-page-main .assessments-content.has-files,
+.files-page-main .projects-content.has-files,
+.files-page-main .certificates-content.has-files {
+    min-height: 0;
+}
 
 
 /* Hide the emoji fallback when Font Awesome is available (best-effort). If Font Awesome
@@ -1135,7 +1405,7 @@ footer {
     right: 0 !important;
     bottom: 0 !important;
     width: 100% !important;
-    height: var(--footer-height) !important;
+    height: var(--footer-height, 3rem) !important;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1) !important;
     z-index: 1200 !important;
 }
