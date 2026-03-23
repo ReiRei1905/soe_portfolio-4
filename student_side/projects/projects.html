@@ -11,7 +11,7 @@
     <script src="../student_homepage/homepage_scripts.js" defer></script>
     <script src="projects_scripts.js" defer></script>
 </head>
-<body class="page-layout">
+<body class="page-layout" data-upload-context="projects">
 <header>
     <div class="header-container">
         <div class="header-display">
@@ -125,8 +125,9 @@
             <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
             <h2 class="homepage-title">
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                <li class="breadcrumb-item" aria-current="page"><a href="../projects/projects.html">Projects</a></li>
+                <ol class="breadcrumb" id="projectsBreadcrumb">
+                <li class="breadcrumb-item" aria-current="page"><a id="projectsBreadcrumbRoot" href="../projects/projects.html">Projects</a></li>
+                <li class="breadcrumb-item active hidden" id="projectsBreadcrumbFolder" aria-current="page"></li>
                 </ol>
             </nav>
             </h2>
@@ -160,7 +161,6 @@
                 <div class="file-entry-content">
                     <div class="file-view-row">
                         <span class="file-entry-name"></span>
-                        <span class="file-entry-folder-badge hidden"></span>
                     </div>
                     <div class="inline-edit hidden">
                         <input class="edit-input" type="text" />

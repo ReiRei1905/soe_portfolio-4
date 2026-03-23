@@ -507,6 +507,12 @@ main {
     position: relative;
 }
 
+.category-option input[type="radio"]:disabled {
+    cursor: not-allowed;
+    border-color: #9ca3af;
+    background: #f3f4f6;
+}
+
 .category-option input[type="radio"]:checked::after {
     content: "";
     width: 0.75rem;
@@ -526,6 +532,21 @@ main {
     padding: 0.25rem 0.5rem;
     text-align: center;
     font-size: 0.95rem;
+}
+
+.category-option.is-disabled .category-label-box,
+.category-option input[type="radio"]:disabled + .category-label-box {
+    border-color: #cbd5e1;
+    color: #6b7280;
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+.category-selection-area.is-context-locked {
+    background: linear-gradient(180deg, rgba(30, 58, 138, 0.03) 0%, rgba(30, 58, 138, 0.07) 100%);
+    border-radius: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 .upload-footer-actions {
@@ -1187,6 +1208,26 @@ footer { display: flex; align-items: center; }
     position: relative;
     padding-right: 2.25rem;
     box-sizing: border-box;
+}
+
+.files-window .file-grid-item.is-folder-entry {
+    cursor: pointer;
+}
+
+.files-window .file-grid-item.is-folder-entry:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+
+.files-window .file-grid-item.is-folder-entry .file-entry-name {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.breadcrumb-root-link {
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .files-window .file-entry-main {

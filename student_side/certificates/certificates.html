@@ -11,7 +11,7 @@
     <script src="../student_homepage/homepage_scripts.js" defer></script>
     <script src="certificates_scripts.js" defer></script>
 </head>
-<body class="page-layout">
+<body class="page-layout" data-upload-context="certificates">
 <header>
     <div class="header-container">
         <div class="header-display">
@@ -125,8 +125,9 @@
             <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
             <h2 class="homepage-title">
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                <li class="breadcrumb-item" aria-current="page"><a href="../certificates/certificates.html">Certificates</a></li>
+                <ol class="breadcrumb" id="certificatesBreadcrumb">
+                <li class="breadcrumb-item" aria-current="page"><a id="certificatesBreadcrumbRoot" href="../certificates/certificates.html">Certificates</a></li>
+                <li class="breadcrumb-item active hidden" id="certificatesBreadcrumbFolder" aria-current="page"></li>
                 </ol>
             </nav>
             </h2>
@@ -160,7 +161,6 @@
                 <div class="file-entry-content">
                     <div class="file-view-row">
                         <span class="file-entry-name"></span>
-                        <span class="file-entry-folder-badge hidden"></span>
                     </div>
                     <div class="inline-edit hidden">
                         <input class="edit-input" type="text" />

@@ -110,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('#uploadDropdown input[name="category"]').forEach((radio) => {
         radio.addEventListener('change', updateCreateFolderButtonState);
     });
+    configureUploadCategorySelection();
     updateCreateFolderButtonState();
     updateFolderListUI();
 });
@@ -139,9 +140,55 @@ function toggleDropdown(icon) {
 let customFolders = []; // Reset on refresh
 let studentFiles = []; // Reset on refresh
 let selectedFolderIndex = -1;
+let selectedUploadFolderName = '';
 
 function getSelectedUploadCategory() {
     return document.querySelector('#uploadDropdown input[name="category"]:checked');
+}
+
+function getUploadContextCategory() {
+    const contextFromBody = document.body ? (document.body.dataset.uploadContext || '').trim() : '';
+
+    if (contextFromBody === 'assessment' || contextFromBody === 'projects' || contextFromBody === 'certificates') {
+        return contextFromBody;
+    }
+
+    if (contextFromBody === 'homepage') {
+        return null;
+    }
+
+    const path = (window.location.pathname || '').toLowerCase();
+    if (path.includes('/assessment/')) return 'assessment';
+    if (path.includes('/projects/')) return 'projects';
+    if (path.includes('/certificates/')) return 'certificates';
+    return null;
+}
+
+function configureUploadCategorySelection() {
+    const radios = Array.from(document.querySelectorAll('#uploadDropdown input[name="category"]'));
+    if (radios.length === 0) return;
+
+    const categoryArea = document.querySelector('#uploadDropdown .category-selection-area');
+    const fixedCategory = getUploadContextCategory();
+
+    radios.forEach((radio) => {
+        const option = radio.closest('.category-option');
+
+        if (!fixedCategory) {
+            radio.disabled = false;
+            if (option) option.classList.remove('is-disabled');
+            return;
+        }
+
+        const isAllowed = radio.value === fixedCategory;
+        radio.disabled = !isAllowed;
+        radio.checked = isAllowed;
+        if (option) option.classList.toggle('is-disabled', !isAllowed);
+    });
+
+    if (categoryArea) {
+        categoryArea.classList.toggle('is-context-locked', !!fixedCategory);
+    }
 }
 
 function updateCreateFolderButtonState() {
@@ -152,6 +199,35 @@ function updateCreateFolderButtonState() {
     createBtn.disabled = !hasCategory;
     createBtn.classList.toggle('is-disabled', !hasCategory);
     createBtn.setAttribute('aria-disabled', hasCategory ? 'false' : 'true');
+}
+
+function getCurrentOpenFolderFromSectionView() {
+    const context = getUploadContextCategory();
+    if (!context) return '';
+
+    if (context === 'projects' && typeof window.getCurrentProjectsFolderName === 'function') {
+        const activeFolder = String(window.getCurrentProjectsFolderName() || '').trim();
+        if (activeFolder) return activeFolder;
+    }
+
+    if (context === 'certificates' && typeof window.getCurrentCertificatesFolderName === 'function') {
+        const activeFolder = String(window.getCurrentCertificatesFolderName() || '').trim();
+        if (activeFolder) return activeFolder;
+    }
+
+    const folderCrumbIdByContext = {
+        assessment: 'assessmentBreadcrumbFolder',
+        projects: 'projectsBreadcrumbFolder',
+        certificates: 'certificatesBreadcrumbFolder'
+    };
+
+    const crumbId = folderCrumbIdByContext[context];
+    if (!crumbId) return '';
+
+    const crumbEl = document.getElementById(crumbId);
+    if (!crumbEl || crumbEl.classList.contains('hidden')) return '';
+
+    return (crumbEl.textContent || '').trim();
 }
 
 // (Remove these global storage markers if they were used for identification)
@@ -171,6 +247,7 @@ function closeUploadModal() {
     // Also hide custom folder popup if open
     hideCustomFolderPopup();
     hideExistingFolderPopup();
+    selectedUploadFolderName = '';
     updateCreateFolderButtonState();
 }
 
@@ -195,7 +272,7 @@ function handleFileSelection(input) {
 
 function handleCustomFolder() {
     // Hide existing folder popup if it's open
-    hideExistingFolderPopup();
+    hideExistingFolderPopup(false);
     const popup = document.getElementById('customFolderPopup');
     if (popup) {
         updateCreateFolderButtonState();
@@ -232,6 +309,8 @@ function createCustomFolder() {
             customFolders.push(folderName);
         }
 
+        selectedUploadFolderName = folderName;
+
         // Create a folder-only entry immediately in the selected category.
         const newEntry = {
             id: Date.now(),
@@ -264,10 +343,12 @@ function handleExistingFolder() {
     }
 }
 
-function hideExistingFolderPopup() {
+function hideExistingFolderPopup(resetPickerSelection) {
     const popup = document.getElementById('existingFolderPopup');
     if (popup) popup.classList.add('hidden');
-    selectedFolderIndex = -1;
+    if (resetPickerSelection !== false) {
+        selectedFolderIndex = -1;
+    }
     updateFolderListUI();
 }
 
@@ -310,6 +391,7 @@ function selectFolder() {
         return;
     }
     const folderName = customFolders[selectedFolderIndex];
+    selectedUploadFolderName = folderName;
     alert(`Target folder set to: ${folderName}`);
     hideExistingFolderPopup();
 }
@@ -329,10 +411,10 @@ function addFile() {
     // Use the folder from the input field IF it has a value, regardless of whether "Create" was clicked
     const customFolderValue = (customFolderNameInput ? customFolderNameInput.value.trim() : '');
     
-    const hasFolder = (selectedFolderIndex !== -1) || (customFolderValue !== '');
-    const folderName = hasFolder ? 
-        (selectedFolderIndex !== -1 ? customFolders[selectedFolderIndex] : customFolderValue) : 
-        '';
+    const folderFromPicker = selectedUploadFolderName || (selectedFolderIndex !== -1 ? customFolders[selectedFolderIndex] : '');
+    const folderFromCurrentSectionView = getCurrentOpenFolderFromSectionView();
+    const folderName = customFolderValue || folderFromPicker || folderFromCurrentSectionView;
+    const hasFolder = !!folderName;
 
     if (!fileName && !hasFolder) {
         alert('Please enter a file name or create/select a folder.');
@@ -379,6 +461,7 @@ function addFile() {
     
     // Reset selection and close
     selectedFolderIndex = -1;
+    selectedUploadFolderName = '';
     if (customFolderNameInput) customFolderNameInput.value = ''; // Clear input
     closeUploadModal();
     

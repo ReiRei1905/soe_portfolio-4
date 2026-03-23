@@ -1,9 +1,21 @@
 console.log("projects_scripts.js loaded");
 
+let currentProjectsFolder = null;
+
+function getCurrentProjectsFolderName() {
+    return currentProjectsFolder || '';
+}
+
+window.getCurrentProjectsFolderName = getCurrentProjectsFolderName;
+
 function closeProjectActionDropdowns() {
     document.querySelectorAll('.files-window .file-actions-dropdown').forEach((menu) => {
         menu.classList.add('hidden');
     });
+}
+
+function isProjectsFolderEntry(file) {
+    return file && (file.entryType === 'folder' || (!file.name && !!file.folder));
 }
 
 function ensureProjectEntryId(file, index) {
@@ -16,17 +28,52 @@ function ensureProjectEntryId(file, index) {
 function removeProjectEntry(targetFile) {
     if (typeof studentFiles === 'undefined' || !Array.isArray(studentFiles)) return;
 
-    const idx = studentFiles.findIndex((entry) =>
-        entry === targetFile || (entry.id && targetFile.id && String(entry.id) === String(targetFile.id))
-    );
+    const targetIsFolder = isProjectsFolderEntry(targetFile);
+    const targetFolderName = targetFile.folder || targetFile.name || '';
 
-    if (idx !== -1) {
-        studentFiles.splice(idx, 1);
+    for (let i = studentFiles.length - 1; i >= 0; i -= 1) {
+        const entry = studentFiles[i];
+        const sameEntry = entry === targetFile || (entry.id && targetFile.id && String(entry.id) === String(targetFile.id));
+        const isFolderChild = targetIsFolder
+            && entry.category === 'projects'
+            && !isProjectsFolderEntry(entry)
+            && (entry.folder || '') === targetFolderName;
+
+        if (sameEntry || isFolderChild) {
+            studentFiles.splice(i, 1);
+        }
+    }
+
+    if (targetIsFolder && currentProjectsFolder === targetFolderName) {
+        currentProjectsFolder = null;
+    }
+}
+
+function openProjectsFolder(folderName) {
+    currentProjectsFolder = folderName;
+    renderCurrentSection();
+}
+
+function updateProjectsBreadcrumb() {
+    const rootLink = document.getElementById('projectsBreadcrumbRoot');
+    const folderCrumb = document.getElementById('projectsBreadcrumbFolder');
+    if (!rootLink || !folderCrumb) return;
+
+    if (currentProjectsFolder) {
+        folderCrumb.textContent = currentProjectsFolder;
+        folderCrumb.classList.remove('hidden');
+        rootLink.setAttribute('href', '#');
+        rootLink.classList.add('breadcrumb-root-link');
+    } else {
+        folderCrumb.textContent = '';
+        folderCrumb.classList.add('hidden');
+        rootLink.setAttribute('href', '../projects/projects.html');
+        rootLink.classList.remove('breadcrumb-root-link');
     }
 }
 
 function buildProjectGridItem(file, index, template) {
-    const isFolderEntry = file.entryType === 'folder' || (!file.name && !!file.folder);
+    const isFolderEntry = isProjectsFolderEntry(file);
     const displayName = isFolderEntry ? (file.folder || file.name || 'Untitled Folder') : (file.name || 'Untitled File');
     const displayDate = file.timestamp ? String(file.timestamp).split(',')[0] : '';
 
@@ -50,23 +97,21 @@ function buildProjectGridItem(file, index, template) {
     const iconEl = fragment.querySelector('.file-entry-icon');
     const nameEl = fragment.querySelector('.file-entry-name');
     const dateEl = fragment.querySelector('.file-entry-date');
-    const badgeEl = fragment.querySelector('.file-entry-folder-badge');
 
     fileDiv.dataset.entryId = String(file.id);
+
+    if (isFolderEntry) {
+        fileDiv.classList.add('is-folder-entry');
+        fileDiv.setAttribute('tabindex', '0');
+        fileDiv.setAttribute('role', 'button');
+        fileDiv.setAttribute('aria-label', `Open folder ${displayName}`);
+    }
 
     iconEl.className = isFolderEntry ? 'fas fa-folder text-yellow-500 text-3xl file-entry-icon' : 'fas fa-project-diagram text-blue-500 text-3xl file-entry-icon';
     nameEl.className = 'file-entry-name text-gray-800 font-bold';
     nameEl.textContent = displayName;
     dateEl.className = 'file-entry-date text-xs text-gray-400';
     dateEl.textContent = displayDate;
-
-    if (!isFolderEntry && file.folder) {
-        badgeEl.className = 'file-entry-folder-badge ml-auto text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full';
-        badgeEl.textContent = file.folder;
-    } else {
-        badgeEl.classList.add('hidden');
-        badgeEl.textContent = '';
-    }
 
     const optionsBtn = fragment.querySelector('.file-options');
     const actionsDropdown = fragment.querySelector('.file-actions-dropdown');
@@ -77,6 +122,23 @@ function buildProjectGridItem(file, index, template) {
     const editInput = fragment.querySelector('.edit-input');
     const saveBtn = fragment.querySelector('.save-edit-btn');
     const cancelBtn = fragment.querySelector('.cancel-edit-btn');
+
+    if (isFolderEntry) {
+        const openFolder = (event) => {
+            if (event.target.closest('.file-options') || event.target.closest('.file-actions-dropdown') || event.target.closest('.inline-edit')) {
+                return;
+            }
+            openProjectsFolder(displayName);
+        };
+
+        fileDiv.addEventListener('click', openFolder);
+        fileDiv.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openProjectsFolder(displayName);
+            }
+        });
+    }
 
     optionsBtn.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -123,6 +185,9 @@ function buildProjectGridItem(file, index, template) {
         if (isFolderEntry) {
             file.folder = newName;
             file.name = newName;
+            if (currentProjectsFolder === displayName) {
+                currentProjectsFolder = newName;
+            }
         } else {
             file.name = newName;
         }
@@ -178,17 +243,33 @@ function renderCurrentSection() {
     // Get all files from session storage
     const allFiles = (typeof studentFiles !== 'undefined') ? studentFiles : [];
     const projectsFiles = allFiles.filter(f => f.category === 'projects');
+    const visibleFiles = currentProjectsFolder
+        ? projectsFiles.filter((file) => !isProjectsFolderEntry(file) && (file.folder || '') === currentProjectsFolder)
+        : projectsFiles.filter((file) => isProjectsFolderEntry(file) || !file.folder);
+
+    updateProjectsBreadcrumb();
 
     // Clear everything first
     container.innerHTML = '';
     container.classList.remove('has-files');
 
-    if (projectsFiles.length === 0) {
+    if (!currentProjectsFolder && projectsFiles.length === 0) {
         container.innerHTML = `
             <div class="projects-placeholder flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
                 <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
                 <p class="text-gray-500 text-lg font-medium">No projects added yet.</p>
                 <p class="text-gray-400 text-sm">Click the upload icon above to add your first project!</p>
+            </div>
+        `;
+        return;
+    }
+
+    if (currentProjectsFolder && visibleFiles.length === 0) {
+        container.innerHTML = `
+            <div class="projects-placeholder flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+                <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg font-medium">No files in this folder yet.</p>
+                <p class="text-gray-400 text-sm">Use the upload icon above to add files inside ${currentProjectsFolder}.</p>
             </div>
         `;
         return;
@@ -203,7 +284,7 @@ function renderCurrentSection() {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6';
     
-    projectsFiles.forEach((file, index) => {
+    visibleFiles.forEach((file, index) => {
         const itemNode = buildProjectGridItem(file, index, itemTemplate);
         grid.appendChild(itemNode);
     });
@@ -240,6 +321,17 @@ document.addEventListener("DOMContentLoaded", () => {
             closeProjectActionDropdowns();
         }
     });
+
+    const rootBreadcrumb = document.getElementById('projectsBreadcrumbRoot');
+    if (rootBreadcrumb) {
+        rootBreadcrumb.addEventListener('click', (event) => {
+            if (currentProjectsFolder) {
+                event.preventDefault();
+                currentProjectsFolder = null;
+                renderCurrentSection();
+            }
+        });
+    }
 
     // Load initial content
     renderCurrentSection();
