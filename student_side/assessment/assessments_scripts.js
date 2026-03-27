@@ -19,26 +19,37 @@ function ensureAssessmentEntryId(file, index) {
     return file.id;
 }
 
-function removeAssessmentEntry(targetFile) {
-    if (typeof studentFiles === 'undefined' || !Array.isArray(studentFiles)) return;
+function formatReadableFileSize(bytes) {
+    const size = Number(bytes);
+    if (!Number.isFinite(size) || size <= 0) return '';
 
-    const targetIsFolder = isAssessmentFolderEntry(targetFile);
-    const targetFolderName = targetFile.folder || targetFile.name || '';
+    if (size < 1024) return `${size} B`;
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let value = size / 1024;
+    let unitIndex = 0;
 
-    for (let i = studentFiles.length - 1; i >= 0; i -= 1) {
-        const entry = studentFiles[i];
-        const sameEntry = entry === targetFile || (entry.id && targetFile.id && String(entry.id) === String(targetFile.id));
-        const isFolderChild = targetIsFolder
-            && entry.category === 'assessment'
-            && !isAssessmentFolderEntry(entry)
-            && (entry.folder || '') === targetFolderName;
-
-        if (sameEntry || isFolderChild) {
-            studentFiles.splice(i, 1);
-        }
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
     }
 
-    if (targetIsFolder && currentAssessmentFolder === targetFolderName) {
+    return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function buildAssessmentMetaText(file, isFolderEntry, displayDate) {
+    if (isFolderEntry) return displayDate;
+    const sizeText = formatReadableFileSize(file.fileSize ?? file.file_size ?? 0);
+    if (!displayDate) return sizeText;
+    if (!sizeText) return displayDate;
+    return `${displayDate} • ${sizeText}`;
+}
+
+async function removeAssessmentEntry(targetFile) {
+    const targetIsFolder = isAssessmentFolderEntry(targetFile);
+    await window.deletePortfolioEntry(targetIsFolder ? 'folder' : 'file', targetFile.id, 'assessment');
+    await window.syncCategoryEntries('assessment');
+
+    if (targetIsFolder && currentAssessmentFolder === (targetFile.folder || targetFile.name || '')) {
         currentAssessmentFolder = null;
     }
 }
@@ -70,6 +81,7 @@ function buildAssessmentGridItem(file, index, template) {
     const isFolderEntry = isAssessmentFolderEntry(file);
     const displayName = isFolderEntry ? (file.folder || file.name || 'Untitled Folder') : (file.name || 'Untitled File');
     const displayDate = file.timestamp ? String(file.timestamp).split(',')[0] : '';
+    const displayMeta = buildAssessmentMetaText(file, isFolderEntry, displayDate);
 
     ensureAssessmentEntryId(file, index);
 
@@ -80,7 +92,7 @@ function buildAssessmentGridItem(file, index, template) {
             <i class="${isFolderEntry ? 'fas fa-folder text-yellow-500 text-2xl' : 'fas fa-file-pdf text-red-500 text-2xl'}"></i>
             <div class="flex flex-col">
                 <span class="text-gray-700 ${isFolderEntry ? 'font-semibold' : 'font-medium'}">${displayName}</span>
-                <span class="text-xs text-gray-400">${displayDate}</span>
+                <span class="text-xs text-gray-400">${displayMeta}</span>
             </div>
         `;
         return fallback;
@@ -105,7 +117,7 @@ function buildAssessmentGridItem(file, index, template) {
     nameEl.className = isFolderEntry ? 'file-entry-name text-gray-700 font-semibold' : 'file-entry-name text-gray-700 font-medium';
     nameEl.textContent = displayName;
     dateEl.className = 'file-entry-date text-xs text-gray-400';
-    dateEl.textContent = displayDate;
+    dateEl.textContent = displayMeta;
 
     const optionsBtn = fragment.querySelector('.file-options');
     const actionsDropdown = fragment.querySelector('.file-actions-dropdown');
@@ -158,17 +170,23 @@ function buildAssessmentGridItem(file, index, template) {
         editInput.focus();
     });
 
-    removeBtn.addEventListener('click', (event) => {
+    removeBtn.addEventListener('click', async (event) => {
         event.stopPropagation();
         actionsDropdown.classList.add('hidden');
 
         if (!confirm(`Delete ${isFolderEntry ? 'folder' : 'file'} "${displayName}"?`)) return;
 
-        removeAssessmentEntry(file);
+        try {
+            await removeAssessmentEntry(file);
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Failed to delete item.');
+            return;
+        }
         renderCurrentSection();
     });
 
-    saveBtn.addEventListener('click', (event) => {
+    saveBtn.addEventListener('click', async (event) => {
         event.stopPropagation();
         const newName = editInput.value.trim();
         if (!newName) {
@@ -176,16 +194,18 @@ function buildAssessmentGridItem(file, index, template) {
             return;
         }
 
-        if (isFolderEntry) {
-            file.folder = newName;
-            file.name = newName;
-            if (currentAssessmentFolder === displayName) {
+        try {
+            await window.renamePortfolioEntry(isFolderEntry ? 'folder' : 'file', file.id, newName, 'assessment');
+            await window.syncCategoryEntries('assessment');
+            if (isFolderEntry && currentAssessmentFolder === displayName) {
                 currentAssessmentFolder = newName;
             }
-        } else {
-            file.name = newName;
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Failed to rename item.');
+            return;
         }
-        file.timestamp = new Date().toLocaleString();
+
         renderCurrentSection();
     });
 
@@ -327,6 +347,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Load initial content
-    renderCurrentSection();
+    // Load initial content from backend
+    if (typeof window.syncCategoryEntries === 'function') {
+        window.syncCategoryEntries('assessment')
+            .catch((error) => {
+                console.error(error);
+            })
+            .finally(() => {
+                renderCurrentSection();
+            });
+    } else {
+        renderCurrentSection();
+    }
 });

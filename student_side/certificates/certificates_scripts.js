@@ -25,26 +25,37 @@ function ensureCertificateEntryId(file, index) {
     return file.id;
 }
 
-function removeCertificateEntry(targetFile) {
-    if (typeof studentFiles === 'undefined' || !Array.isArray(studentFiles)) return;
+function formatReadableFileSize(bytes) {
+    const size = Number(bytes);
+    if (!Number.isFinite(size) || size <= 0) return '';
 
-    const targetIsFolder = isCertificatesFolderEntry(targetFile);
-    const targetFolderName = targetFile.folder || targetFile.name || '';
+    if (size < 1024) return `${size} B`;
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let value = size / 1024;
+    let unitIndex = 0;
 
-    for (let i = studentFiles.length - 1; i >= 0; i -= 1) {
-        const entry = studentFiles[i];
-        const sameEntry = entry === targetFile || (entry.id && targetFile.id && String(entry.id) === String(targetFile.id));
-        const isFolderChild = targetIsFolder
-            && entry.category === 'certificates'
-            && !isCertificatesFolderEntry(entry)
-            && (entry.folder || '') === targetFolderName;
-
-        if (sameEntry || isFolderChild) {
-            studentFiles.splice(i, 1);
-        }
+    while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
     }
 
-    if (targetIsFolder && currentCertificatesFolder === targetFolderName) {
+    return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function buildCertificatesMetaText(file, isFolderEntry, displayDate) {
+    if (isFolderEntry) return displayDate;
+    const sizeText = formatReadableFileSize(file.fileSize ?? file.file_size ?? 0);
+    if (!displayDate) return sizeText;
+    if (!sizeText) return displayDate;
+    return `${displayDate} • ${sizeText}`;
+}
+
+async function removeCertificateEntry(targetFile) {
+    const targetIsFolder = isCertificatesFolderEntry(targetFile);
+    await window.deletePortfolioEntry(targetIsFolder ? 'folder' : 'file', targetFile.id, 'certificates');
+    await window.syncCategoryEntries('certificates');
+
+    if (targetIsFolder && currentCertificatesFolder === (targetFile.folder || targetFile.name || '')) {
         currentCertificatesFolder = null;
     }
 }
@@ -76,6 +87,7 @@ function buildCertificateGridItem(file, index, template) {
     const isFolderEntry = isCertificatesFolderEntry(file);
     const displayName = isFolderEntry ? (file.folder || file.name || 'Untitled Folder') : (file.name || 'Untitled File');
     const displayDate = file.timestamp ? String(file.timestamp).split(',')[0] : '';
+    const displayMeta = buildCertificatesMetaText(file, isFolderEntry, displayDate);
 
     ensureCertificateEntryId(file, index);
 
@@ -86,7 +98,7 @@ function buildCertificateGridItem(file, index, template) {
             <i class="${isFolderEntry ? 'fas fa-folder text-yellow-500 text-3xl' : 'fas fa-certificate text-yellow-500 text-3xl'}"></i>
             <div class="flex flex-col">
                 <span class="text-orange-950 font-bold uppercase text-sm tracking-wide">${displayName}</span>
-                <span class="text-xs text-orange-300">${displayDate}</span>
+                <span class="text-xs text-orange-300">${displayMeta}</span>
             </div>
         `;
         return fallback;
@@ -111,7 +123,7 @@ function buildCertificateGridItem(file, index, template) {
     nameEl.className = 'file-entry-name text-orange-950 font-bold uppercase text-sm tracking-wide';
     nameEl.textContent = displayName;
     dateEl.className = 'file-entry-date text-xs text-orange-300';
-    dateEl.textContent = displayDate;
+    dateEl.textContent = displayMeta;
 
     const optionsBtn = fragment.querySelector('.file-options');
     const actionsDropdown = fragment.querySelector('.file-actions-dropdown');
@@ -164,17 +176,23 @@ function buildCertificateGridItem(file, index, template) {
         editInput.focus();
     });
 
-    removeBtn.addEventListener('click', (event) => {
+    removeBtn.addEventListener('click', async (event) => {
         event.stopPropagation();
         actionsDropdown.classList.add('hidden');
 
         if (!confirm(`Delete ${isFolderEntry ? 'folder' : 'file'} "${displayName}"?`)) return;
 
-        removeCertificateEntry(file);
+        try {
+            await removeCertificateEntry(file);
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Failed to delete item.');
+            return;
+        }
         renderCurrentSection();
     });
 
-    saveBtn.addEventListener('click', (event) => {
+    saveBtn.addEventListener('click', async (event) => {
         event.stopPropagation();
         const newName = editInput.value.trim();
         if (!newName) {
@@ -182,16 +200,18 @@ function buildCertificateGridItem(file, index, template) {
             return;
         }
 
-        if (isFolderEntry) {
-            file.folder = newName;
-            file.name = newName;
-            if (currentCertificatesFolder === displayName) {
+        try {
+            await window.renamePortfolioEntry(isFolderEntry ? 'folder' : 'file', file.id, newName, 'certificates');
+            await window.syncCategoryEntries('certificates');
+            if (isFolderEntry && currentCertificatesFolder === displayName) {
                 currentCertificatesFolder = newName;
             }
-        } else {
-            file.name = newName;
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Failed to rename item.');
+            return;
         }
-        file.timestamp = new Date().toLocaleString();
+
         renderCurrentSection();
     });
 
@@ -333,6 +353,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Load initial content
-    renderCurrentSection();
+    // Load initial content from backend
+    if (typeof window.syncCategoryEntries === 'function') {
+        window.syncCategoryEntries('certificates')
+            .catch((error) => {
+                console.error(error);
+            })
+            .finally(() => {
+                renderCurrentSection();
+            });
+    } else {
+        renderCurrentSection();
+    }
 });

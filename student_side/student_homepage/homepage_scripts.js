@@ -112,7 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     configureUploadCategorySelection();
     updateCreateFolderButtonState();
-    updateFolderListUI();
+    const contextCategory = getUploadContextCategory();
+    if (contextCategory) {
+        syncCategoryEntries(contextCategory).catch((error) => {
+            console.error('Failed to load category entries:', error);
+        });
+    } else {
+        updateFolderListUI();
+    }
 });
 
 // Canonical dropdown toggle (shared)
@@ -141,6 +148,74 @@ let customFolders = []; // Reset on refresh
 let studentFiles = []; // Reset on refresh
 let selectedFolderIndex = -1;
 let selectedUploadFolderName = '';
+
+const PORTFOLIO_API_BASE = '../api';
+
+async function callPortfolioApi(endpoint, options) {
+    const response = await fetch(`${PORTFOLIO_API_BASE}/${endpoint}`, {
+        credentials: 'same-origin',
+        ...options
+    });
+
+    const payload = await response.json().catch(() => ({ ok: false, message: 'Invalid server response.' }));
+    if (!response.ok || !payload.ok) {
+        throw new Error(payload.message || `Request failed for ${endpoint}`);
+    }
+    return payload;
+}
+
+function syncFoldersFromStudentFiles() {
+    const folderSet = new Set();
+    studentFiles.forEach((entry) => {
+        if (entry && entry.entryType === 'folder' && entry.folder) {
+            folderSet.add(entry.folder);
+        }
+    });
+    customFolders = Array.from(folderSet);
+}
+
+async function syncCategoryEntries(categoryKey) {
+    const payload = await callPortfolioApi(`list_entries.php?category=${encodeURIComponent(categoryKey)}`, {
+        method: 'GET'
+    });
+
+    const incomingEntries = Array.isArray(payload.entries) ? payload.entries : [];
+    studentFiles = (studentFiles || []).filter((entry) => entry.category !== categoryKey).concat(incomingEntries);
+    syncFoldersFromStudentFiles();
+    updateFolderListUI();
+    return incomingEntries;
+}
+
+window.syncCategoryEntries = syncCategoryEntries;
+
+async function renamePortfolioEntry(entryType, entryId, newName, categoryKey) {
+    const formData = new FormData();
+    formData.append('entry_type', entryType);
+    formData.append('entry_id', String(entryId));
+    formData.append('new_name', newName);
+    if (categoryKey) formData.append('category', categoryKey);
+
+    return callPortfolioApi('rename_entry.php', {
+        method: 'POST',
+        body: formData
+    });
+}
+
+window.renamePortfolioEntry = renamePortfolioEntry;
+
+async function deletePortfolioEntry(entryType, entryId, categoryKey) {
+    const formData = new FormData();
+    formData.append('entry_type', entryType);
+    formData.append('entry_id', String(entryId));
+    if (categoryKey) formData.append('category', categoryKey);
+
+    return callPortfolioApi('delete_entry.php', {
+        method: 'POST',
+        body: formData
+    });
+}
+
+window.deletePortfolioEntry = deletePortfolioEntry;
 
 function getSelectedUploadCategory() {
     return document.querySelector('#uploadDropdown input[name="category"]:checked');
@@ -290,7 +365,7 @@ function hideCustomFolderPopup() {
     if (input) input.value = '';
 }
 
-function createCustomFolder() {
+async function createCustomFolder() {
     const nameInput = document.getElementById('customFolderName');
     const selectedCategoryEl = getSelectedUploadCategory();
 
@@ -304,30 +379,26 @@ function createCustomFolder() {
         const folderName = nameInput.value.trim();
         const category = selectedCategoryEl.value;
 
-        // Keep folder available in the Existing Folder picker.
-        if (!customFolders.includes(folderName)) {
-            customFolders.push(folderName);
-        }
+        try {
+            const formData = new FormData();
+            formData.append('category', category);
+            formData.append('folder_name', folderName);
+            await callPortfolioApi('create_folder.php', {
+                method: 'POST',
+                body: formData
+            });
 
-        selectedUploadFolderName = folderName;
+            selectedUploadFolderName = folderName;
+            await syncCategoryEntries(category);
+            alert(`Folder "${folderName}" created in ${category}.`);
+            closeUploadModal();
 
-        // Create a folder-only entry immediately in the selected category.
-        const newEntry = {
-            id: Date.now(),
-            name: folderName,
-            category: category,
-            folder: folderName,
-            entryType: 'folder',
-            timestamp: new Date().toLocaleString()
-        };
-        studentFiles.push(newEntry);
-
-        updateFolderListUI();
-        alert(`Folder "${folderName}" created in ${category}.`);
-        closeUploadModal();
-
-        if (typeof renderCurrentSection === 'function') {
-            renderCurrentSection();
+            if (typeof renderCurrentSection === 'function') {
+                renderCurrentSection();
+            }
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Failed to create folder.');
         }
     } else {
         alert('Please enter a folder name.');
@@ -339,6 +410,13 @@ function handleExistingFolder() {
     hideCustomFolderPopup();
     const popup = document.getElementById('existingFolderPopup');
     if (popup) {
+        const selectedCategory = getSelectedUploadCategory();
+        const categoryKey = selectedCategory ? selectedCategory.value : getUploadContextCategory();
+        if (categoryKey) {
+            syncCategoryEntries(categoryKey).catch((error) => {
+                console.error('Failed to refresh folders:', error);
+            });
+        }
         popup.classList.toggle('hidden');
     }
 }
@@ -396,13 +474,15 @@ function selectFolder() {
     hideExistingFolderPopup();
 }
 
-function addFile() {
+async function addFile() {
     const fileNameInput = document.getElementById('uploadFileName');
+    const fileInput = document.getElementById('hiddenFileInput');
     const selectedCategoryEl = getSelectedUploadCategory();
     const customFolderNameInput = document.getElementById('customFolderName');
     
     // Check if we have a file name OR we are intending to just create/use a folder
     const fileName = fileNameInput ? fileNameInput.value.trim() : '';
+    const selectedFile = fileInput && fileInput.files && fileInput.files.length > 0 ? fileInput.files[0] : null;
     
     // Logic: User must provide a File Name OR have a folder selected/created
     // But the user specifically asked: "can upload a folder without a file name"
@@ -416,8 +496,8 @@ function addFile() {
     const folderName = customFolderValue || folderFromPicker || folderFromCurrentSectionView;
     const hasFolder = !!folderName;
 
-    if (!fileName && !hasFolder) {
-        alert('Please enter a file name or create/select a folder.');
+    if (!fileName && !selectedFile && !hasFolder) {
+        alert('Please enter/select a file name or create/select a folder.');
         return;
     }
 
@@ -428,34 +508,36 @@ function addFile() {
     
     const category = selectedCategoryEl.value;
 
-    // If there's a custom folder name in the input but it wasn't "Created" yet, 
-    // we should add it now to the list for UI consistency (if you want it to appear in "Existing Folders" later)
-    if (customFolderValue && !customFolders.includes(customFolderValue)) {
-        customFolders.push(customFolderValue);
-        // localStorage.setItem('studentCustomFolders', JSON.stringify(customFolders)); // PERSISTENCE REMOVED
-    }
+    try {
+        if (!fileName && !selectedFile && hasFolder) {
+            const createFolderData = new FormData();
+            createFolderData.append('category', category);
+            createFolderData.append('folder_name', folderName);
+            await callPortfolioApi('create_folder.php', {
+                method: 'POST',
+                body: createFolderData
+            });
+            await syncCategoryEntries(category);
+            alert(`Folder "${folderName}" created in ${category}!`);
+        } else {
+            const uploadData = new FormData();
+            uploadData.append('category', category);
+            uploadData.append('display_name', fileName || (selectedFile ? selectedFile.name : 'Untitled File'));
+            if (folderName) uploadData.append('folder_name', folderName);
+            if (selectedFile) uploadData.append('file', selectedFile);
 
-    // Simulated file/folder storage
-    const newEntry = {
-        id: Date.now(),
-        name: fileName || folderName,
-        category: category,
-        folder: folderName,
-        entryType: fileName ? 'file' : 'folder',
-        timestamp: new Date().toLocaleString()
-    };
+            await callPortfolioApi('upload_file.php', {
+                method: 'POST',
+                body: uploadData
+            });
 
-    // const allFiles = JSON.parse(localStorage.getItem('studentFiles') || '[]'); // PERSISTENCE REMOVED
-    // allFiles.push(newEntry);
-    // localStorage.setItem('studentFiles', JSON.stringify(allFiles));
-
-    // For this session, we'll store it in the global studentFiles array
-    studentFiles.push(newEntry);
-
-    if (fileName) {
-        alert(`File "${fileName}" uploaded to "${folderName}" in ${category}!`);
-    } else {
-        alert(`Folder "${folderName}" created in ${category}!`);
+            await syncCategoryEntries(category);
+            alert(`File "${fileName || (selectedFile ? selectedFile.name : 'Untitled File')}" uploaded${folderName ? ` to "${folderName}"` : ''} in ${category}!`);
+        }
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Failed to save upload.');
+        return;
     }
 
     
