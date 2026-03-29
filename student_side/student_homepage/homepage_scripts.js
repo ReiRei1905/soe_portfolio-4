@@ -150,14 +150,31 @@ let selectedFolderIndex = -1;
 let selectedUploadFolderName = '';
 
 const PORTFOLIO_API_BASE = '../api';
+const FILE_ACCESS_DEDUPE_MS = 1200;
+const recentFileAccessActions = new Map();
 
 function buildPortfolioFileAccessUrl(fileId, download) {
     const modeParam = download ? '&download=1' : '';
     return `${PORTFOLIO_API_BASE}/file_access.php?file_id=${encodeURIComponent(String(fileId))}${modeParam}`;
 }
 
+function isDuplicateFileAccessAction(fileId, download) {
+    const actionKey = `${String(fileId)}:${download ? 'download' : 'open'}`;
+    const now = Date.now();
+    const previous = recentFileAccessActions.get(actionKey) || 0;
+
+    if (now - previous < FILE_ACCESS_DEDUPE_MS) {
+        return true;
+    }
+
+    recentFileAccessActions.set(actionKey, now);
+    return false;
+}
+
 function openPortfolioFileEntry(fileId, download) {
     if (!fileId) return;
+    if (isDuplicateFileAccessAction(fileId, !!download)) return;
+
     const targetUrl = buildPortfolioFileAccessUrl(fileId, !!download);
 
     // Use a single deterministic navigation path for downloads to avoid
@@ -167,10 +184,26 @@ function openPortfolioFileEntry(fileId, download) {
         return;
     }
 
-    const newTab = window.open(targetUrl, '_blank', 'noopener');
-    if (!newTab) {
-        window.location.href = targetUrl;
+    // Avoid using "noopener" in the feature string because some browsers can
+    // return null even when the tab opens, which caused duplicate fallback requests.
+    let newTab = null;
+    try {
+        newTab = window.open(targetUrl, '_blank');
+    } catch (error) {
+        newTab = null;
     }
+
+    if (newTab) {
+        try {
+            newTab.opener = null;
+        } catch (error) {
+            // Ignore cross-origin access restrictions.
+        }
+        return;
+    }
+
+    const fallbackDownloadUrl = buildPortfolioFileAccessUrl(fileId, true);
+    window.location.assign(fallbackDownloadUrl);
 }
 
 window.openPortfolioFileEntry = openPortfolioFileEntry;
