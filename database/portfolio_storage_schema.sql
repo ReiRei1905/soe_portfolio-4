@@ -27,20 +27,15 @@ CREATE TABLE IF NOT EXISTS portfolio_folders (
     folder_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     student_id BIGINT UNSIGNED NOT NULL,
     category_id INT UNSIGNED NOT NULL,
-    parent_folder_id BIGINT UNSIGNED NULL,
     folder_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (folder_id),
     KEY idx_portfolio_folders_student_category (student_id, category_id),
-    KEY idx_portfolio_folders_parent (parent_folder_id),
     CONSTRAINT fk_portfolio_folders_category
         FOREIGN KEY (category_id) REFERENCES portfolio_categories(category_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_portfolio_folders_parent
-        FOREIGN KEY (parent_folder_id) REFERENCES portfolio_folders(folder_id)
-        ON DELETE SET NULL ON UPDATE CASCADE,
-    UNIQUE KEY uq_portfolio_folder_name_per_scope (student_id, category_id, parent_folder_id, folder_name)
+    UNIQUE KEY uq_portfolio_folder_name_per_scope (student_id, category_id, folder_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS portfolio_files (

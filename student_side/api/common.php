@@ -94,7 +94,7 @@ function ensure_folder(mysqli $conn, int $studentId, int $categoryId, string $fo
         json_response(422, ['ok' => false, 'message' => 'Folder name is required.']);
     }
 
-    $select = $conn->prepare('SELECT folder_id FROM portfolio_folders WHERE student_id = ? AND category_id = ? AND parent_folder_id IS NULL AND folder_name = ? LIMIT 1');
+    $select = $conn->prepare('SELECT folder_id FROM portfolio_folders WHERE student_id = ? AND category_id = ? AND folder_name = ? LIMIT 1');
     $select->bind_param('iis', $studentId, $categoryId, $cleanName);
     $select->execute();
     $found = $select->get_result()->fetch_assoc();
@@ -104,7 +104,7 @@ function ensure_folder(mysqli $conn, int $studentId, int $categoryId, string $fo
         return (int) $found['folder_id'];
     }
 
-    $insert = $conn->prepare('INSERT INTO portfolio_folders (student_id, category_id, parent_folder_id, folder_name) VALUES (?, ?, NULL, ?)');
+    $insert = $conn->prepare('INSERT INTO portfolio_folders (student_id, category_id, folder_name) VALUES (?, ?, ?)');
     $insert->bind_param('iis', $studentId, $categoryId, $cleanName);
     $insert->execute();
     $folderId = (int) $insert->insert_id;
@@ -115,7 +115,7 @@ function ensure_folder(mysqli $conn, int $studentId, int $categoryId, string $fo
 
 function upload_root_dir(): string
 {
-    $dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'portfolio';
+    $dir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'soe_portfolio_uploads';
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
     }
@@ -124,6 +124,10 @@ function upload_root_dir(): string
 
 function relative_path_from_repo(string $absolutePath): string
 {
+    if (preg_match('/^[A-Za-z]:\\\\|^\//', $absolutePath) === 1) {
+        return $absolutePath;
+    }
+
     $repoRoot = dirname(__DIR__, 2);
     $repoRoot = rtrim(str_replace('\\', '/', $repoRoot), '/');
     $target = str_replace('\\', '/', $absolutePath);

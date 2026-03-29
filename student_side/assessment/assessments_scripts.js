@@ -122,6 +122,7 @@ function buildAssessmentGridItem(file, index, template) {
     const optionsBtn = fragment.querySelector('.file-options');
     const actionsDropdown = fragment.querySelector('.file-actions-dropdown');
     const editBtn = fragment.querySelector('.edit-btn');
+    const downloadBtn = fragment.querySelector('.download-btn');
     const removeBtn = fragment.querySelector('.remove-btn');
     const viewRow = fragment.querySelector('.file-view-row');
     const inlineEdit = fragment.querySelector('.inline-edit');
@@ -144,6 +145,48 @@ function buildAssessmentGridItem(file, index, template) {
                 openAssessmentFolder(displayName);
             }
         });
+    } else {
+        nameEl.classList.add('is-file-link');
+        nameEl.setAttribute('tabindex', '0');
+        nameEl.setAttribute('role', 'link');
+        nameEl.setAttribute('aria-label', `Open file ${displayName}`);
+
+        const openFile = (event) => {
+            event.stopPropagation();
+            if (file.hasContent === false) {
+                alert('This file record was created without binary content. Please re-upload the file.');
+                return;
+            }
+            if (typeof window.openPortfolioFileEntry === 'function') {
+                window.openPortfolioFileEntry(file.id, false);
+            }
+        };
+
+        nameEl.addEventListener('click', openFile);
+        nameEl.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openFile(event);
+            }
+        });
+    }
+
+    if (downloadBtn) {
+        if (isFolderEntry) {
+            downloadBtn.classList.add('hidden');
+        } else {
+            downloadBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                actionsDropdown.classList.add('hidden');
+                if (file.hasContent === false) {
+                    alert('This file record was created without binary content. Please re-upload the file.');
+                    return;
+                }
+                if (typeof window.openPortfolioFileEntry === 'function') {
+                    window.openPortfolioFileEntry(file.id, true);
+                }
+            });
+        }
     }
 
     optionsBtn.addEventListener('click', (event) => {

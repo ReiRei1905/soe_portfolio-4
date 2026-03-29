@@ -1260,6 +1260,19 @@ footer { display: flex; align-items: center; }
     white-space: nowrap;
 }
 
+.files-window .file-entry-name.is-file-link {
+    color: #1d4ed8;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.files-window .file-entry-name.is-file-link:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
 .files-window .file-options {
     position: absolute;
     top: 50%;

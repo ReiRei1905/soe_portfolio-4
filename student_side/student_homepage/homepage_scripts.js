@@ -151,6 +151,30 @@ let selectedUploadFolderName = '';
 
 const PORTFOLIO_API_BASE = '../api';
 
+function buildPortfolioFileAccessUrl(fileId, download) {
+    const modeParam = download ? '&download=1' : '';
+    return `${PORTFOLIO_API_BASE}/file_access.php?file_id=${encodeURIComponent(String(fileId))}${modeParam}`;
+}
+
+function openPortfolioFileEntry(fileId, download) {
+    if (!fileId) return;
+    const targetUrl = buildPortfolioFileAccessUrl(fileId, !!download);
+
+    // Use a single deterministic navigation path for downloads to avoid
+    // accidental double requests caused by popup behavior/fallback.
+    if (download) {
+        window.location.assign(targetUrl);
+        return;
+    }
+
+    const newTab = window.open(targetUrl, '_blank', 'noopener');
+    if (!newTab) {
+        window.location.href = targetUrl;
+    }
+}
+
+window.openPortfolioFileEntry = openPortfolioFileEntry;
+
 async function callPortfolioApi(endpoint, options) {
     const response = await fetch(`${PORTFOLIO_API_BASE}/${endpoint}`, {
         credentials: 'same-origin',
@@ -520,6 +544,11 @@ async function addFile() {
             await syncCategoryEntries(category);
             alert(`Folder "${folderName}" created in ${category}!`);
         } else {
+            if (!selectedFile) {
+                alert('Please select a real file using the upload icon before pressing Done.');
+                return;
+            }
+
             const uploadData = new FormData();
             uploadData.append('category', category);
             uploadData.append('display_name', fileName || (selectedFile ? selectedFile.name : 'Untitled File'));
