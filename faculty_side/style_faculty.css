@@ -1487,6 +1487,15 @@ main {
     gap: 1rem;
 }
 
+.create-output-container select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+}
+
 .hidden {
     display: none;
 }
@@ -1514,14 +1523,88 @@ main {
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.required-outputs-list li .output-header {
+    font-weight: 600;
+}
+
+.required-format-chip {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0c4a6e;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
 }
 
 .required-outputs-list li .input-and-buttons {
     display: flex; /* Align input and buttons horizontally */
     align-items: center; /* Vertically align input and buttons */
     gap: 0.5rem; /* Add spacing between input and buttons */
+    flex-wrap: wrap;
+}
+
+.required-outputs-list li .score-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.required-outputs-list li .score-input-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 145px;
+}
+
+.required-outputs-list li .attach-output-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.required-outputs-list li .attach-output-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 145px;
+}
+
+.required-outputs-list li .attach-output-name {
+    min-width: 220px;
+    flex: 1;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    background: #ffffff;
+}
+
+.required-outputs-list li .attach-output-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.required-outputs-list li .attach-output-btn:disabled,
+.required-outputs-list li .attach-output-name:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.required-outputs-list li .required-output-file-input {
+    display: none;
 }
 
 .required-outputs-list li .user-score {

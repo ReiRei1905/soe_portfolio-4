@@ -24,10 +24,10 @@ try {
     }
 
     if ($entryType === 'folder') {
-        $stmt = $conn->prepare('UPDATE portfolio_folders SET folder_name = ?, updated_at = CURRENT_TIMESTAMP WHERE folder_id = ? AND student_id = ?');
+        $stmt = $conn->prepare('UPDATE folders SET folder_name = ?, updated_at = CURRENT_TIMESTAMP WHERE folder_id = ? AND student_id = ?');
         $stmt->bind_param('sii', $newName, $entryId, $studentId);
     } else {
-        $stmt = $conn->prepare('UPDATE portfolio_files SET original_file_name = ?, updated_at = CURRENT_TIMESTAMP WHERE file_id = ? AND student_id = ?');
+        $stmt = $conn->prepare('UPDATE files SET original_file_name = ?, updated_at = CURRENT_TIMESTAMP WHERE file_id = ? AND student_id = ?');
         $stmt->bind_param('sii', $newName, $entryId, $studentId);
     }
 

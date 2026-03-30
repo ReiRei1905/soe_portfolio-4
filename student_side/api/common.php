@@ -74,7 +74,7 @@ function current_student_id(mysqli $conn): int
 
 function category_id_by_key(mysqli $conn, string $categoryKey): int
 {
-    $stmt = $conn->prepare('SELECT category_id FROM portfolio_categories WHERE category_key = ? LIMIT 1');
+    $stmt = $conn->prepare('SELECT category_id FROM academic_categories WHERE category_key = ? LIMIT 1');
     $stmt->bind_param('s', $categoryKey);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
@@ -94,7 +94,7 @@ function ensure_folder(mysqli $conn, int $studentId, int $categoryId, string $fo
         json_response(422, ['ok' => false, 'message' => 'Folder name is required.']);
     }
 
-    $select = $conn->prepare('SELECT folder_id FROM portfolio_folders WHERE student_id = ? AND category_id = ? AND folder_name = ? LIMIT 1');
+    $select = $conn->prepare('SELECT folder_id FROM folders WHERE student_id = ? AND category_id = ? AND folder_name = ? LIMIT 1');
     $select->bind_param('iis', $studentId, $categoryId, $cleanName);
     $select->execute();
     $found = $select->get_result()->fetch_assoc();
@@ -104,7 +104,7 @@ function ensure_folder(mysqli $conn, int $studentId, int $categoryId, string $fo
         return (int) $found['folder_id'];
     }
 
-    $insert = $conn->prepare('INSERT INTO portfolio_folders (student_id, category_id, folder_name) VALUES (?, ?, ?)');
+    $insert = $conn->prepare('INSERT INTO folders (student_id, category_id, folder_name) VALUES (?, ?, ?)');
     $insert->bind_param('iis', $studentId, $categoryId, $cleanName);
     $insert->execute();
     $folderId = (int) $insert->insert_id;

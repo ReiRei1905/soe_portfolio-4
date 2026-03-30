@@ -56,7 +56,7 @@ try {
     $fileSize = (int) ($_FILES['file']['size'] ?? 0);
     $relativePath = relative_path_from_repo($absolutePath);
 
-    $stmt = $conn->prepare('INSERT INTO portfolio_files (student_id, category_id, folder_id, original_file_name, stored_file_name, file_path, mime_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $conn->prepare('INSERT INTO files (student_id, category_id, folder_id, original_file_name, stored_file_name, file_path, mime_type, file_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->bind_param('iiissssi', $studentId, $categoryId, $folderId, $displayName, $storedFileName, $relativePath, $mimeType, $fileSize);
     $stmt->execute();
     $fileId = (int) $stmt->insert_id;

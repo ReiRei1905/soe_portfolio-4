@@ -15,7 +15,7 @@ try {
         exit;
     }
 
-    $stmt = $conn->prepare('SELECT original_file_name, mime_type, file_path FROM portfolio_files WHERE file_id = ? AND student_id = ? LIMIT 1');
+    $stmt = $conn->prepare('SELECT original_file_name, mime_type, file_path FROM files WHERE file_id = ? AND student_id = ? LIMIT 1');
     $stmt->bind_param('ii', $fileId, $studentId);
     $stmt->execute();
     $file = $stmt->get_result()->fetch_assoc();

@@ -9,7 +9,7 @@ try {
 
     $entries = [];
 
-    $folderStmt = $conn->prepare('SELECT folder_id, folder_name, created_at, updated_at FROM portfolio_folders WHERE student_id = ? AND category_id = ? ORDER BY created_at DESC');
+    $folderStmt = $conn->prepare('SELECT folder_id, folder_name, created_at, updated_at FROM folders WHERE student_id = ? AND category_id = ? ORDER BY created_at DESC');
     $folderStmt->bind_param('ii', $studentId, $categoryId);
     $folderStmt->execute();
     $folders = $folderStmt->get_result();
@@ -25,7 +25,7 @@ try {
     }
     $folderStmt->close();
 
-    $fileStmt = $conn->prepare('SELECT f.file_id, f.original_file_name, f.mime_type, f.file_size, f.file_path, f.created_at, f.updated_at, d.folder_name FROM portfolio_files f LEFT JOIN portfolio_folders d ON d.folder_id = f.folder_id WHERE f.student_id = ? AND f.category_id = ? ORDER BY f.created_at DESC');
+    $fileStmt = $conn->prepare('SELECT f.file_id, f.original_file_name, f.mime_type, f.file_size, f.file_path, f.created_at, f.updated_at, d.folder_name FROM files f LEFT JOIN folders d ON d.folder_id = f.folder_id WHERE f.student_id = ? AND f.category_id = ? ORDER BY f.created_at DESC');
     $fileStmt->bind_param('ii', $studentId, $categoryId);
     $fileStmt->execute();
     $files = $fileStmt->get_result();

@@ -5,6 +5,46 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmOutputBtn = document.getElementById('confirmOutputBtn');
     const cancelOutputBtn = document.getElementById('cancelOutputBtn');
     const outputsList = document.getElementById('outputsList');
+    const requiredFormatSelect = document.getElementById('requiredFormat');
+
+    const FORMAT_RULES = {
+        '.docx': ['docx'],
+        '.pdf': ['pdf'],
+        '.xlsx': ['xlsx'],
+        '.png/.jpg': ['png', 'jpg', 'jpeg']
+    };
+
+    function isFormatAllowed(requiredFormat, fileName) {
+        const normalizedRequired = String(requiredFormat || '').trim().toLowerCase();
+        const extension = (String(fileName || '').split('.').pop() || '').trim().toLowerCase();
+        const allowed = FORMAT_RULES[normalizedRequired] || [];
+        return extension && allowed.includes(extension);
+    }
+
+    function renderAttachControls(output, isProfessorView) {
+        const disabled = isProfessorView ? 'disabled' : '';
+        const disabledAttr = isProfessorView ? 'true' : 'false';
+        const fileName = output.submitted_file_name ? String(output.submitted_file_name) : '';
+        const requiredFormat = output.required_file_format || '';
+        const browseLabel = isProfessorView ? 'Attach disabled' : 'Browse';
+
+        return `
+            <div class="attach-output-row">
+                <label class="attach-output-label">Attach required output</label>
+                <input
+                    type="text"
+                    class="attach-output-name"
+                    placeholder="Attach required output"
+                    value="${fileName.replace(/"/g, '&quot;')}"
+                    ${disabled}
+                    aria-disabled="${disabledAttr}"
+                    readonly
+                />
+                <button type="button" class="attach-output-btn" ${disabled}>${browseLabel}</button>
+                <input type="file" class="required-output-file-input" data-required-format="${requiredFormat}" ${disabled} />
+            </div>
+        `;
+    }
 
     // Show the create output container
     createOutputBtn.addEventListener('click', () => {
@@ -14,6 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Hide the create output container
     cancelOutputBtn.addEventListener('click', () => {
         createOutputContainer.classList.add('hidden');
+        document.getElementById('outputName').value = '';
+        document.getElementById('totalScore').value = '';
+        if (requiredFormatSelect) requiredFormatSelect.value = '';
+        delete confirmOutputBtn.dataset.editingOutputId;
     });
 
     // Determine which view to render: 'professor' or 'student'. Relies on optional window.PAGE_USER
@@ -54,11 +98,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     data.outputs.forEach(output => {
                         const listItem = document.createElement('li');
                         listItem.dataset.outputId = output.output_id;
+                        listItem.dataset.outputName = output.output_name;
+                        listItem.dataset.totalScore = output.total_score;
+                        listItem.dataset.requiredFormat = output.required_file_format || '';
+
+                        const requiredFormatLabel = output.required_file_format || 'Not set';
+                        const outputHeader = `
+                            <div class="output-header">
+                                <span>${output.output_name} (Total Score: ${output.total_score})</span>
+                                <div><span class="required-format-chip">Required format: ${requiredFormatLabel}</span></div>
+                            </div>
+                        `;
+
                         if (view === 'professor') {
                             listItem.innerHTML = `
-                                <span>${output.output_name} (Total Score: ${output.total_score})</span>
+                                ${outputHeader}
+                                ${renderAttachControls(output, true)}
                                 <div class="input-and-buttons">
-                                    <input type="number" placeholder="Enter your score" class="user-score" disabled />
+                                    <div class="score-input-row">
+                                        <label class="score-input-label">Enter your score</label>
+                                        <input type="number" placeholder="Enter your score" class="user-score" disabled />
+                                    </div>
                                     <div class="button-group">
                                         <button class="editOutput-btn">Edit</button>
                                         <button class="delete-btn">Delete</button>
@@ -66,17 +126,33 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </div>
                             `;
                         } else {
+                            const isSubmitted = output.status === 'submitted';
+                            const scoreValue = output.student_score !== null && output.student_score !== undefined ? output.student_score : '';
                             // student view: enable input and show Submit/Undo buttons
                             listItem.innerHTML = `
-                                <span>${output.output_name} (Total Score: ${output.total_score})</span>
+                                ${outputHeader}
+                                ${renderAttachControls(output, false)}
                                 <div class="input-and-buttons">
-                                    <input type="number" placeholder="Enter your score" class="user-score" />
+                                    <div class="score-input-row">
+                                        <label class="score-input-label">Enter your score</label>
+                                        <input type="number" placeholder="Enter your score" class="user-score" value="${scoreValue}" ${isSubmitted ? 'disabled' : ''} />
+                                    </div>
                                     <div class="button-group">
-                                        <button class="student-submit-btn">Submit</button>
-                                        <button class="student-undo-btn" style="display:none">Undo Turn in</button>
+                                        <button class="student-submit-btn" ${isSubmitted ? 'style="display:none"' : ''}>Submit</button>
+                                        <button class="student-undo-btn" ${isSubmitted ? '' : 'style="display:none"'}>Undo Turn in</button>
                                     </div>
                                 </div>
                             `;
+
+                            if (isSubmitted) {
+                                listItem.dataset.submitted = 'true';
+                                const attachTextInput = listItem.querySelector('.attach-output-name');
+                                const attachBtn = listItem.querySelector('.attach-output-btn');
+                                const attachFileInput = listItem.querySelector('.required-output-file-input');
+                                if (attachTextInput) attachTextInput.disabled = true;
+                                if (attachBtn) attachBtn.disabled = true;
+                                if (attachFileInput) attachFileInput.disabled = true;
+                            }
                         }
                         outputsList.appendChild(listItem);
                     });
@@ -87,11 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmOutputBtn.addEventListener('click', () => {
         const outputName = document.getElementById('outputName').value.trim();
         const totalScore = document.getElementById('totalScore').value.trim();
+        const requiredFormat = requiredFormatSelect ? requiredFormatSelect.value.trim() : '';
         const urlParams = new URLSearchParams(window.location.search);
         const classId = urlParams.get('class_id');
         const editingOutputId = confirmOutputBtn.dataset.editingOutputId;
     
-        if (outputName === '' || totalScore === '') {
+        if (requiredFormat === '' || outputName === '' || totalScore === '') {
             alert('Please fill out all fields.');
             return;
         }
@@ -101,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
             fetch('edit_class_output.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `output_id=${encodeURIComponent(editingOutputId)}&output_name=${encodeURIComponent(outputName)}&total_score=${encodeURIComponent(totalScore)}`
+                body: `output_id=${encodeURIComponent(editingOutputId)}&output_name=${encodeURIComponent(outputName)}&total_score=${encodeURIComponent(totalScore)}&required_file_format=${encodeURIComponent(requiredFormat)}`
             })
             .then(response => response.json())
             .then(result => {
@@ -109,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fetchAndDisplayOutputs(classId);
                     document.getElementById('outputName').value = '';
                     document.getElementById('totalScore').value = '';
+                    if (requiredFormatSelect) requiredFormatSelect.value = '';
                     createOutputContainer.classList.add('hidden');
                     delete confirmOutputBtn.dataset.editingOutputId;
                 } else {
@@ -120,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
             fetch('add_class_output.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `class_id=${encodeURIComponent(classId)}&output_name=${encodeURIComponent(outputName)}&total_score=${encodeURIComponent(totalScore)}`
+                body: `class_id=${encodeURIComponent(classId)}&output_name=${encodeURIComponent(outputName)}&total_score=${encodeURIComponent(totalScore)}&required_file_format=${encodeURIComponent(requiredFormat)}`
             })
             .then(response => response.json())
             .then(result => {
@@ -128,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fetchAndDisplayOutputs(classId);
                     document.getElementById('outputName').value = '';
                     document.getElementById('totalScore').value = '';
+                    if (requiredFormatSelect) requiredFormatSelect.value = '';
                     createOutputContainer.classList.add('hidden');
                 } else {
                     alert('Failed to add output.');
@@ -140,18 +219,27 @@ document.addEventListener("DOMContentLoaded", () => {
     outputsList.addEventListener('click', (event) => {
         const target = event.target;
 
+        if (target.classList.contains('attach-output-btn') || target.classList.contains('attach-output-name')) {
+            const listItem = target.closest('li');
+            const fileInput = listItem ? listItem.querySelector('.required-output-file-input') : null;
+            if (fileInput && !fileInput.disabled) {
+                fileInput.click();
+            }
+            return;
+        }
+
         // Handle Edit button click (professor)
         if (target.classList.contains('editOutput-btn')) {
             const listItem = target.closest('li');
             const outputId = listItem.dataset.outputId;
-            const outputDetails = listItem.querySelector('span').textContent;
-            const [outputName, totalScore] = outputDetails
-                .match(/^(.*) \(Total Score: (\d+)\)$/)
-                .slice(1);
+            const outputName = listItem.dataset.outputName || '';
+            const totalScore = listItem.dataset.totalScore || '';
+            const requiredFormat = listItem.dataset.requiredFormat || '';
 
             // Populate the input fields with the existing values
             document.getElementById('outputName').value = outputName;
             document.getElementById('totalScore').value = totalScore;
+            if (requiredFormatSelect) requiredFormatSelect.value = requiredFormat;
 
             // Show the create output container for editing
             createOutputContainer.classList.remove('hidden');
@@ -185,24 +273,61 @@ document.addEventListener("DOMContentLoaded", () => {
         if (target.classList.contains('student-submit-btn')) {
             const listItem = target.closest('li');
             const input = listItem.querySelector('.user-score');
+            const attachInput = listItem.querySelector('.required-output-file-input');
+            const requiredFormat = (listItem.dataset.requiredFormat || '').trim();
             const score = input.value.trim();
             if (score === '') {
                 alert('Please enter a score before submitting.');
                 return;
             }
+
+            if (!attachInput || !attachInput.files || attachInput.files.length === 0) {
+                alert('Please attach the required output before submitting.');
+                return;
+            }
+
+            const selectedFile = attachInput.files[0];
+            if (!isFormatAllowed(requiredFormat, selectedFile.name)) {
+                alert(`Invalid file format. Required format is ${requiredFormat}.`);
+                return;
+            }
+
             const outputId = listItem.dataset.outputId;
             // Call backend submit endpoint
+            const formData = new FormData();
+            formData.append('output_id', outputId);
+            formData.append('student_score', score);
+            formData.append('attached_output', selectedFile);
+
             fetch('submit_output.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `output_id=${encodeURIComponent(outputId)}&student_score=${encodeURIComponent(score)}`
+                body: formData
             })
-            .then(r => r.json())
+            .then(async (response) => {
+                const raw = await response.text();
+                let parsed = null;
+                try {
+                    parsed = raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    throw new Error(raw || `Submit request failed with status ${response.status}`);
+                }
+
+                if (!response.ok) {
+                    throw new Error((parsed && (parsed.error || parsed.message)) || raw || 'Submit request failed.');
+                }
+
+                return parsed;
+            })
             .then(resp => {
                 if (resp && resp.success) {
                     // reflect UI changes
                     input.disabled = true;
                     target.style.display = 'none';
+                    const attachTextInput = listItem.querySelector('.attach-output-name');
+                    const attachBtn = listItem.querySelector('.attach-output-btn');
+                    if (attachTextInput) attachTextInput.disabled = true;
+                    if (attachBtn) attachBtn.disabled = true;
+                    if (attachInput) attachInput.disabled = true;
                     const undoBtn = listItem.querySelector('.student-undo-btn');
                     if (undoBtn) undoBtn.style.display = '';
                     listItem.dataset.submitted = 'true';
@@ -210,7 +335,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert((resp && resp.error) ? resp.error : 'Failed to submit score.');
                 }
             })
-            .catch(() => alert('Network error while submitting.'));
+            .catch((error) => {
+                alert(error && error.message ? error.message : 'Network error while submitting.');
+            });
         }
 
         // Handle Student Undo
@@ -223,11 +350,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `output_id=${encodeURIComponent(outputId)}`
             })
-            .then(r => r.json())
+            .then(async (response) => {
+                const raw = await response.text();
+                let parsed = null;
+                try {
+                    parsed = raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    throw new Error(raw || `Undo request failed with status ${response.status}`);
+                }
+
+                if (!response.ok) {
+                    throw new Error((parsed && (parsed.error || parsed.message)) || raw || 'Undo request failed.');
+                }
+
+                return parsed;
+            })
             .then(resp => {
                 if (resp && resp.success) {
                     input.disabled = false;
                     target.style.display = 'none';
+                    const attachTextInput = listItem.querySelector('.attach-output-name');
+                    const attachBtn = listItem.querySelector('.attach-output-btn');
+                    const attachInput = listItem.querySelector('.required-output-file-input');
+                    if (attachTextInput) attachTextInput.disabled = false;
+                    if (attachBtn) attachBtn.disabled = false;
+                    if (attachInput) {
+                        attachInput.disabled = false;
+                        attachInput.value = '';
+                    }
+                    if (attachTextInput) attachTextInput.value = '';
                     const submitBtn = listItem.querySelector('.student-submit-btn');
                     if (submitBtn) submitBtn.style.display = '';
                     delete listItem.dataset.submitted;
@@ -235,8 +386,34 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert((resp && resp.error) ? resp.error : 'Failed to undo submission.');
                 }
             })
-            .catch(() => alert('Network error while undoing submission.'));
+            .catch((error) => {
+                alert(error && error.message ? error.message : 'Network error while undoing submission.');
+            });
         }
+    });
+
+    outputsList.addEventListener('change', (event) => {
+        const target = event.target;
+        if (!target.classList.contains('required-output-file-input')) return;
+
+        const listItem = target.closest('li');
+        const attachNameInput = listItem ? listItem.querySelector('.attach-output-name') : null;
+        if (!target.files || target.files.length === 0) {
+            if (attachNameInput) attachNameInput.value = '';
+            return;
+        }
+
+        const selectedFile = target.files[0];
+        const requiredFormat = (listItem && listItem.dataset.requiredFormat) ? listItem.dataset.requiredFormat : (target.dataset.requiredFormat || '');
+
+        if (!isFormatAllowed(requiredFormat, selectedFile.name)) {
+            alert(`Invalid file format. Required format is ${requiredFormat}.`);
+            target.value = '';
+            if (attachNameInput) attachNameInput.value = '';
+            return;
+        }
+
+        if (attachNameInput) attachNameInput.value = selectedFile.name;
     });
 
     // Deadline Logic Frontend:

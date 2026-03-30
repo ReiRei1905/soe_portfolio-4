@@ -20,13 +20,13 @@ try {
     }
 
     if ($entryType === 'file') {
-        $pathStmt = $conn->prepare('SELECT file_path FROM portfolio_files WHERE file_id = ? AND student_id = ? LIMIT 1');
+        $pathStmt = $conn->prepare('SELECT file_path FROM files WHERE file_id = ? AND student_id = ? LIMIT 1');
         $pathStmt->bind_param('ii', $entryId, $studentId);
         $pathStmt->execute();
         $pathRow = $pathStmt->get_result()->fetch_assoc();
         $pathStmt->close();
 
-        $deleteStmt = $conn->prepare('DELETE FROM portfolio_files WHERE file_id = ? AND student_id = ?');
+        $deleteStmt = $conn->prepare('DELETE FROM files WHERE file_id = ? AND student_id = ?');
         $deleteStmt->bind_param('ii', $entryId, $studentId);
         $deleteStmt->execute();
         $deleteStmt->close();
@@ -38,19 +38,19 @@ try {
             }
         }
     } else {
-        $folderStmt = $conn->prepare('SELECT folder_id FROM portfolio_folders WHERE folder_id = ? AND student_id = ? LIMIT 1');
+        $folderStmt = $conn->prepare('SELECT folder_id FROM folders WHERE folder_id = ? AND student_id = ? LIMIT 1');
         $folderStmt->bind_param('ii', $entryId, $studentId);
         $folderStmt->execute();
         $folder = $folderStmt->get_result()->fetch_assoc();
         $folderStmt->close();
 
         if ($folder) {
-            $deleteFiles = $conn->prepare('DELETE FROM portfolio_files WHERE folder_id = ? AND student_id = ?');
+            $deleteFiles = $conn->prepare('DELETE FROM files WHERE folder_id = ? AND student_id = ?');
             $deleteFiles->bind_param('ii', $entryId, $studentId);
             $deleteFiles->execute();
             $deleteFiles->close();
 
-            $deleteFolder = $conn->prepare('DELETE FROM portfolio_folders WHERE folder_id = ? AND student_id = ?');
+            $deleteFolder = $conn->prepare('DELETE FROM folders WHERE folder_id = ? AND student_id = ?');
             $deleteFolder->bind_param('ii', $entryId, $studentId);
             $deleteFolder->execute();
             $deleteFolder->close();
