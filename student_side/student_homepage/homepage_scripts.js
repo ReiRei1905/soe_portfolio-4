@@ -22,8 +22,15 @@ function handleProfileClick() {
 }
 
 function goToStudentOverviewPage() {
-    // Redirect to the student homepage
-    window.location.href = "../student_homepage/student_homepage.html";
+    const bodyHomeUrl = document.body ? (document.body.dataset.homeUrl || '').trim() : '';
+    if (bodyHomeUrl) {
+        window.location.href = bodyHomeUrl;
+        return;
+    }
+
+    const currentPath = (window.location.pathname || '').toLowerCase();
+    const extension = currentPath.endsWith('.php') ? 'php' : 'html';
+    window.location.href = `../student_homepage/student_homepage.${extension}`;
 }
 
 /* Toggle sidebar in overview section (shared) */
@@ -120,6 +127,135 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         updateFolderListUI();
     }
+
+    const newCategoryInput = document.getElementById('newCategoryName');
+    if (newCategoryInput) {
+        newCategoryInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                createCategoryFromPopup();
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closeAddCategoryPopup();
+            }
+        });
+    }
+
+    const profileEditTrigger = document.getElementById('profileEditTrigger');
+    if (profileEditTrigger) {
+        profileEditTrigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!document.body.classList.contains('customize-mode')) return;
+            openProfileTextEditor();
+        });
+    }
+
+    const quickGrid = document.querySelector('.quick-access-grid');
+    if (quickGrid) {
+        quickGrid.addEventListener('click', async (event) => {
+            const editTrigger = event.target.closest('.quick-card-edit-trigger');
+            if (!editTrigger) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            if (!document.body.classList.contains('customize-mode')) return;
+
+            const card = editTrigger.closest('.quick-card');
+            if (!card) return;
+
+            if (quickCardDeleteMode) {
+                const titleEl = card.querySelector('.quick-title');
+                const title = titleEl ? titleEl.textContent.trim() : 'this portfolio card';
+                if (confirm(`Delete "${title}"?`)) {
+                    const portfolioId = Number(card.dataset.portfolioId || 0);
+                    if (portfolioId > 0) {
+                        try {
+                            const deleteData = new FormData();
+                            deleteData.append('portfolio_id', String(portfolioId));
+                            await callHomepageApi('delete_quick_card.php', {
+                                method: 'POST',
+                                body: deleteData
+                            });
+                        } catch (error) {
+                            alert(error.message || 'Failed to delete portfolio card.');
+                            return;
+                        }
+                    }
+                    card.remove();
+                }
+                return;
+            }
+
+            openQuickCardTitleEditor(card, editTrigger);
+        }, true);
+
+        quickGrid.addEventListener('keydown', async (event) => {
+            const editTrigger = event.target.closest('.quick-card-edit-trigger');
+            if (!editTrigger) return;
+
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!document.body.classList.contains('customize-mode')) return;
+                const card = editTrigger.closest('.quick-card');
+                if (!card) return;
+
+                if (quickCardDeleteMode) {
+                    const titleEl = card.querySelector('.quick-title');
+                    const title = titleEl ? titleEl.textContent.trim() : 'this portfolio card';
+                    if (confirm(`Delete "${title}"?`)) {
+                        const portfolioId = Number(card.dataset.portfolioId || 0);
+                        if (portfolioId > 0) {
+                            try {
+                                const deleteData = new FormData();
+                                deleteData.append('portfolio_id', String(portfolioId));
+                                await callHomepageApi('delete_quick_card.php', {
+                                    method: 'POST',
+                                    body: deleteData
+                                });
+                            } catch (error) {
+                                alert(error.message || 'Failed to delete portfolio card.');
+                                return;
+                            }
+                        }
+                        card.remove();
+                    }
+                    return;
+                }
+
+                openQuickCardTitleEditor(card, editTrigger);
+            }
+        });
+    }
+
+    const quickEditInput = document.getElementById('quickTitleEditInput');
+    if (quickEditInput) {
+        quickEditInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveQuickCardTitleChange();
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelQuickCardTitleChange();
+            }
+        });
+    }
+
+    document.addEventListener('click', (event) => {
+        const popup = document.getElementById('quickTitleEditPopup');
+        if (!popup || popup.classList.contains('hidden')) return;
+
+        const clickedOnTrigger = !!event.target.closest('.quick-card-edit-trigger');
+        const clickedInsidePopup = popup.contains(event.target);
+        if (!clickedOnTrigger && !clickedInsidePopup) {
+            cancelQuickCardTitleChange();
+        }
+    });
+
+    loadHomepageState();
 });
 
 // Canonical dropdown toggle (shared)
@@ -148,10 +284,99 @@ let customFolders = []; // Reset on refresh
 let studentFiles = []; // Reset on refresh
 let selectedFolderIndex = -1;
 let selectedUploadFolderName = '';
+let activeQuickCardForEdit = null;
+let quickCardDeleteMode = false;
+let currentCarouselItems = [];
+let currentCarouselIndex = 0;
+let activeQuickCardPortfolioId = 0;
+let activeQuickCardPortfolioKey = '';
+let activeQuickCardTitle = '';
+let quickCardPickerCategory = 'all';
+let quickCardPickerAvailableFiles = [];
+let quickCardPickerSelectedFileIds = new Set();
 
 const PORTFOLIO_API_BASE = '../api';
 const FILE_ACCESS_DEDUPE_MS = 1200;
 const recentFileAccessActions = new Map();
+
+function callHomepageApi(endpoint, options) {
+    return callPortfolioApi(endpoint, options);
+}
+
+function normalizePortfolioKey(rawKey, fallbackTitle) {
+    const source = (rawKey || '').trim() || (fallbackTitle || '').trim();
+    const normalized = source.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return normalized || 'portfolio';
+}
+
+function mapPortfolioKeyToCategory(key) {
+    const normalized = String(key || '').trim().toLowerCase();
+    if (normalized === 'assessments' || normalized === 'assessment') return 'assessment';
+    if (normalized === 'projects' || normalized === 'project') return 'projects';
+    if (normalized === 'certificates' || normalized === 'certificate') return 'certificates';
+    return 'all';
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderQuickAccessCards(quickCards) {
+    const grid = document.querySelector('.quick-access-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    if (!Array.isArray(quickCards) || quickCards.length === 0) {
+        const fallbackCard = createQuickCard('Top projects', 'projects', null);
+        grid.appendChild(fallbackCard);
+        setQuickCardCornerMode(quickCardDeleteMode);
+        return;
+    }
+
+    quickCards.forEach((card) => {
+        const title = String(card && card.title ? card.title : 'Untitled portfolio');
+        const key = normalizePortfolioKey(card && card.portfolioKey ? card.portfolioKey : '', title);
+        const id = Number(card && card.id ? card.id : 0);
+        const node = createQuickCard(title, key, id > 0 ? id : null);
+        grid.appendChild(node);
+    });
+
+    setQuickCardCornerMode(quickCardDeleteMode);
+}
+
+async function loadHomepageState() {
+    try {
+        const payload = await callHomepageApi('get_homepage_state.php', { method: 'GET' });
+        const profile = payload && payload.profile ? payload.profile : {};
+
+        const studentNameEl = document.getElementById('studentName');
+        const bioEl = document.getElementById('profileBioText') || document.querySelector('.profile-bio');
+
+        const displayName = String(profile.displayName || '').trim();
+        const accountName = String(profile.accountName || '').trim();
+        const effectiveName = displayName || accountName;
+
+        if (studentNameEl && effectiveName) {
+            studentNameEl.textContent = effectiveName;
+            try { localStorage.setItem('studentName', effectiveName); } catch (error) { }
+        }
+
+        if (bioEl) {
+            const bio = String(profile.bio || '').trim();
+            bioEl.textContent = bio || 'About the user';
+        }
+
+        renderQuickAccessCards(Array.isArray(payload.quickCards) ? payload.quickCards : []);
+    } catch (error) {
+        console.warn('Homepage state load failed:', error);
+    }
+}
 
 function buildPortfolioFileAccessUrl(fileId, download) {
     const modeParam = download ? '&download=1' : '';
@@ -651,18 +876,197 @@ function toggleCustomize() {
         controls.classList.remove('hidden');
         controls.classList.add('show');
         controls.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('customize-mode');
+        quickCardDeleteMode = false;
+        setQuickCardCornerMode(false);
     } else {
         controls.classList.add('hidden');
         controls.classList.remove('show');
         controls.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('customize-mode');
+        quickCardDeleteMode = false;
+        setQuickCardCornerMode(false);
+        closeAddCategoryPopup();
+        cancelProfileTextChanges();
+        cancelQuickCardTitleChange();
     }
 }
 
+function setQuickCardCornerMode(isDeleteMode) {
+    const triggers = document.querySelectorAll('.quick-card-edit-trigger');
+    triggers.forEach((trigger) => {
+        const icon = trigger.querySelector('i');
+        trigger.classList.toggle('is-delete-trigger', !!isDeleteMode);
+        trigger.setAttribute('aria-label', isDeleteMode ? 'Delete portfolio card' : 'Edit portfolio title');
+        trigger.dataset.actionMode = isDeleteMode ? 'delete' : 'edit';
+
+        if (icon) {
+            icon.className = isDeleteMode ? 'fas fa-trash' : 'fas fa-pen-square';
+        }
+    });
+
+    const deleteBtn = document.querySelector('#customizeControls .control-delete');
+    if (deleteBtn) {
+        deleteBtn.classList.toggle('is-active', !!isDeleteMode);
+        deleteBtn.setAttribute('title', isDeleteMode ? 'Exit delete mode' : 'Delete category');
+    }
+}
+
+function openProfileTextEditor() {
+    const panel = document.getElementById('profileEditPanel');
+    if (!panel) return;
+
+    const nameEl = document.getElementById('studentName');
+    const bioEl = document.getElementById('profileBioText') || document.querySelector('.profile-bio');
+    const nameInput = document.getElementById('profileNameInput');
+    const bioInput = document.getElementById('profileBioInput');
+
+    if (nameInput) nameInput.value = nameEl ? (nameEl.textContent || '').trim() : '';
+    if (bioInput) bioInput.value = bioEl ? (bioEl.textContent || '').trim() : '';
+
+    panel.classList.remove('hidden');
+    if (nameInput) nameInput.focus();
+}
+
+async function saveProfileTextChanges() {
+    const nameInput = document.getElementById('profileNameInput');
+    const bioInput = document.getElementById('profileBioInput');
+    const nameEl = document.getElementById('studentName');
+    const bioEl = document.getElementById('profileBioText') || document.querySelector('.profile-bio');
+
+    const nextName = nameInput ? nameInput.value.trim() : '';
+    const nextBio = bioInput ? bioInput.value.trim() : '';
+
+    if (!nextName) {
+        alert('Name cannot be empty.');
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    try {
+        const payload = new FormData();
+        payload.append('display_name', nextName);
+        payload.append('bio', nextBio);
+        await callHomepageApi('save_homepage_profile.php', {
+            method: 'POST',
+            body: payload
+        });
+    } catch (error) {
+        alert(error.message || 'Failed to save profile.');
+        return;
+    }
+
+    if (nameEl) nameEl.textContent = nextName;
+    if (bioEl) bioEl.textContent = nextBio || 'About the user';
+    try { localStorage.setItem('studentName', nextName); } catch (error) { }
+
+    cancelProfileTextChanges();
+}
+
+function cancelProfileTextChanges() {
+    const panel = document.getElementById('profileEditPanel');
+    if (panel) panel.classList.add('hidden');
+}
+
+function openQuickCardTitleEditor(card, triggerElement) {
+    activeQuickCardForEdit = card;
+    const titleEl = card ? card.querySelector('.quick-title') : null;
+    const popup = document.getElementById('quickTitleEditPopup');
+    const input = document.getElementById('quickTitleEditInput');
+
+    if (!popup || !input || !titleEl) return;
+
+    input.value = (titleEl.textContent || '').trim();
+
+    const anchor = triggerElement || card;
+    const rect = anchor.getBoundingClientRect();
+    const popupWidth = 250;
+    const left = Math.max(12, Math.min(window.innerWidth - popupWidth - 12, rect.right - popupWidth));
+    const top = Math.max(12, Math.min(window.innerHeight - 120, rect.bottom + 8));
+
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+    popup.classList.remove('hidden');
+    input.focus();
+    input.select();
+}
+
+async function saveQuickCardTitleChange() {
+    const popup = document.getElementById('quickTitleEditPopup');
+    const input = document.getElementById('quickTitleEditInput');
+    if (!popup || !input || !activeQuickCardForEdit) return;
+
+    const nextTitle = input.value.trim();
+    if (!nextTitle) {
+        alert('Portfolio title cannot be empty.');
+        input.focus();
+        return;
+    }
+
+    const portfolioId = Number(activeQuickCardForEdit.dataset.portfolioId || 0);
+    if (portfolioId > 0) {
+        try {
+            const payload = new FormData();
+            payload.append('portfolio_id', String(portfolioId));
+            payload.append('title', nextTitle);
+            await callHomepageApi('update_quick_card.php', {
+                method: 'POST',
+                body: payload
+            });
+        } catch (error) {
+            alert(error.message || 'Failed to update portfolio title.');
+            return;
+        }
+    }
+
+    const titleEl = activeQuickCardForEdit.querySelector('.quick-title');
+    if (titleEl) titleEl.textContent = nextTitle;
+
+    cancelQuickCardTitleChange();
+}
+
+function cancelQuickCardTitleChange() {
+    const popup = document.getElementById('quickTitleEditPopup');
+    if (popup) popup.classList.add('hidden');
+    activeQuickCardForEdit = null;
+}
+
 function addCategory() {
-    // har Prompt user for a new quick-access category name and add a quick-card to
-    // the homepage quick-access grid. This runs on the front-end only.
-    const name = prompt('Enter name for the new quick-access category:');
-    if (!name || !name.trim()) return alert('Category name cannot be empty.');
+    const popup = document.getElementById('addCategoryPopup');
+    if (!popup) return;
+
+    if (!popup.classList.contains('hidden')) {
+        closeAddCategoryPopup(false);
+        return;
+    }
+
+    popup.classList.remove('hidden');
+    const input = document.getElementById('newCategoryName');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+}
+
+function closeAddCategoryPopup(clearInput = true) {
+    const popup = document.getElementById('addCategoryPopup');
+    if (popup) popup.classList.add('hidden');
+
+    if (clearInput) {
+        const input = document.getElementById('newCategoryName');
+        if (input) input.value = '';
+    }
+}
+
+async function createCategoryFromPopup() {
+    const input = document.getElementById('newCategoryName');
+    const name = input ? input.value : '';
+    if (!name || !name.trim()) {
+        alert('Portfolio name cannot be empty.');
+        if (input) input.focus();
+        return;
+    }
+
     const trimmed = name.trim();
 
     const grid = document.querySelector('.quick-access-grid');
@@ -674,65 +1078,73 @@ function addCategory() {
             div.className = 'file-tile';
             div.textContent = trimmed;
             fallback.appendChild(div);
-            alert(`Category "${trimmed}" added (front-end only).`);
+            closeAddCategoryPopup();
             return;
         }
         return alert('Quick-access area not found on this page.');
     }
 
     // Create and append the quick-card button
-    const card = createQuickCard(trimmed);
+    let card = null;
+    try {
+        const payload = new FormData();
+        payload.append('title', trimmed);
+        const response = await callHomepageApi('create_quick_card.php', {
+            method: 'POST',
+            body: payload
+        });
+
+        if (response && response.quickCard) {
+            const quickCard = response.quickCard;
+            card = createQuickCard(
+                String(quickCard.title || trimmed),
+                normalizePortfolioKey(String(quickCard.portfolioKey || ''), trimmed),
+                Number(quickCard.id || 0) || null
+            );
+        }
+    } catch (error) {
+        alert(error.message || 'Failed to create portfolio card.');
+        return;
+    }
+
+    if (!card) {
+        card = createQuickCard(trimmed);
+    }
+
     grid.appendChild(card);
-    // Provide feedback
-    alert(`Quick-access category "${trimmed}" added.`);
+    setQuickCardCornerMode(quickCardDeleteMode);
+    closeAddCategoryPopup();
 }
 
 function deleteCategory() {
-    // Front-end deletion helper: show available quick-access categories and allow
-    // the user to choose one to remove.
-    const grid = document.querySelector('.quick-access-grid');
-    if (!grid) return alert('No quick-access area found on this page.');
+    if (!document.body.classList.contains('customize-mode')) return;
 
-    const cards = Array.from(grid.querySelectorAll('.quick-card'));
-    if (cards.length === 0) return alert('There are no categories to delete.');
-
-    const names = cards.map((c, idx) => {
-        const h = c.querySelector('.quick-title');
-        return h ? h.textContent.trim() : `Item ${idx + 1}`;
-    });
-
-    // Build a numbered list for the prompt
-    const listText = names.map((n, i) => `${i + 1}) ${n}`).join('\n');
-    const input = prompt(`Choose a category to delete (enter number or exact name):\n\n${listText}`);
-    if (!input) return; // cancelled
-
-    let chosenIndex = -1;
-    const asNum = parseInt(input, 10);
-    if (!Number.isNaN(asNum) && asNum >= 1 && asNum <= names.length) {
-        chosenIndex = asNum - 1;
-    } else {
-        // Match by exact (case-insensitive) name
-        const normalized = input.trim().toLowerCase();
-        chosenIndex = names.findIndex(n => n.toLowerCase() === normalized);
-    }
-
-    if (chosenIndex === -1) return alert('No matching category found.');
-
-    const toDelete = cards[chosenIndex];
-    const toDeleteName = names[chosenIndex];
-    if (!confirm(`Delete quick-access category "${toDeleteName}"? This is front-end only.`)) return;
-
-    toDelete.remove();
-    alert(`Category "${toDeleteName}" deleted.`);
+    quickCardDeleteMode = !quickCardDeleteMode;
+    closeAddCategoryPopup();
+    cancelQuickCardTitleChange();
+    setQuickCardCornerMode(quickCardDeleteMode);
 }
 
 // Helper: create a quick-card DOM node that matches the homepage markup
-function createQuickCard(title) {
-    const slug = slugify(title);
+function createQuickCard(title, portfolioKey, portfolioId) {
+    const slug = normalizePortfolioKey(portfolioKey || '', title);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quick-card';
-    btn.setAttribute('onclick', `openFileManagement('fileManagementModal','${slug}')`);
+    if (portfolioId) btn.dataset.portfolioId = String(portfolioId);
+    btn.dataset.portfolioKey = slug;
+    btn.setAttribute('onclick', `openFileManagement('fileManagementModal','${slug}', event)`);
+
+    const editTrigger = document.createElement('span');
+    editTrigger.className = 'edit-corner-trigger quick-card-edit-trigger';
+    editTrigger.setAttribute('role', 'button');
+    editTrigger.setAttribute('tabindex', '0');
+    editTrigger.setAttribute('aria-label', 'Edit portfolio title');
+
+    const editIcon = document.createElement('i');
+    editIcon.className = 'fas fa-pen-square';
+    editIcon.setAttribute('aria-hidden', 'true');
+    editTrigger.appendChild(editIcon);
 
     const icon = document.createElement('i');
     icon.className = 'fas fa-folder folder-fa';
@@ -742,6 +1154,7 @@ function createQuickCard(title) {
     h3.className = 'quick-title';
     h3.textContent = title;
 
+    btn.appendChild(editTrigger);
     btn.appendChild(icon);
     btn.appendChild(h3);
     return btn;
@@ -753,11 +1166,18 @@ function slugify(str) {
 
 function goBack() {
     // If customize controls are visible, hide them; otherwise do nothing (could navigate back)
+    closeAddCategoryPopup();
+    cancelProfileTextChanges();
+    cancelQuickCardTitleChange();
+
     const controls = document.getElementById('customizeControls');
     if (controls && !controls.classList.contains('hidden')) {
         controls.classList.add('hidden');
         controls.classList.remove('show');
         controls.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('customize-mode');
+        quickCardDeleteMode = false;
+        setQuickCardCornerMode(false);
         return;
     }
     // default fallback: navigate back to a previous page if desired
@@ -765,7 +1185,22 @@ function goBack() {
 }
 
 /* Quick-access modal helpers used by the homepage cards */
-function openFileManagement(modalId, type) {
+async function openFileManagement(modalId, type, event) {
+    if (event && event.target && event.target.closest('.quick-card-edit-trigger')) {
+        event.preventDefault();
+        return;
+    }
+
+    const card = event && event.currentTarget
+        ? event.currentTarget
+        : (event && event.target ? event.target.closest('.quick-card') : null);
+
+    activeQuickCardPortfolioId = card ? Number(card.dataset.portfolioId || 0) : 0;
+    activeQuickCardPortfolioKey = card ? String(card.dataset.portfolioKey || type || '') : String(type || '');
+    const cardTitleEl = card ? card.querySelector('.quick-title') : null;
+    activeQuickCardTitle = cardTitleEl ? cardTitleEl.textContent.trim() : 'Manage Files';
+    quickCardPickerCategory = mapPortfolioKeyToCategory(activeQuickCardPortfolioKey);
+
     const modal = document.getElementById(modalId);
     if (!modal) return console.warn('Modal not found:', modalId);
     modal.classList.remove('hidden');
@@ -774,26 +1209,10 @@ function openFileManagement(modalId, type) {
 
     // If this is the file management modal, populate tiles (sample behavior)
     if (modalId === 'fileManagementModal') {
-        const container = document.getElementById('fileTileContainer');
         const title = document.getElementById('fileManagementTitle');
-        if (title) {
-            // Set a contextual title based on requested type
-            if (type === 'projects') title.textContent = 'Top projects';
-            else if (type === 'certificates') title.textContent = 'Top certificates / awards';
-            else if (type === 'assessments') title.textContent = 'Top assessments';
-            else title.textContent = 'Manage Files';
-        }
+        if (title) title.textContent = activeQuickCardTitle || 'Manage Files';
 
-        if (container) {
-            container.innerHTML = '';
-            // Provide sample items per type so the modal feels populated
-            let sampleFiles = ['Sample File 1', 'Sample File 2'];
-            if (type === 'projects') sampleFiles = ['Project - Final', 'Project - Prototype'];
-            if (type === 'certificates') sampleFiles = ['Certificate - Course A', 'Award - Hackathon'];
-            if (type === 'assessments') sampleFiles = ['Assessment - Quiz 1', 'Assessment - Lab 2'];
-
-            sampleFiles.forEach(name => container.appendChild(createFileTile(name)));
-        }
+        await loadQuickCardFiles(activeQuickCardPortfolioId);
     }
 }
 
@@ -822,10 +1241,226 @@ function openFileManagementModal() {
 }
 
 function closeFileManagement() {
-    // clear tiles then close
-    const container = document.getElementById('fileTileContainer');
-    if (container) container.innerHTML = '';
+    currentCarouselItems = [];
+    currentCarouselIndex = 0;
+    activeQuickCardPortfolioId = 0;
+    activeQuickCardPortfolioKey = '';
+    activeQuickCardTitle = '';
+    closeQuickCardFilePicker();
     closeModal('fileManagementModal');
+}
+
+async function loadQuickCardFiles(portfolioId) {
+    if (portfolioId <= 0) {
+        currentCarouselItems = [];
+        currentCarouselIndex = 0;
+        quickCardPickerAvailableFiles = [];
+        quickCardPickerSelectedFileIds = new Set();
+        renderFileCarouselItem();
+        return;
+    }
+
+    try {
+        const payload = await callHomepageApi(`get_quick_card_files.php?portfolio_id=${encodeURIComponent(String(portfolioId))}`, {
+            method: 'GET'
+        });
+
+        quickCardPickerAvailableFiles = Array.isArray(payload.availableFiles) ? payload.availableFiles : [];
+        const selectedIds = Array.isArray(payload.selectedFileIds) ? payload.selectedFileIds : [];
+        quickCardPickerSelectedFileIds = new Set(selectedIds.map((id) => Number(id)).filter((id) => id > 0));
+
+        currentCarouselItems = Array.isArray(payload.attachedFiles) ? payload.attachedFiles : [];
+        currentCarouselIndex = 0;
+        renderFileCarouselItem();
+    } catch (error) {
+        alert(error.message || 'Failed to load portfolio files.');
+        currentCarouselItems = [];
+        currentCarouselIndex = 0;
+        renderFileCarouselItem();
+    }
+}
+
+function renderFileCarouselItem() {
+    const itemBtn = document.getElementById('fileCarouselItem');
+    const counter = document.getElementById('fileCarouselCounter');
+    const prevBtn = document.getElementById('fileCarouselPrev');
+    const nextBtn = document.getElementById('fileCarouselNext');
+
+    if (!itemBtn || !counter || !prevBtn || !nextBtn) return;
+
+    if (!Array.isArray(currentCarouselItems) || currentCarouselItems.length === 0) {
+        itemBtn.textContent = 'No items yet';
+        counter.textContent = '0 / 0';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        itemBtn.disabled = true;
+        return;
+    }
+
+    const safeIndex = Math.max(0, Math.min(currentCarouselItems.length - 1, currentCarouselIndex));
+    currentCarouselIndex = safeIndex;
+
+    const entry = currentCarouselItems[safeIndex] || {};
+    itemBtn.textContent = String(entry.name || 'Untitled file');
+    counter.textContent = `${safeIndex + 1} / ${currentCarouselItems.length}`;
+    itemBtn.disabled = false;
+
+    prevBtn.disabled = safeIndex === 0;
+    nextBtn.disabled = safeIndex === currentCarouselItems.length - 1;
+}
+
+function showPreviousFileItem() {
+    if (!Array.isArray(currentCarouselItems) || currentCarouselItems.length === 0) return;
+    if (currentCarouselIndex <= 0) return;
+    currentCarouselIndex -= 1;
+    renderFileCarouselItem();
+}
+
+function showNextFileItem() {
+    if (!Array.isArray(currentCarouselItems) || currentCarouselItems.length === 0) return;
+    if (currentCarouselIndex >= currentCarouselItems.length - 1) return;
+    currentCarouselIndex += 1;
+    renderFileCarouselItem();
+}
+
+function openCurrentFileItem() {
+    if (!Array.isArray(currentCarouselItems) || currentCarouselItems.length === 0) return;
+    const activeEntry = currentCarouselItems[currentCarouselIndex] || null;
+    const fileId = activeEntry ? Number(activeEntry.id || 0) : 0;
+    if (fileId > 0) {
+        openPortfolioFileEntry(fileId, false);
+    }
+}
+
+function openQuickCardFilePicker() {
+    if (activeQuickCardPortfolioId <= 0) {
+        alert('Please open a saved extracurricular portfolio first.');
+        return;
+    }
+
+    const picker = document.getElementById('quickCardFilePickerModal');
+    if (!picker) return;
+
+    picker.classList.remove('hidden');
+    renderQuickCardPickerTabs();
+    renderQuickCardPickerList();
+}
+
+function closeQuickCardFilePicker() {
+    const picker = document.getElementById('quickCardFilePickerModal');
+    if (picker) picker.classList.add('hidden');
+}
+
+function setQuickCardPickerCategory(categoryKey) {
+    quickCardPickerCategory = String(categoryKey || 'all').trim() || 'all';
+    renderQuickCardPickerTabs();
+    renderQuickCardPickerList();
+}
+
+function renderQuickCardPickerTabs() {
+    const tabs = document.querySelectorAll('#quickCardPickerCategoryTabs .picker-tab');
+    tabs.forEach((tab) => {
+        const tabCategory = String(tab.dataset.category || '');
+        tab.classList.toggle('is-active', tabCategory === quickCardPickerCategory);
+    });
+}
+
+function buildQuickCardPickerGroups(files) {
+    const groups = new Map();
+
+    files.forEach((file) => {
+        const categoryLabel = String(file.categoryLabel || file.categoryKey || 'Uncategorized');
+        const folderName = String(file.folderName || '').trim() || 'No folder';
+        const groupKey = `${categoryLabel}::${folderName}`;
+
+        if (!groups.has(groupKey)) {
+            groups.set(groupKey, {
+                categoryLabel,
+                folderName,
+                files: []
+            });
+        }
+
+        groups.get(groupKey).files.push(file);
+    });
+
+    return Array.from(groups.values());
+}
+
+function renderQuickCardPickerList() {
+    const container = document.getElementById('quickCardPickerList');
+    if (!container) return;
+
+    const filteredFiles = quickCardPickerAvailableFiles.filter((file) => {
+        if (quickCardPickerCategory === 'all') return true;
+        return String(file.categoryKey || '').toLowerCase() === quickCardPickerCategory;
+    });
+
+    if (filteredFiles.length === 0) {
+        container.innerHTML = '<p class="picker-empty">No PDF/PNG/JPG files found in this category.</p>';
+        return;
+    }
+
+    const groups = buildQuickCardPickerGroups(filteredFiles);
+    const html = groups.map((group) => {
+        const rows = group.files.map((file) => {
+            const fileId = Number(file.id || 0);
+            const checked = quickCardPickerSelectedFileIds.has(fileId) ? 'checked' : '';
+            const safeName = escapeHtml(String(file.name || 'Untitled file'));
+            return `
+                <label class="picker-file-row" data-file-id="${fileId}">
+                    <input type="checkbox" class="picker-file-checkbox" value="${fileId}" ${checked} onchange="toggleQuickCardPickerFile(this)">
+                    <span class="picker-file-name">${safeName}</span>
+                </label>
+            `;
+        }).join('');
+
+        return `
+            <section class="picker-group">
+                <h4 class="picker-group-title">${escapeHtml(group.categoryLabel)} <span class="picker-group-folder">/ ${escapeHtml(group.folderName)}</span></h4>
+                <div class="picker-group-files">${rows}</div>
+            </section>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+}
+
+function toggleQuickCardPickerFile(checkbox) {
+    if (!checkbox) return;
+    const fileId = Number(checkbox.value || 0);
+    if (fileId <= 0) return;
+
+    if (checkbox.checked) {
+        quickCardPickerSelectedFileIds.add(fileId);
+    } else {
+        quickCardPickerSelectedFileIds.delete(fileId);
+    }
+}
+
+async function confirmQuickCardFileSelection() {
+    if (activeQuickCardPortfolioId <= 0) {
+        alert('No active portfolio selected.');
+        return;
+    }
+
+    const payload = new FormData();
+    payload.append('portfolio_id', String(activeQuickCardPortfolioId));
+    Array.from(quickCardPickerSelectedFileIds).forEach((fileId) => {
+        payload.append('file_ids[]', String(fileId));
+    });
+
+    try {
+        await callHomepageApi('save_quick_card_files.php', {
+            method: 'POST',
+            body: payload
+        });
+
+        closeQuickCardFilePicker();
+        await loadQuickCardFiles(activeQuickCardPortfolioId);
+    } catch (error) {
+        alert(error.message || 'Failed to save selected files.');
+    }
 }
 
 // Create a DOM tile for a file (matches the Tailwind-like markup used elsewhere)

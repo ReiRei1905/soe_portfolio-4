@@ -137,9 +137,9 @@
     <div id="sidebar">
         <nav>
             <a class="text-lg" href="../assessment/assessments.html">Assessments</a>
-            <a class="text-lg" href="../projects.html">Projects</a>
-            <a class="text-lg" href="../certificates/awards.html">Certificates/Awards</a>
-            <a class="text-lg" href="../classes.html">Classes</a>
+            <a class="text-lg" href="../projects/projects.html">Projects</a>
+            <a class="text-lg" href="../certificates/certificates.html">Certificates/Awards</a>
+            <a class="text-lg" href="../student_class/student_classes.html">Classes</a>
             <a class="text-lg" href="../faculty_about_us.html">About us</a>
         </nav>
     </div>
@@ -158,10 +158,22 @@
          positioned outside the <section> but aligned to its top-right. -->
     <div class="profile-wrapper">
         <section class="profile-card" aria-label="student profile">
+            <button id="profileEditTrigger" class="edit-corner-trigger profile-edit-trigger" type="button" aria-label="Edit profile section">
+                <i class="fas fa-pen-square" aria-hidden="true"></i>
+            </button>
             <div class="profile-info">
                 <!-- ID used by JS to set the logged-in student's name -->
                 <h2 id="studentName" class="profile-name">Student Name</h2>
-                <p class="profile-bio">About the user</p>
+                <p id="profileBioText" class="profile-bio">About the user</p>
+
+                <div id="profileEditPanel" class="profile-edit-panel hidden" aria-label="Edit profile text">
+                    <input id="profileNameInput" type="text" placeholder="Enter name" maxlength="80" />
+                    <input id="profileBioInput" type="text" placeholder="About the user" maxlength="160" />
+                    <div class="profile-edit-actions">
+                        <button type="button" class="btn-profile-save" onclick="saveProfileTextChanges()">Save</button>
+                        <button type="button" class="btn-profile-cancel" onclick="cancelProfileTextChanges()">Cancel</button>
+                    </div>
+                </div>
             </div>
             <div class="profile-right">
                 <div class="profile-avatar" role="img" aria-label="student avatar">
@@ -184,26 +196,54 @@
         <button title="Go back" class="control-btn control-back" type="button" onclick="goBack()">
             <i class="fas fa-arrow-left"></i>
         </button>
+
+        <div id="addCategoryPopup" class="add-category-popup hidden" role="dialog" aria-modal="false" aria-labelledby="addCategoryPopupTitle">
+            <div id="addCategoryPopupTitle" class="add-category-input-wrap">
+                <i class="fas fa-folder" aria-hidden="true"></i>
+                <input id="newCategoryName" type="text" placeholder="Enter Portfolio Name" maxlength="60" />
+            </div>
+            <div class="add-category-actions">
+                <button type="button" class="btn-category-create" onclick="createCategoryFromPopup()">Create</button>
+                <button type="button" class="btn-category-cancel" onclick="closeAddCategoryPopup()">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <!-- Quick access grid: Top projects / certificates / assessments -->
     <section class="quick-access" aria-label="quick access">
         <div class="quick-access-grid">
-            <button onclick="openFileManagement('fileManagementModal','projects')" class="quick-card" type="button">
+            <button onclick="openFileManagement('fileManagementModal','projects', event)" class="quick-card" type="button">
+                <span class="edit-corner-trigger quick-card-edit-trigger" role="button" tabindex="0" aria-label="Edit portfolio title">
+                    <i class="fas fa-pen-square" aria-hidden="true"></i>
+                </span>
                 <!-- If you have a local image, replace the <i> fallback with <img src="..."> -->
                 <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                 <h3 class="quick-title">Top projects</h3>
             </button>
 
-            <button onclick="openFileManagement('fileManagementModal','certificates')" class="quick-card" type="button">
+            <button onclick="openFileManagement('fileManagementModal','certificates', event)" class="quick-card" type="button">
+                <span class="edit-corner-trigger quick-card-edit-trigger" role="button" tabindex="0" aria-label="Edit portfolio title">
+                    <i class="fas fa-pen-square" aria-hidden="true"></i>
+                </span>
                 <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                 <h3 class="quick-title">Top certificates/awards</h3>
             </button>
 
-            <button onclick="openFileManagement('fileManagementModal','assessments')" class="quick-card" type="button">
+            <button onclick="openFileManagement('fileManagementModal','assessments', event)" class="quick-card" type="button">
+                <span class="edit-corner-trigger quick-card-edit-trigger" role="button" tabindex="0" aria-label="Edit portfolio title">
+                    <i class="fas fa-pen-square" aria-hidden="true"></i>
+                </span>
                 <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                 <h3 class="quick-title">Top assessments</h3>
             </button>
+        </div>
+
+        <div id="quickTitleEditPopup" class="quick-title-edit-popup hidden" role="dialog" aria-modal="false" aria-label="Edit portfolio title">
+            <input id="quickTitleEditInput" type="text" placeholder="Enter Portfolio Name" maxlength="60" />
+            <div class="quick-title-edit-actions">
+                <button type="button" class="btn-quick-save" onclick="saveQuickCardTitleChange()">Save</button>
+                <button type="button" class="btn-quick-cancel" onclick="cancelQuickCardTitleChange()">Cancel</button>
+            </div>
         </div>
     </section>
 
@@ -242,15 +282,41 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeFileManagement()">&times;</button>
             <h2 id="fileManagementTitle">Manage Files</h2>
-            <div id="fileTileContainer" class="file-tile-container">
-                <!-- Sample tiles; in practice populate dynamically or replace with server-rendered content -->
-                <div class="file-tile"><a class="file-link" href="#">Sample File 1</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 2</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 3</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 4</a></div>
+            <div class="file-carousel-shell" aria-label="Portfolio item slider">
+                <button id="fileCarouselPrev" class="file-carousel-arrow" type="button" onclick="showPreviousFileItem()" aria-label="Previous item">&#10094;</button>
+
+                <div class="file-carousel-viewport">
+                    <button id="fileCarouselItem" class="file-carousel-item" type="button" onclick="openCurrentFileItem()"></button>
+                    <p id="fileCarouselCounter" class="file-carousel-counter">1 / 1</p>
+                </div>
+
+                <button id="fileCarouselNext" class="file-carousel-arrow" type="button" onclick="showNextFileItem()" aria-label="Next item">&#10095;</button>
             </div>
-            <div style="margin-top:1rem;">
-                <button onclick="closeFileManagement()" class="modal-action-close">Close</button>
+            <div class="file-management-actions">
+                <button type="button" class="modal-action-open-picker" onclick="openQuickCardFilePicker()">Add Files</button>
+                <button type="button" onclick="closeFileManagement()" class="modal-action-close">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quickCardFilePickerModal" class="modal hidden file-picker-modal" role="dialog" aria-modal="true" aria-labelledby="quickCardFilePickerTitle">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeQuickCardFilePicker()">&times;</button>
+            <h2 id="quickCardFilePickerTitle">Select Files</h2>
+            <p class="picker-hint">Choose files only (PDF, PNG, JPG). Multiple selection is allowed.</p>
+
+            <div id="quickCardPickerCategoryTabs" class="picker-category-tabs" role="tablist" aria-label="File categories">
+                <button type="button" class="picker-tab is-active" data-category="all" onclick="setQuickCardPickerCategory('all')">All</button>
+                <button type="button" class="picker-tab" data-category="assessment" onclick="setQuickCardPickerCategory('assessment')">Assessments</button>
+                <button type="button" class="picker-tab" data-category="projects" onclick="setQuickCardPickerCategory('projects')">Projects</button>
+                <button type="button" class="picker-tab" data-category="certificates" onclick="setQuickCardPickerCategory('certificates')">Certificates</button>
+            </div>
+
+            <div id="quickCardPickerList" class="picker-file-list" aria-live="polite"></div>
+
+            <div class="picker-actions">
+                <button type="button" class="picker-confirm-btn" onclick="confirmQuickCardFileSelection()">Confirm</button>
+                <button type="button" class="picker-cancel-btn" onclick="closeQuickCardFilePicker()">Cancel</button>
             </div>
         </div>
     </div>

@@ -585,6 +585,7 @@ main {
 .customize-controls {
     /* Hidden by default; JS toggles the 'show' class to display */
     display: none;
+    position: relative;
     /* Anchor the controls to the top-right of the centered profile area.
        Previously a large fixed `margin-right: 70rem` was used which
        made horizontal adjustments with `margin-left` behave unpredictably
@@ -622,8 +623,128 @@ main {
 .control-add:hover { filter: brightness(0.95); }
 .control-delete { background: #ef4444; /* red */ }
 .control-delete:hover { filter: brightness(0.95); }
+.control-delete.is-active {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+}
 .control-back { background: #9ca3af; /* gray */ color: #111827; }
 .control-back:hover { filter: brightness(0.95); }
+
+.edit-corner-trigger {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    width: 34px;
+    height: 34px;
+    border-radius: 0.5rem;
+    border: 1px solid #111827;
+    background: #ffffff;
+    color: #111827;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    cursor: pointer;
+    z-index: 3;
+}
+
+body.customize-mode .edit-corner-trigger {
+    display: inline-flex;
+}
+
+.edit-corner-trigger:hover {
+    background: #f3f4f6;
+}
+
+.quick-card-edit-trigger.is-delete-trigger {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: #fff1f2;
+}
+
+.quick-card-edit-trigger.is-delete-trigger:hover {
+    background: #fee2e2;
+}
+
+.add-category-popup {
+    position: absolute;
+    top: 3.2rem;
+    right: 0;
+    width: 360px;
+    background: #ffffff;
+    border: 2px solid #f59e0b;
+    border-radius: 1.25rem;
+    padding: 0.8rem;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+    z-index: 1200;
+}
+
+.add-category-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    border: 1px solid #1f2937;
+    border-radius: 0.65rem;
+    background: #f8fafc;
+    padding: 0.6rem 0.75rem;
+}
+
+.add-category-input-wrap i {
+    color: #111827;
+    font-size: 1.25rem;
+}
+
+#newCategoryName {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    color: #111827;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+#newCategoryName::placeholder {
+    color: #111827;
+    font-weight: 500;
+}
+
+.add-category-actions {
+    margin-top: 0.8rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.btn-category-create,
+.btn-category-cancel {
+    min-width: 110px;
+    border-radius: 0.55rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #374151;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.btn-category-create {
+    background: #1e40af;
+    color: #ffffff;
+    border-color: #1e40af;
+}
+
+.btn-category-cancel {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+@media (max-width: 640px) {
+    .add-category-popup {
+        top: 3rem;
+        right: 0;
+        left: auto;
+        width: min(92vw, 340px);
+    }
+}
 
 
 
@@ -866,6 +987,7 @@ footer { display: flex; align-items: center; }
     justify-content: space-between; /* justify-between */
     align-items: center;    /* items-center */
     background: #ffffff;    /* keep same background as header/content */
+    position: relative;
 }
 
 /* Make the profile card a centered, readable column on wide screens
@@ -880,6 +1002,7 @@ footer { display: flex; align-items: center; }
 .profile-info {
     display: flex;
     flex-direction: column;
+    width: calc(100% - 72px);
 }
 
 .profile-name {
@@ -891,6 +1014,48 @@ footer { display: flex; align-items: center; }
 .profile-bio {
     margin: 0;
     color: #4b5563; /* gray-600 equivalent */
+}
+
+.profile-edit-panel {
+    margin-top: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: min(460px, 100%);
+}
+
+.profile-edit-panel input {
+    border: 1px solid #9ca3af;
+    border-radius: 0.45rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.95rem;
+    color: #111827;
+    background: #ffffff;
+}
+
+.profile-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-profile-save,
+.btn-profile-cancel {
+    border: 1px solid #374151;
+    border-radius: 0.45rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-profile-save {
+    background: #1e40af;
+    color: #ffffff;
+    border-color: #1e40af;
+}
+
+.btn-profile-cancel {
+    background: #f3f4f6;
+    color: #111827;
 }
 
 .profile-avatar {
@@ -1031,11 +1196,59 @@ footer { display: flex; align-items: center; }
     transition: transform 0.12s ease, box-shadow 0.12s ease;
     min-height: var(--quick-card-min-height); /* consistent visual height */
     box-sizing: border-box; /* include padding in sizes */
+    position: relative;
 }
 .quick-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
 
 .folder-fa { color: #3b82f6; font-size: 2rem; margin-bottom: 0.5rem; }
 .quick-title { margin: 0; font-weight: 700; color: #1e3a8a; }
+
+.quick-title-edit-popup {
+    position: fixed;
+    z-index: 2200;
+    width: 250px;
+    background: #ffffff;
+    border: 1px solid #f59e0b;
+    border-radius: 0.8rem;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.18);
+    padding: 0.6rem;
+}
+
+.quick-title-edit-popup input {
+    width: 100%;
+    border: 1px solid #9ca3af;
+    border-radius: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.9rem;
+    color: #111827;
+}
+
+.quick-title-edit-actions {
+    margin-top: 0.55rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.btn-quick-save,
+.btn-quick-cancel {
+    border: 1px solid #374151;
+    border-radius: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.btn-quick-save {
+    background: #1e40af;
+    color: #ffffff;
+    border-color: #1e40af;
+}
+
+.btn-quick-cancel {
+    background: #f3f4f6;
+    color: #111827;
+}
 
 /* Modal overlay */
 .modal.hidden { display: none; }
@@ -1082,6 +1295,93 @@ footer { display: flex; align-items: center; }
     box-shadow: 0 10px 30px rgba(2,6,23,0.12);
 }
 
+.file-carousel-shell {
+    margin-top: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+}
+
+.file-carousel-arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid #9ca3af;
+    background: #ffffff;
+    color: #374151;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.file-carousel-arrow:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.file-carousel-arrow:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.file-carousel-viewport {
+    min-width: min(68vw, 520px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.file-carousel-item {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.7rem;
+    background: #f8fafc;
+    color: #1d4ed8;
+    font-weight: 700;
+    text-align: left;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+}
+
+.file-carousel-item:hover {
+    background: #eef2ff;
+}
+
+.file-carousel-counter {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.file-management-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.6rem;
+}
+
+.modal-action-open-picker,
+.modal-action-close {
+    flex: 1;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.375rem;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.modal-action-open-picker {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.modal-action-close {
+    background: #6b7280;
+    color: #fff;
+}
+
 .file-tile-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* grid-cols-2 */
@@ -1109,15 +1409,133 @@ footer { display: flex; align-items: center; }
 .file-link { color: #2563eb; text-decoration: none; font-weight: 600; }
 .file-link:hover { text-decoration: underline; }
 
-.modal-action-close {
-    width: 100%;
-    padding: 0.5rem 0.75rem; /* py-2 equivalent */
-    border-radius: 0.375rem; /* rounded-md */
-    background: #6b7280; /* gray-500 */
-    color: #fff;
-    border: none;
+.file-picker-modal .modal-content {
+    width: min(860px, 94%);
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.picker-hint {
+    margin: 0.25rem 0 0.75rem;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.picker-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.picker-tab {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
     cursor: pointer;
-    font-size: 1rem;
+}
+
+.picker-tab.is-active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+.picker-file-list {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.6rem;
+    padding: 0.8rem;
+    max-height: 52vh;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+
+.picker-empty {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem 0.5rem;
+}
+
+.picker-group {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.6rem;
+    margin-bottom: 0.65rem;
+}
+
+.picker-group:last-child {
+    margin-bottom: 0;
+}
+
+.picker-group-title {
+    margin: 0 0 0.55rem;
+    font-size: 0.85rem;
+    color: #0f172a;
+}
+
+.picker-group-folder {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.picker-group-files {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.picker-file-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    background: #ffffff;
+}
+
+.picker-file-checkbox {
+    width: 16px;
+    height: 16px;
+}
+
+.picker-file-name {
+    color: #1e293b;
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.picker-actions {
+    margin-top: 0.85rem;
+    display: flex;
+    gap: 0.6rem;
+}
+
+.picker-confirm-btn,
+.picker-cancel-btn {
+    flex: 1;
+    border: none;
+    border-radius: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.picker-confirm-btn {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.picker-cancel-btn {
+    background: #e5e7eb;
+    color: #111827;
 }
 
 /* Position the small × close icon in the top-right of the modal like the Tailwind example */

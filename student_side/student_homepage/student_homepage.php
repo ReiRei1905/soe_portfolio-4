@@ -20,7 +20,7 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
     <link href="../style_student.css" rel="stylesheet"/>
     <script src="../student_homepage/homepage_scripts.js" defer></script>
 </head>
-<body class="page-layout" data-student-name="<?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?>">
+<body class="page-layout" data-student-name="<?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?>" data-upload-context="homepage" data-home-url="../student_homepage/student_homepage.php">
 <header>
     <div class="header-container">
         <div class="header-display">
@@ -51,21 +51,61 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
                 <div class="relative header-upload">
                     <i class="fas fa-cloud-upload-alt text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
                     <div id="uploadDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
-                        <div style="display:flex;gap:0.5rem;">
-                            <button class="btn-upload" type="button">Add Custom Folder</button>
-                            <button class="btn-upload" type="button">Use Existing Folder</button>
+                        <div class="upload-header">
+                            <i class="fas fa-cloud-upload-alt upload-icon-top cursor-pointer" onclick="triggerFileExplorer()" title="Upload from computer"></i>
+                            <input type="file" id="hiddenFileInput" class="hidden" onchange="handleFileSelection(this)">
+                            <input type="text" class="file-name-input" placeholder="Enter file name" id="uploadFileName">
                         </div>
-                        <div style="margin-top:0.5rem;">
-                            <label style="font-weight:600;">Select Category:</label>
-                            <div style="margin-top:0.25rem;">
-                                <label style="display:block;"><input type="radio" name="category" value="assessment" class="mr-1"> Assessment</label>
-                                <label style="display:block;"><input type="radio" name="category" value="projects" class="mr-1"> Projects</label>
-                                <label style="display:block;"><input type="radio" name="category" value="certificates" class="mr-1"> Certificate &amp; Awards</label>
+
+                        <div class="upload-button-group">
+                            <div class="relative">
+                                <button class="btn-upload-outline" type="button" onclick="handleCustomFolder()">Add Custom Folder</button>
+                                <div id="customFolderPopup" class="custom-folder-popup hidden">
+                                    <div class="folder-input-wrapper">
+                                        <i class="fas fa-folder folder-icon-small"></i>
+                                        <input type="text" id="customFolderName" class="folder-name-input" placeholder="Enter folder name">
+                                    </div>
+                                    <div class="folder-popup-actions">
+                                        <button id="btnCreateFolder" class="btn-folder-create is-disabled" type="button" onclick="createCustomFolder()" disabled aria-disabled="true">Create</button>
+                                        <button class="btn-folder-cancel" type="button" onclick="hideCustomFolderPopup()">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <button class="btn-upload-outline" type="button" onclick="handleExistingFolder()">Use Existing Folder</button>
+                                <div id="existingFolderPopup" class="existing-folder-popup hidden">
+                                    <div class="existing-folder-header">
+                                        <span>Folders</span>
+                                    </div>
+                                    <div id="folderListContainer" class="folder-list-container">
+                                        <p class="text-gray-400 text-xs text-center py-4">No folders created yet.</p>
+                                    </div>
+                                    <div class="folder-popup-actions">
+                                        <button class="btn-folder-add" type="button" onclick="selectFolder()">Add</button>
+                                        <button class="btn-folder-back" type="button" onclick="hideExistingFolderPopup()">Back</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
-                            <button class="btn-cancel" type="button" onclick="closeUploadModal()">Cancel</button>
-                            <button class="btn-done" type="button" onclick="addFile()">Done</button>
+
+                        <div class="category-selection-area">
+                            <div class="category-option">
+                                <input type="radio" name="category" value="assessment" id="cat-assessment">
+                                <label for="cat-assessment" class="category-label-box">Assessments</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="projects" id="cat-projects">
+                                <label for="cat-projects" class="category-label-box">Projects</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="certificates" id="cat-certificates">
+                                <label for="cat-certificates" class="category-label-box">Certificate/Awards</label>
+                            </div>
+                        </div>
+
+                        <div class="upload-footer-actions">
+                            <button class="btn-upload-done" type="button" onclick="addFile()">Done</button>
+                            <button class="btn-upload-cancel" type="button" onclick="closeUploadModal()">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -103,10 +143,10 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
 <main class = "main-content">  
     <div id="sidebar">
         <nav>
-            <a class="text-lg" href="./assessments.html">Assessments</a>
-            <a class="text-lg" href="../projects.html">Projects</a>
-            <a class="text-lg" href="../certificates/awards.html">Certificates/Awards</a>
-            <a class="text-lg" href="../classes.html">Classes</a>
+            <a class="text-lg" href="../assessment/assessments.html">Assessments</a>
+            <a class="text-lg" href="../projects/projects.html">Projects</a>
+            <a class="text-lg" href="../certificates/certificates.html">Certificates/Awards</a>
+            <a class="text-lg" href="../student_class/student_classes.html">Classes</a>
             <a class="text-lg" href="../faculty_about_us.html">About us</a>
         </nav>
     </div>
@@ -115,10 +155,21 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
 
     <div class="profile-wrapper">
         <section class="profile-card" aria-label="student profile">
+            <button id="profileEditTrigger" class="edit-corner-trigger profile-edit-trigger" type="button" aria-label="Edit profile section">
+                <i class="fas fa-pen-square" aria-hidden="true"></i>
+            </button>
             <div class="profile-info">
-                <!-- Server-rendered student name -->
                 <h2 id="studentName" class="profile-name"><?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?></h2>
-                <p class="profile-bio">About the user</p>
+                <p id="profileBioText" class="profile-bio">About the user</p>
+
+                <div id="profileEditPanel" class="profile-edit-panel hidden" aria-label="Edit profile text">
+                    <input id="profileNameInput" type="text" placeholder="Enter name" maxlength="80" />
+                    <input id="profileBioInput" type="text" placeholder="About the user" maxlength="160" />
+                    <div class="profile-edit-actions">
+                        <button type="button" class="btn-profile-save" onclick="saveProfileTextChanges()">Save</button>
+                        <button type="button" class="btn-profile-cancel" onclick="cancelProfileTextChanges()">Cancel</button>
+                    </div>
+                </div>
             </div>
             <div class="profile-right">
                 <div class="profile-avatar" role="img" aria-label="student avatar">
@@ -140,24 +191,52 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
         <button title="Go back" class="control-btn control-back" type="button" onclick="goBack()">
             <i class="fas fa-arrow-left"></i>
         </button>
+
+        <div id="addCategoryPopup" class="add-category-popup hidden" role="dialog" aria-modal="false" aria-labelledby="addCategoryPopupTitle">
+            <div id="addCategoryPopupTitle" class="add-category-input-wrap">
+                <i class="fas fa-folder" aria-hidden="true"></i>
+                <input id="newCategoryName" type="text" placeholder="Enter Portfolio Name" maxlength="60" />
+            </div>
+            <div class="add-category-actions">
+                <button type="button" class="btn-category-create" onclick="createCategoryFromPopup()">Create</button>
+                <button type="button" class="btn-category-cancel" onclick="closeAddCategoryPopup()">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <section class="quick-access" aria-label="quick access">
         <div class="quick-access-grid">
-            <button onclick="openFileManagement('fileManagementModal','projects')" class="quick-card" type="button">
+            <button onclick="openFileManagement('fileManagementModal','projects', event)" class="quick-card" type="button">
+                <span class="edit-corner-trigger quick-card-edit-trigger" role="button" tabindex="0" aria-label="Edit portfolio title">
+                    <i class="fas fa-pen-square" aria-hidden="true"></i>
+                </span>
                 <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                 <h3 class="quick-title">Top projects</h3>
             </button>
 
-            <button onclick="openFileManagement('fileManagementModal','certificates')" class="quick-card" type="button">
+            <button onclick="openFileManagement('fileManagementModal','certificates', event)" class="quick-card" type="button">
+                <span class="edit-corner-trigger quick-card-edit-trigger" role="button" tabindex="0" aria-label="Edit portfolio title">
+                    <i class="fas fa-pen-square" aria-hidden="true"></i>
+                </span>
                 <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                 <h3 class="quick-title">Top certificates/awards</h3>
             </button>
 
-            <button onclick="openFileManagement('fileManagementModal','assessments')" class="quick-card" type="button">
+            <button onclick="openFileManagement('fileManagementModal','assessments', event)" class="quick-card" type="button">
+                <span class="edit-corner-trigger quick-card-edit-trigger" role="button" tabindex="0" aria-label="Edit portfolio title">
+                    <i class="fas fa-pen-square" aria-hidden="true"></i>
+                </span>
                 <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                 <h3 class="quick-title">Top assessments</h3>
             </button>
+        </div>
+
+        <div id="quickTitleEditPopup" class="quick-title-edit-popup hidden" role="dialog" aria-modal="false" aria-label="Edit portfolio title">
+            <input id="quickTitleEditInput" type="text" placeholder="Enter Portfolio Name" maxlength="60" />
+            <div class="quick-title-edit-actions">
+                <button type="button" class="btn-quick-save" onclick="saveQuickCardTitleChange()">Save</button>
+                <button type="button" class="btn-quick-cancel" onclick="cancelQuickCardTitleChange()">Cancel</button>
+            </div>
         </div>
     </section>
 
@@ -165,14 +244,41 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
         <div class="modal-content">
             <button class="modal-close" onclick="closeFileManagement()">&times;</button>
             <h2 id="fileManagementTitle">Manage Files</h2>
-            <div id="fileTileContainer" class="file-tile-container">
-                <div class="file-tile"><a class="file-link" href="#">Sample File 1</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 2</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 3</a></div>
-                <div class="file-tile"><a class="file-link" href="#">Sample File 4</a></div>
+            <div class="file-carousel-shell" aria-label="Portfolio item slider">
+                <button id="fileCarouselPrev" class="file-carousel-arrow" type="button" onclick="showPreviousFileItem()" aria-label="Previous item">&#10094;</button>
+
+                <div class="file-carousel-viewport">
+                    <button id="fileCarouselItem" class="file-carousel-item" type="button" onclick="openCurrentFileItem()"></button>
+                    <p id="fileCarouselCounter" class="file-carousel-counter">1 / 1</p>
+                </div>
+
+                <button id="fileCarouselNext" class="file-carousel-arrow" type="button" onclick="showNextFileItem()" aria-label="Next item">&#10095;</button>
             </div>
-            <div style="margin-top:1rem;">
-                <button onclick="closeFileManagement()" class="modal-action-close">Close</button>
+            <div class="file-management-actions">
+                <button type="button" class="modal-action-open-picker" onclick="openQuickCardFilePicker()">Add Files</button>
+                <button type="button" onclick="closeFileManagement()" class="modal-action-close">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quickCardFilePickerModal" class="modal hidden file-picker-modal" role="dialog" aria-modal="true" aria-labelledby="quickCardFilePickerTitle">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeQuickCardFilePicker()">&times;</button>
+            <h2 id="quickCardFilePickerTitle">Select Files</h2>
+            <p class="picker-hint">Choose files only (PDF, PNG, JPG). Multiple selection is allowed.</p>
+
+            <div id="quickCardPickerCategoryTabs" class="picker-category-tabs" role="tablist" aria-label="File categories">
+                <button type="button" class="picker-tab is-active" data-category="all" onclick="setQuickCardPickerCategory('all')">All</button>
+                <button type="button" class="picker-tab" data-category="assessment" onclick="setQuickCardPickerCategory('assessment')">Assessments</button>
+                <button type="button" class="picker-tab" data-category="projects" onclick="setQuickCardPickerCategory('projects')">Projects</button>
+                <button type="button" class="picker-tab" data-category="certificates" onclick="setQuickCardPickerCategory('certificates')">Certificates</button>
+            </div>
+
+            <div id="quickCardPickerList" class="picker-file-list" aria-live="polite"></div>
+
+            <div class="picker-actions">
+                <button type="button" class="picker-confirm-btn" onclick="confirmQuickCardFileSelection()">Confirm</button>
+                <button type="button" class="picker-cancel-btn" onclick="closeQuickCardFilePicker()">Cancel</button>
             </div>
         </div>
     </div>

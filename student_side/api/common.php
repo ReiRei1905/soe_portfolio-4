@@ -48,23 +48,49 @@ function sanitize_name(string $name, int $max = 255): string
 
 function current_student_id(mysqli $conn): int
 {
-    foreach (['student_id', 'user_id', 'id'] as $sessionKey) {
-        if (!empty($_SESSION[$sessionKey])) {
-            return (int) $_SESSION[$sessionKey];
-        }
+    $sessionStudentId = (int) ($_SESSION['student_id'] ?? 0);
+    if ($sessionStudentId > 0) {
+        return $sessionStudentId;
+    }
+
+    $resolveByUserId = function (int $userId) use ($conn): int {
+        if ($userId <= 0) return 0;
+        $stmt = $conn->prepare('SELECT student_id FROM students WHERE user_id = ? OR student_id = ? ORDER BY CASE WHEN user_id = ? THEN 0 ELSE 1 END LIMIT 1');
+        $stmt->bind_param('iii', $userId, $userId, $userId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return !empty($row['student_id']) ? (int) $row['student_id'] : 0;
+    };
+
+    $sessionUserId = (int) ($_SESSION['user_id'] ?? 0);
+    $resolved = $resolveByUserId($sessionUserId);
+    if ($resolved > 0) {
+        $_SESSION['student_id'] = $resolved;
+        return $resolved;
+    }
+
+    $genericSessionId = (int) ($_SESSION['id'] ?? 0);
+    $resolved = $resolveByUserId($genericSessionId);
+    if ($resolved > 0) {
+        $_SESSION['student_id'] = $resolved;
+        return $resolved;
     }
 
     $email = trim((string) ($_SESSION['email'] ?? ''));
     if ($email !== '') {
-        $stmt = $conn->prepare('SELECT user_id FROM users WHERE email = ? LIMIT 1');
-        $stmt->bind_param('s', $email);
+        $stmt = $conn->prepare('SELECT s.student_id, s.user_id FROM students s LEFT JOIN users u ON u.user_id = s.user_id WHERE s.email = ? OR u.email = ? LIMIT 1');
+        $stmt->bind_param('ss', $email, $email);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        if (!empty($result['user_id'])) {
-            $_SESSION['user_id'] = (int) $result['user_id'];
-            return (int) $result['user_id'];
+        if (!empty($result['student_id'])) {
+            $_SESSION['student_id'] = (int) $result['student_id'];
+            if (!empty($result['user_id'])) {
+                $_SESSION['user_id'] = (int) $result['user_id'];
+            }
+            return (int) $result['student_id'];
         }
     }
 
