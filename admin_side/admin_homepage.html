@@ -9,14 +9,15 @@
     <script src="admin_scripts.js" defer></script>
 </head>
 <body class="page-layout">
+<div id="actionToast" class="action-toast hidden" aria-live="polite"></div>
 <header>
     <div class="header-container">
         <div class="header-display">
-            <img alt="College logo" class="college-header" src="https://scontent.fmnl17-2.fna.fbcdn.net/v/t39.30808-1/309029587_459753179521293_5621644846638556558_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeFir2kR4G3TSgwoXK8CTYwXgMcJ5eEQJR6Axwnl4RAlHh_niM6f3hc9REt9On1Bo0hYDuB602Jje_sH9YjjMMJV&_nc_ohc=TTD306I9niwQ7kNvgEtCZM5&_nc_oc=Adhw3AcB7qiaAsToDKdD3JAhWPWCt2SO61lUdbT6ClMw6jFkF6ND-ny7aVblaIMsf88&_nc_zt=24&_nc_ht=scontent.fmnl17-2.fna&_nc_gid=mW9KxobHMlYlxAve0jPylg&oh=00_AYFa8CFwbvHj3IGVauxhoB8n0ph2y0pJu0_gVvhxt_-kXA&oe=67DD68CC"/>
-            <div class="college-info">
+            <img alt="College logo" class="college-header" src="../images/soe apc logo.png"/>
+            <!--<div class="college-info">
                 <h1>ASIA PACIFIC COLLEGE</h1>
                 <h2>SCHOOL OF ENGINEERING</h2>
-            </div>
+            </div>-->
         </div>
     </div>
     <div class="header-actions">
@@ -32,31 +33,65 @@
         </div>
         <!--Profile Icon-->
         <div class="header-profile">
-            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleProfileClick()"></i>
+            <div class="header-actions-icons">
+                <div class="header-notifications">
+                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleHeaderMenu('notificationDropdown', this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <span id="adminNotificationBadge" class="notification-count-badge hidden">0</span>
+                    <div id="notificationDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <div id="adminNotificationList" class="notification-list">
+                            <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-profile-menu">
+                    <div class="profile-avatar-btn" onclick="toggleHeaderMenu('profileDropdown', this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div id="profileDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <div class="profile-summary">
+                            <p id="adminProfileFullName" class="profile-summary-name">Full Name</p>
+                            <p id="adminProfileEmail" class="profile-summary-email">fullname@email.com</p>
+                        </div>
+                        <a href="#" class="menu-item"><i class="fas fa-edit"></i> Edit Profile</a>
+                        <a href="#" class="menu-item"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="menu-item"><i class="fas fa-question-circle"></i> Help</a>
+                        <div class="menu-logout-wrap">
+                            <a href="../user_info_V3/logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="lists-users-header">
+        <div class="header-left">
+            <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+            <h2 class="lists-users-title">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item" aria-current="page">Lists of Users</li>
+                    </ol>
+                </nav>
+            </h2>
         </div>
     </div>
 </header>
 <main class="main-content">
     <div id="sidebar">
         <nav>
-            <a class="text-lg" href="../admin_side/admin_hompage.html">User Lists</a>
+            <a class="text-lg" href="../admin_side/admin_homepage.html">User Lists</a>
             <a class="text-lg" href="../faculty_side/classes.html">Classes</a>
             <a class="text-lg" href="../faculty_side/lists_students.html">Lists of Students</a>
             <a class="text-lg" href="../admin_side/admin_about_us.html">About us</a>
         </nav>
     </div>
     <div id="listsUsers" class="lists-users-section">
-        <div class="lists-users-header">
-            <div class="header-left">
-                <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
-                <h2 class="lists-users-title">Lists of Users</h2>
-            </div>
-        </div>
 
         <!-- Search Bar and Filter Icon -->
         <div class="search-filter-container">
             <div class="search-bar">
-                <input class="search-input" placeholder="Search Users" type="text"/>
+                <input id="userSearchInput" class="search-input" placeholder="Search Users" type="text"/>
                 <i class="search-icon fas fa-search"></i>
             </div>
             <div class="search-dropdown">
@@ -65,12 +100,12 @@
                     <span id="selectedFilter">All Users</span> <!-- Placeholder for selected filter -->
                 </button>
                 <div class="search-dropdown-content">
-                    <a href="#" onclick="filterUsers('all')">All Users</a>
-                    <a href="#" onclick="filterUsers('admin')">Admin</a>
-                    <a href="#" onclick="filterUsers('executiveDirector')">Executive Director</a>
-                    <a href="#" onclick="filterUsers('programDirector')">Program Director</a>
-                    <a href="#" onclick="filterUsers('professor')">Professor</a>
-                    <a href="#" onclick="filterUsers('student')">Student</a>
+                    <a href="#" onclick="return filterUsers('all')">All Users</a>
+                    <a href="#" onclick="return filterUsers('admin')">Admin</a>
+                    <a href="#" onclick="return filterUsers('executiveDirector')">Executive Director</a>
+                    <a href="#" onclick="return filterUsers('programDirector')">Program Director</a>
+                    <a href="#" onclick="return filterUsers('professor')">Professor</a>
+                    <a href="#" onclick="return filterUsers('student')">Student</a>
                 </div>
             </div>
             <div class="dropdown info-dropdown-container">
@@ -103,7 +138,7 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody id = userTableBody>
+                    <tbody id="userTableBody">
                         <!--<tr id="userRow-1">
                             <td> 1 </td>
                             <td> Kim</td>
@@ -148,6 +183,7 @@
                     <div class="right-section">
                         <h3>Account Access</h3>
                         <div class="role-buttons">
+                            <button id="adminButton" class="role-button">Admin</button>
                             <button id="executiveDirectorButton" class="role-button">Executive Director</button>
                             <button id="programDirectorButton" class="role-button">Program Directors</button>
                             <button id="professorButton" class="role-button">Professors</button>

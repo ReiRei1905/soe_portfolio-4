@@ -2,11 +2,14 @@
 ob_start();
 session_start();
 include 'connect.php';
+require_once __DIR__ . '/notification_service.php';
+require_once __DIR__ . '/user_access_common.php';
 
 $mailerAvailable = false;
 $autoloadPath = __DIR__ . '/vendor/autoload.php';
 if (file_exists($autoloadPath)) {
     require_once $autoloadPath;
+    require_once __DIR__ . '/mail_settings.php';
     $mailerAvailable = true;
 } else {
     error_log("PHPMailer autoload not found at: $autoloadPath. Run 'composer install' in project root.");
@@ -128,15 +131,7 @@ if (!isPasswordStrong($password)) {
     // Send OTP email
     $mail = new PHPMailer(true);
     try {
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'neloangelo4123@gmail.com'; // your Gmail
-        $mail->Password = 'pflg rocs kbhp jtzl';    // your Gmail App Password
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
-
-        $mail->setFrom('neloangelo4123@gmail.com', 'OTP Verification');
+        configureSmtpMailer($mail, 'OTP Verification');
         $mail->addAddress($email);
 
         $mail->isHTML(true);
@@ -146,7 +141,13 @@ if (!isPasswordStrong($password)) {
         $mail->send();
         echo "<script>alert('Registration successful! OTP sent to $email'); window.location.replace('verification.php');</script>";
     } catch (Exception $e) {
-        echo "<script>alert('Registration successful, but OTP email could not be sent. Mailer Error: {$mail->ErrorInfo}');</script>";
+        error_log("OTP mail send failed for {$email}: " . $mail->ErrorInfo);
+
+        if (isLocalMailFallbackEnabled()) {
+            echo "<script>alert('Registration successful. SMTP failed, so local fallback is active. Your OTP is: {$otp}'); window.location.replace('verification.php');</script>";
+        } else {
+            echo "<script>alert('Registration successful, but OTP email could not be sent. Mailer Error: {$mail->ErrorInfo}');</script>";
+        }
     }
     exit();
 }
@@ -180,27 +181,25 @@ if (isset($_POST['signIn'])) {
 
         if (password_verify($password, $row['password'])) {
             session_regenerate_id(true);
+            $_SESSION['user_id'] = (int) ($row['user_id'] ?? 0);
             $_SESSION['email'] = $row['email'];
             $_SESSION['first_name'] = $row['first_name'];
             $_SESSION['last_name'] = $row['last_name'];
             $_SESSION['role_type'] = $row['role_type'];
-            
-            // Redirect based on role or email domain
-            if ($row['role_type'] === 'student' || 
-                preg_match('/@student\.apc\.edu\.ph$/', $row['email'])) {
-                // Redirect student users to the student-side homepage in `student_side` folder
-                header("Location: ../student_side/student_homepage/student_homepage.php");
-                exit();
-            } elseif ($row['role_type'] === 'faculty' ||
-                preg_match('/@apc\.edu\.ph$/', $row['email'])) {
-                header("Location: review_user.php");
-                exit();
-            } else {
-                if (preg_match('/@gmail\.com$/', $row['email'])) { // Allow Gmail for testing purposes
-                    header("Location: review_user.php"); // Default or admin
-                    exit();
-                }
+            $_SESSION['is_verified'] = (int) ($row['is_verified'] ?? 0);
+
+            $fullName = trim((string) $row['first_name'] . ' ' . (string) $row['last_name']);
+            if ((int) ($_SESSION['user_id'] ?? 0) > 0 && $fullName !== '') {
+                add_system_notification(
+                    $conn,
+                    (int) $_SESSION['user_id'],
+                    "Welcome {$fullName}, you have officially logged in the system."
+                );
             }
+            
+            $targetPath = resolve_effective_route($row);
+            header("Location: {$targetPath}");
+            exit();
         } else {
             echo " Invalid email or password!";
         }

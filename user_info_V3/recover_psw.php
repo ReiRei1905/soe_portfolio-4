@@ -26,6 +26,7 @@
 <?php
 
     require 'vendor/autoload.php';
+    require_once 'mail_settings.php';
     use PHPMailer\PHPMailer\PHPMailer;
     use PHPMailer\PHPMailer\Exception;
 
@@ -34,14 +35,22 @@ include 'connect.php';
 
 if (isset($_POST["recoverButton"])) {
     
-    $email = $_POST["email"];
+    $email = trim($_POST["email"] ?? '');
 
-    $sql = mysqli_query($conn, "SELECT * FROM users WHERE email='$email'");
-    $fetch = mysqli_fetch_assoc($sql);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo "<script>alert('Please enter a valid email address.');</script>";
+        exit();
+    }
 
-    if (mysqli_num_rows($sql) <= 0) {
+    $stmt = $conn->prepare("SELECT status FROM users WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $fetch = $result->fetch_assoc();
+
+    if ($result->num_rows <= 0) {
         echo "<script>alert('Sorry, no email exists');</script>";
-    } else if ($fetch["status"] == 0) {
+    } else if ((int)$fetch["status"] === 0) {
         echo "<script>
             alert('Sorry, your account must be verified before you can recover your password!');
             window.location.replace('index.php');
@@ -53,33 +62,32 @@ if (isset($_POST["recoverButton"])) {
         $_SESSION['email'] = $email;
 
         $mail = new PHPMailer(true);
+        try {
+            configureSmtpMailer($mail, 'Password Reset');
+            $mail->addAddress($email);
 
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->Port = 587;
-        $mail->SMTPAuth = true;
-        $mail->SMTPSecure = 'tls';
+            $resetUrl = buildAppUrl("reset_psw.php?token=$token");
 
-        $mail->Username = 'neloangelo4123@gmail.com'; // your Gmail
-        $mail->Password = 'pflg rocs kbhp jtzl';    // your Gmail App Password
+            $mail->isHTML(true);
+            $mail->Subject = "Recover your password";
+            $mail->Body = "<b>Dear User</b>
+                <h3>We received a request to reset your password.</h3>
+                <p>Kindly click the below link to reset your password</p>
+                <a href='$resetUrl'>Reset Password</a>
+                <br><br>
+                <p>With regards,</p>
+                <b>SOE Portfolio</b>";
 
-        $mail->setFrom('neloangelo4123@gmail.com', 'Password Reset');
-        $mail->addAddress($email);
-
-        $mail->isHTML(true);
-        $mail->Subject = "Recover your password";
-        $mail->Body = "<b>Dear User</b>
-            <h3>We received a request to reset your password.</h3>
-            <p>Kindly click the below link to reset your password</p>
-            <a href='http://localhost/soe_portfolio/user_info_V3/reset_psw.php?token=$token'>Reset Password</a>
-            <br><br>
-            <p>With regards,</p>
-            <b>SOE Portfolio</b>";
-
-        if (!$mail->send()) {
-            echo "<script>alert('Invalid Email');</script>";
-        } else {
+            $mail->send();
             echo "<script>window.location.replace('notification.html');</script>";
+        } catch (Exception $e) {
+            error_log("Password recovery mail failed for {$email}: " . $mail->ErrorInfo);
+
+            if (isLocalMailFallbackEnabled()) {
+                echo "<script>alert('SMTP failed, so local fallback is active. You will be redirected to reset password directly.'); window.location.replace('reset_psw.php?token=$token');</script>";
+            } else {
+                echo "<script>alert('Email service is temporarily unavailable. Please try again later.');</script>";
+            }
         }
     }
 }

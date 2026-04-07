@@ -1,5 +1,90 @@
 console.log("homepage_scripts.js loaded");
 
+function escapeHeaderHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function updateHeaderNotificationBadge(unreadCount) {
+    const badge = document.getElementById('studentNotificationBadge');
+    if (!badge) return;
+
+    if (!unreadCount || unreadCount <= 0) {
+        badge.textContent = '0';
+        badge.classList.add('hidden');
+        return;
+    }
+
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.classList.remove('hidden');
+}
+
+function renderStudentNotificationList(notifications) {
+    const listContainer = document.getElementById('studentNotificationList');
+    if (!listContainer) return;
+
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+        listContainer.innerHTML = '<p class="text-gray-500 text-center">No new notifications at the moment.</p>';
+        return;
+    }
+
+    listContainer.innerHTML = notifications.map((item) => `
+        <div class="notification-item">
+            <p class="notification-message">${escapeHeaderHtml(item.message || '')}</p>
+            <p class="notification-time">${escapeHeaderHtml(item.createdAt || '')}</p>
+        </div>
+    `).join('');
+}
+
+async function loadStudentSessionContext() {
+    try {
+        const response = await fetch('../../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) return;
+
+        const fullName = payload.user?.fullName || 'Student Name';
+        const email = payload.user?.email || '';
+
+        const fullNameEl = document.getElementById('studentProfileFullName');
+        const emailEl = document.getElementById('studentProfileEmail');
+
+        if (fullNameEl) fullNameEl.textContent = fullName;
+        if (emailEl) emailEl.textContent = email;
+
+        updateHeaderNotificationBadge(Number(payload.user?.unreadNotifications || 0));
+    } catch (error) {
+        console.warn('Unable to load student session context:', error);
+    }
+}
+
+async function loadStudentNotifications(options = {}) {
+    const markRead = options.markRead === true;
+
+    try {
+        const requestOptions = markRead
+            ? {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: 'action=mark_read'
+            }
+            : { method: 'GET', credentials: 'same-origin' };
+
+        const response = await fetch('../../user_info_V3/notifications_api.php', requestOptions);
+        const payload = await response.json();
+        if (!response.ok || !payload.success) return;
+
+        renderStudentNotificationList(payload.notifications || []);
+        updateHeaderNotificationBadge(Number(payload.unreadCount || 0));
+    } catch (error) {
+        console.warn('Unable to load student notifications:', error);
+    }
+}
+
 function handleNotificationClick() {
     const notificationDropdown = document.getElementById("notificationDropdown");
     const notificationBadge = document.getElementById("notificationBadge");
@@ -76,7 +161,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("click", (event) => {
         const dropdowns = document.querySelectorAll(".dropdown");
         dropdowns.forEach((dropdown) => {
-            if (!dropdown.contains(event.target) && dropdown.previousElementSibling && !dropdown.previousElementSibling.contains(event.target)) {
+            let trigger = dropdown.previousElementSibling;
+            // Notification dropdown includes a badge node between icon and menu.
+            if (trigger && trigger.classList && trigger.classList.contains('notification-count-badge')) {
+                trigger = trigger.previousElementSibling;
+            }
+
+            const clickedInsideMenu = dropdown.contains(event.target);
+            const clickedTrigger = trigger && trigger.contains(event.target);
+
+            if (!clickedInsideMenu && !clickedTrigger) {
                 dropdown.classList.add("hidden");
             }
         });
@@ -256,12 +350,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     loadHomepageState();
+    loadStudentSessionContext();
+    loadStudentNotifications();
+    setInterval(() => {
+        loadStudentSessionContext();
+        loadStudentNotifications();
+    }, 15000);
 });
 
 // Canonical dropdown toggle (shared)
 function toggleDropdown(icon) {
     if (!icon) return;
-    const dropdown = icon.nextElementSibling;
+    let dropdown = icon.nextElementSibling;
+    // Notification bell has an unread badge inserted before the menu.
+    if (dropdown && dropdown.classList && dropdown.classList.contains('notification-count-badge')) {
+        dropdown = dropdown.nextElementSibling;
+    }
     if (!dropdown) return;
 
     // Close other open dropdowns and reset aria-expanded on their triggers
@@ -277,6 +381,10 @@ function toggleDropdown(icon) {
     // reflect state on the triggering element for accessibility
     const expanded = !dropdown.classList.contains('hidden');
     if (icon && icon.setAttribute) icon.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+    if (expanded && icon.closest('.header-notifications')) {
+        loadStudentNotifications({ markRead: true });
+    }
 }
 
 // In-memory storage for current session only (no persistence)

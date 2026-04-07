@@ -1,6 +1,31 @@
 <?php
 session_start();
 include ("connect.php");
+require_once __DIR__ . '/user_access_common.php';
+
+if (!empty($_SESSION['email'])) {
+    $email = trim((string) $_SESSION['email']);
+    $stmt = $conn->prepare('SELECT user_id, first_name, last_name, email, role_type, status, is_verified FROM users WHERE email = ? LIMIT 1');
+    if ($stmt) {
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $userRow = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
+
+        if ($userRow) {
+            $_SESSION['user_id'] = (int) ($userRow['user_id'] ?? 0);
+            $_SESSION['role_type'] = (string) ($userRow['role_type'] ?? '');
+            $_SESSION['is_verified'] = (int) ($userRow['is_verified'] ?? 0);
+
+            if (can_access_dashboard($userRow)) {
+                $targetPath = resolve_dashboard_path($userRow);
+                header('Location: ' . $targetPath);
+                exit();
+            }
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,4 +98,24 @@ include ("connect.php");
             <a href="logout.php">Logout</a>
         </div>
     </body>
+    <script>
+        async function pollApprovalStatus() {
+            try {
+                const response = await fetch('get_session_user.php', { credentials: 'same-origin' });
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success || !payload.user) {
+                    return;
+                }
+
+                if (payload.user.canAccessDashboard && payload.user.nextPath) {
+                    window.location.replace(payload.user.nextPath);
+                }
+            } catch (error) {
+                // Keep polling silently while user is on pending page.
+            }
+        }
+
+        setInterval(pollApprovalStatus, 5000);
+    </script>
 </html>

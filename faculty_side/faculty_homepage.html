@@ -32,7 +32,35 @@
         </div>
         <!--Profile Icon-->
         <div class="header-profile">
-            <i class="fas fa-user-circle text-xl cursor-pointer" onclick="handleProfileClick()"></i>
+            <div class="header-actions-icons">
+                <div class="header-notifications">
+                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleHeaderMenu('notificationDropdown', this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <span id="facultyNotificationBadge" class="notification-count-badge hidden">0</span>
+                    <div id="notificationDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <div id="facultyNotificationList" class="notification-list">
+                            <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-profile-menu">
+                    <div class="profile-avatar-btn" onclick="toggleHeaderMenu('profileDropdown', this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div id="profileDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <div class="profile-summary">
+                            <p id="facultyProfileFullName" class="profile-summary-name">Full Name</p>
+                            <p id="facultyProfileEmail" class="profile-summary-email">fullname@email.com</p>
+                        </div>
+                        <a href="#" class="menu-item"><i class="fas fa-edit"></i> Edit Profile</a>
+                        <a href="#" class="menu-item"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="menu-item"><i class="fas fa-question-circle"></i> Help</a>
+                        <div class="menu-logout-wrap">
+                            <a href="../user_info_V3/logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </header>
@@ -55,7 +83,7 @@
         <!--Start of Content-->
         <div class="content-container">
             <div id="profName" class="prof-name">
-                    <h3>Hello! Professor Name</h3>
+                    <h3 id="facultyGreetingText">Hello! Professor Name</h3>
             </div>
             <div id="chartsContainer" class="charts-container">
                 <div id="pieChart" class="chart pie-chart">

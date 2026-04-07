@@ -6,11 +6,39 @@
     justify-content: space-between;
 }
 
+.action-toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2000;
+    min-width: 16rem;
+    max-width: 24rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 10px 20px rgba(2, 6, 23, 0.2);
+}
+
+.action-toast.success {
+    background-color: #16a34a;
+}
+
+.action-toast.error {
+    background-color: #dc2626;
+}
+
 /* Start of Header styles */
+
 
 header {
     background-color: #ffffff;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Ensures it stays above other elements */
 }
 
 .header-container {
@@ -31,24 +59,36 @@ header {
 }
 
 .college-header{
-    height: 2.5rem;
-    width: 2.5rem;
-
+     /* Logo sizing:
+         - Increase --logo-height to change the displayed height.
+         - width:auto preserves the image aspect ratio.
+         - object-fit keeps the image from stretching.
+         If the logo still looks blurry, provide a higher-resolution image or an SVG.
+     */
+     --logo-height: 3.5rem; /* change this value to increase/decrease logo size */
+     height: var(--logo-height);
+     width: auto;
+     max-height: var(--logo-height);
+     display: block;         /* avoid inline spacing issues */
+     object-fit: contain;    /* preserve aspect ratio */
+     -webkit-font-smoothing: antialiased;
+     image-rendering: -webkit-optimize-contrast; /* best-effort for raster scaling */
 }
 
+/*
 .college-info {
     margin-left: 0.5rem;
-    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 */
+    color: #dd6b20; /* Adjust the color code as per Tailwind's orange-600 
 }
 
 .college-info h1 {
     font-weight: bold;
-    font-size: 0.875rem; /* 14px */
+    font-size: 0.875rem; /* 14px 
 }
 
 .college-info h2 {
-    font-size: 0.75rem; /* 12px */
-}
+    font-size: 0.75rem; /* 12px 
+}*/
 
 /* End of Header*/
 
@@ -121,12 +161,179 @@ header {
     cursor: pointer;
 }
 
+.hidden {
+    display: none !important;
+}
+
+.header-actions-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-notifications,
+.header-profile-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.notification-count-badge {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    min-width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.25rem;
+}
+
+.header-notifications i {
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.header-notifications i:hover {
+    color: #007bff;
+}
+
+.profile-avatar-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.profile-avatar-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.header-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.12);
+    padding: 0.75rem;
+    z-index: 1500;
+    min-width: 14rem;
+}
+
+#notificationDropdown p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.notification-list {
+    max-height: 14rem;
+    overflow-y: auto;
+    min-width: 18rem;
+}
+
+.notification-item {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.5rem 0;
+}
+
+.notification-item:last-child {
+    border-bottom: 0;
+}
+
+.notification-message {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #111827;
+}
+
+.notification-time {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+#profileDropdown {
+    min-width: 16rem;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #111827;
+    text-decoration: none;
+    padding: 0.45rem 0.25rem;
+}
+
+.profile-summary {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0.35rem;
+    padding-bottom: 0.5rem;
+}
+
+.profile-summary-name {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.profile-summary-email {
+    margin: 0.1rem 0 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+    word-break: break-word;
+}
+
+.menu-item:hover {
+    color: #1d4ed8;
+}
+
+.menu-logout-wrap {
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.logout-link {
+    color: #1e3a8a;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.logout-link:hover {
+    text-decoration: underline;
+}
+
 /*End of Header actions*/
 
 /*Start of Main content*/
+main {
+    margin-top: calc(120px); /* Add space for the header */
+    margin-bottom: calc(70px); /* Add space for the fixed footer */
+    padding: 1rem; /* Optional: Add padding for better spacing */
+    overflow-y: auto; /* Allow scrolling for the content */
+    height: 100vh; /* Ensure the content fits within the viewport */
+    box-sizing: border-box; /* Include padding and border in height calculation */
+}
+
+/* Start of Main content styles */
 .main-content {
     max-width: 100%;
     margin-top: 1rem; /* mt-4 */
+    margin-bottom: 16px;
     padding-left: 1rem; /* px-4 */
     padding-right: 1rem; /* px-4 */
     flex: 1;
@@ -137,13 +344,16 @@ header {
     background-color: #4a4a4a;
     color: #ffffff;
     padding: 1rem;
-    position: absolute;
+    position: fixed;
     left: 0;
     width: 16rem;
     height: 80%;
     z-index: 50;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    top: 0; /* Start from the top */
+    height: 100vh; /* Full height of the viewport */
+    overflow-y: auto; /* Add scrolling if content overflows */
 }
 
 #sidebar.active {
@@ -184,7 +394,21 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+    border-bottom: 2px solid #000;
+}
+
+/* Keep header burger slightly indented from the left edge when it's in the header */
+.lists-users-header .sidebar-toggle,
+.header-actions .sidebar-toggle {
+    margin-left: 0.75rem; /* nudge right so it's not flush with the very left */
+    margin-right: 0.5rem; /* small gap to title */
+}
+
+@media (max-width: 768px) {
+    .lists-users-header .sidebar-toggle,
+    .header-actions .sidebar-toggle {
+        margin-left: 0.5rem;
+    }
 }
 
 /* Header Left Section */
@@ -202,11 +426,33 @@ header {
 
 /* Lists Users Title */
 .lists-users-title {
+    margin-top: 1rem; /* Match classes header title offset */
     font-size: 1.125rem; /* Equivalent to text-lg */
     font-weight: bold;
 }
 
+.lists-users-title nav {
+    margin: 0;
+}
+
+.lists-users-title .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0 0 1rem 0;
+    padding: 0;
+}
+
+.lists-users-title .breadcrumb-item {
+    margin: 0;
+    line-height: 1.2;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
 #listsUsers {
+    margin-top: 10rem;
     flex: 1;
     transition: all 0.3s;
     margin-left: 0;
@@ -304,18 +550,22 @@ header {
     background-color: #3b82f6;
     color: white;
     border-radius: 9999px;
-    padding: 0.5rem;
+    padding: 0.5rem 0.9rem;
     margin-left: 35rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    width: 15rem;
+    width: fit-content;
+    min-width: 9.5rem;
+    max-width: 22rem;
+    white-space: nowrap;
 }
 
 #selectedFilter {
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
     font-weight: bold;
     align-items: center;
+    display: inline-block;
 }
 
 .filter-icon {
@@ -391,6 +641,10 @@ thead th{
 
 }
 
+.table__body.dropdown-open {
+    overflow: visible;
+}
+
 .table_body::-webkit-scrollbar{
     width: 0.5rem;
     height: 0.5rem;
@@ -434,8 +688,8 @@ thead th{
 }
 
 .status.verified {
-    background-color: #007bff; /* Blue background for Verified */
-    border: 1px solid #007bff;
+    background-color: #4caf50; /* Blue background for Verified */
+    border: 1px solid #4caf50;
     color: white;
     text-align: center;
 }
@@ -459,10 +713,14 @@ thead th{
     position: absolute;
     background-color: white;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
+    z-index: 100;
     right: 0; /* Align the dropdown to the right */
     min-width: 160px; /* Ensure the dropdown has a minimum width */
     overflow: visible; /* Ensure the dropdown content is visible */
+}
+
+.dropdown-content.show {
+    display: block;
 }
 
 .dropdown-content a {
@@ -514,7 +772,8 @@ thead th{
     border-radius: 0.5rem; /* rounded-lg */
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-lg */
     width: 700px; /* Adjust the width */
-    height: 400px;
+    min-height: 430px;
+    height: auto;
     display: flex;
     margin: auto;
     position: relative;
@@ -584,7 +843,7 @@ thead th{
     flex-direction: column;
     align-items: center;
     padding-left: 1rem;
-    margin-top: -2rem; /* Move the right section up */
+    margin-top: -1rem; /* Keep role buttons visible with the added Admin item */
     
 }
 
@@ -763,44 +1022,58 @@ thead th{
 
 /*End of About us Styles*/
 
-/* Start of Footer */
+/*Start of footer*/
 footer {
     background-color: #1e3a8a;
-    position: absolute;
     color: #ffffff;
     width: 100%;
-    transition: all 0.3s;
-    z-index: 70; /* Ensure the footer is above other elements */
-    padding: 1rem 0;
-    bottom: 0%;
-    margin-top: 1rem;
-
-    
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+    box-sizing: border-box;
+    position: relative; /* keep in normal flow so page layout (flex) pushes it to bottom */
+    z-index: 1200; /* put footer above fixed sidebar (sidebar z-index is 50) so it's not overlapped */
 }
 
-
 .footer-container {
-    max-width: 1200px; /* Example max-width */
-    padding-left: 1rem; /* px-4 */
-    padding-right: 1rem; /* px-4 */
+    width: 100%;
+    max-width: none; /* make full width so content can align to the left */
+    margin: 0; /* remove auto-centering */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep content at the left */
+    gap: 1rem;
+    /* padding: horizontal 1rem, vertical 0.25rem; left padding nudges content away from edge */
+    padding: 0.25rem 1rem;
 }
 
 .footer-text {
-    text-align: left; /* text-left */
-    color: white; /* Example text color */
-    font-weight: bold;
-
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: left; /* ensure text centered inside container */
 }
 
 .footer-link {
-    color: #007bff; /* text-blue-300 */
+    color: #93c5fd;
     text-decoration: none;
+    margin-left: 0.35rem;
 }
 
 .footer-link:hover {
     text-decoration: underline;
 }
 
-footer a {
-    color: #93c5fd;
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 0.75rem 0;
+        padding-left: 0; /* remove desktop offset on small screens */
+    }
+    .footer-text {
+        font-size: 0.9rem;
+    }
 }
+
+/* End of Footer styles */

@@ -43,8 +43,11 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
             <div style="display:flex;align-items:center;gap:0.75rem;">
                 <div class="relative header-notifications">
                     <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <span id="studentNotificationBadge" class="notification-count-badge hidden">0</span>
                     <div id="notificationDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
-                        <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        <div id="studentNotificationList" class="notification-list">
+                            <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -115,6 +118,10 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
                         <i class="fas fa-user text-xl"></i>
                     </div>
                     <div id="profileDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <div class="profile-summary">
+                            <p id="studentProfileFullName" class="profile-summary-name"><?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p id="studentProfileEmail" class="profile-summary-email"><?php echo htmlspecialchars((string) ($_SESSION['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
                         <a href="#" class="block menu-item"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
                         <a href="#" onclick="toggleCustomize(); return false;" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
                         <a href="#" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>

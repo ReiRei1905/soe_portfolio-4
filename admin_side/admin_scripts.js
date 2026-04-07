@@ -1,491 +1,586 @@
 function goToOverviewPage() {
-    /*// Scroll to the top of the page
-    window.scrollTo({ top: 0, behavior: 'smooth' });*/
-    
-    // Redirect to the overview page
-    window.location.href = "admin_homepage.html";
+    window.location.href = 'admin_homepage.html';
 }
 
 function handleProfileClick() {
     alert('Profile button clicked!');
 }
 
+const roleLabels = {
+    all: 'All Users',
+    admin: 'Admin',
+    executiveDirector: 'Executive Director',
+    programDirector: 'Program Director',
+    professor: 'Professor',
+    student: 'Student'
+};
+
+const roleToFilterParam = {
+    all: 'all',
+    admin: 'admin',
+    executiveDirector: 'executiveDirector',
+    programDirector: 'programDirector',
+    professor: 'professor',
+    student: 'student'
+};
+
+let currentFilter = 'all';
+let currentSearch = '';
+let selectedUserId = null;
+let selectedAccessRole = 'student';
+let users = [];
+let searchDebounceTimer = null;
+let isAdminSessionContext = false;
+let actionToastTimer = null;
+
+function showActionToast(message, type = 'success') {
+    const toast = document.getElementById('actionToast');
+    if (!toast || !message) return;
+
+    toast.textContent = message;
+    toast.classList.remove('hidden', 'success', 'error');
+    toast.classList.add(type === 'error' ? 'error' : 'success');
+
+    if (actionToastTimer) {
+        clearTimeout(actionToastTimer);
+    }
+
+    actionToastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 2600);
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderNotificationList(containerId, notifications) {
+    const listContainer = document.getElementById(containerId);
+    if (!listContainer) return;
+
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+        listContainer.innerHTML = '<p class="text-gray-500 text-center">No new notifications at the moment.</p>';
+        return;
+    }
+
+    listContainer.innerHTML = notifications.map((item) => `
+        <div class="notification-item">
+            <p class="notification-message">${escapeHtml(item.message || '')}</p>
+            <p class="notification-time">${escapeHtml(item.createdAt || '')}</p>
+        </div>
+    `).join('');
+}
+
+function updateNotificationBadge(badgeId, unreadCount) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+
+    if (!unreadCount || unreadCount <= 0) {
+        badge.classList.add('hidden');
+        badge.textContent = '0';
+        return;
+    }
+
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.classList.remove('hidden');
+}
+
+async function loadCurrentUserContext() {
+    try {
+        const response = await fetch('../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            isAdminSessionContext = false;
+            return;
+        }
+
+        const roleType = String(payload.user?.roleType || '').toLowerCase();
+        if (roleType !== 'admin') {
+            isAdminSessionContext = false;
+            const fullNameEl = document.getElementById('adminProfileFullName');
+            const emailEl = document.getElementById('adminProfileEmail');
+            if (fullNameEl) fullNameEl.textContent = 'Owner Local Mode';
+            if (emailEl) emailEl.textContent = 'No admin session loaded';
+            updateNotificationBadge('adminNotificationBadge', 0);
+            renderNotificationList('adminNotificationList', []);
+            return;
+        }
+
+        isAdminSessionContext = true;
+
+        const fullName = payload.user?.fullName || 'Full Name';
+        const email = payload.user?.email || 'fullname@email.com';
+
+        const fullNameEl = document.getElementById('adminProfileFullName');
+        const emailEl = document.getElementById('adminProfileEmail');
+        if (fullNameEl) fullNameEl.textContent = fullName;
+        if (emailEl) emailEl.textContent = email;
+
+        updateNotificationBadge('adminNotificationBadge', Number(payload.user?.unreadNotifications || 0));
+    } catch (error) {
+        console.warn('Unable to load session context:', error);
+    }
+}
+
+async function loadNotifications(options = {}) {
+    if (!isAdminSessionContext) {
+        updateNotificationBadge('adminNotificationBadge', 0);
+        renderNotificationList('adminNotificationList', []);
+        return;
+    }
+
+    const markRead = options.markRead === true;
+
+    try {
+        const requestOptions = markRead
+            ? {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: 'action=mark_read'
+            }
+            : { method: 'GET', credentials: 'same-origin' };
+
+        const response = await fetch('../user_info_V3/notifications_api.php', requestOptions);
+        const payload = await response.json();
+        if (!response.ok || !payload.success) return;
+
+        renderNotificationList('adminNotificationList', payload.notifications || []);
+        updateNotificationBadge('adminNotificationBadge', Number(payload.unreadCount || 0));
+    } catch (error) {
+        console.warn('Unable to load notifications:', error);
+    }
+}
+
+function toggleHeaderMenu(menuId, trigger) {
+    const targetMenu = document.getElementById(menuId);
+    if (!targetMenu) return;
+
+    const willOpen = targetMenu.classList.contains('hidden');
+
+    document.querySelectorAll('.header-menu-dropdown').forEach((menu) => {
+        menu.classList.add('hidden');
+        menu.setAttribute('aria-hidden', 'true');
+    });
+
+    if (willOpen) {
+        targetMenu.classList.remove('hidden');
+        targetMenu.setAttribute('aria-hidden', 'false');
+    }
+
+    if (trigger) {
+        trigger.setAttribute('aria-expanded', String(willOpen));
+    }
+
+    if (willOpen && menuId === 'notificationDropdown') {
+        loadNotifications({ markRead: true });
+    }
+}
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const listsUsers = document.getElementById('listsUsers')
-    || document.getElementById('aboutUs') 
-    || document.getElementById('programs')
-    || document.getElementById('classes');
+        || document.getElementById('aboutUs')
+        || document.getElementById('programs')
+        || document.getElementById('classes');
 
-    // Toggle the sidebar visibility
-    sidebar.classList.toggle('active');
-
-    // Adjust the main content position
-    listsUsers.classList.toggle('shifted');
-}
-
-// Added this event listener to set the top property of the sidebar dynamically
-window.addEventListener('DOMContentLoaded', () => {
-    const header = document.querySelector('header');
-    const sidebar = document.getElementById('sidebar');
-    sidebar.style.top = `${header.offsetHeight}px`;
-});
-
-/*function toggleDropdown(button) {
-    var dropdownContent = button.nextElementSibling;
-    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-}
-
-// Close the dropdown if the user clicks outside of it
-window.onclick = function(event) {
-    if (!event.target.matches('.dropbtn')) {
-        var dropdowns = document.getElementsByClassName("dropdown-content");
-        for (var i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.style.display === 'block') {
-                openDropdown.style.display = 'none';
-            }
-        }
+    if (sidebar) {
+        sidebar.classList.toggle('active');
     }
-}*/
 
-function toggleDropdown(button) {
-    const dropdownContent = button.nextElementSibling;
-    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-}
-
-window.addEventListener('click', (event) => {
-    if (!event.target.closest('.dropbtn')) {
-        document.querySelectorAll('.dropdown-content.show').forEach(dropdown => {
-            dropdown.classList.remove('show');
-        });
+    if (listsUsers) {
+        listsUsers.classList.toggle('shifted');
     }
-});
-
-
-// Predefined list of users (replace with actual data fetching in a real application)
-// Eventually, when you have a backend, update fetchUsers() to fetch data via API.
-
-/* 
-
- Replace this:
- async function fetchUsers() {
-    return new Promise((resolve) => { /* Simulated delay  });
 }
 
-to this:
-
-async function fetchUsers() {
-    const response = await fetch('/api/users');  // Replace with actual API
-    return await response.json();
+function setFilterLabel(filterKey) {
+    const selectedFilter = document.getElementById('selectedFilter');
+    if (selectedFilter) {
+        selectedFilter.textContent = roleLabels[filterKey] || roleLabels.all;
+    }
 }
 
-*/ 
-
-let users = [];
-
-/*async function fetchUsers() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve([
-                {
-                    id: 1,
-                    name: 'Kim Chaewon',
-                    role: 'Professor',
-                    email: 'chae@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12345',
-                    signUpDate: '20/03/2025'
-                },
-                // Add more users here
-
-                {
-                    id: 2,
-                    name: 'Hong Eunchae',
-                    role: 'Student',
-                    email: 'hong@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12346',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 3,
-                    name: 'Kazuha',
-                    role: 'Student',
-                    email: 'zuha@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12347',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 4,
-                    name: 'Sakura Miyawaki',
-                    role: 'Executive Director',
-                    email: 'kura@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12348',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 5,
-                    name: 'Huh Yunjin',
-                    role: 'Professor',
-                    email: 'huh@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12349',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 6,
-                    name: 'Gawr Gura',
-                    role: 'Student',
-                    email: 'gura@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12350',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 7,
-                    name: 'Ammelia Watson',
-                    role: 'Program Director',
-                    email: 'ame@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12351',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 8,
-                    name: 'Ninomae Ina\'nis',
-                    role: 'Professor',
-                    email: 'ina@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12352',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 9,
-                    name: 'Takanashi Kiara',
-                    role: 'Professor',
-                    email: 'kiara@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12353',
-                    signUpDate: '20/03/2025'
-                },
-                {
-                    id: 10,
-                    name: 'Mori Calliope',
-                    role: 'Program Director',
-                    email: 'mori@example.com',
-                    program: 'Computer Engineering',
-                    yearEnroll: '2023',
-                    idNumber: '2023-12354',
-                    signUpDate: '20/03/2025'
-                },
-
-            ]);
-        }, 500); // Simulates fetching delay
+async function fetchUsersFromApi() {
+    const query = new URLSearchParams({
+        filter: roleToFilterParam[currentFilter] || 'all',
+        search: currentSearch
     });
-}*/
 
-async function loadUsers() {
-    const users = await fetchUsers(); // Simulated or fetched user data
-    const tableBody = document.getElementById('userTableBody'); // Ensure the correct ID is used
-    tableBody.innerHTML = ''; // Clear existing rows
+    const response = await fetch(`get_users.php?${query.toString()}`);
+    const payload = await response.json();
 
-    users.forEach(user => {
+    if (!response.ok || !payload.success) {
+        throw new Error(payload.message || 'Failed to load users.');
+    }
+
+    return payload.users || [];
+}
+
+function renderUsersTable() {
+    const tableBody = document.getElementById('userTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    if (users.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8">No users found.</td></tr>';
+        return;
+    }
+
+    users.forEach((user) => {
+        const statusClass = user.status === 'Verified' ? 'verified' : 'not-verified';
+
         const row = document.createElement('tr');
         row.id = `userRow-${user.id}`;
         row.innerHTML = `
-            <td>${user.firstName}</td>
-            <td>${user.middleInitial || ''}</td>
-            <td>${user.lastName}</td>
-            <td>${user.suffix || ''}</td>
-            <td>${user.role}</td>
-            <td><span class="status not-verified">${user.status}</span></td>
-            <td>${user.createdAccount}</td>
+            <td>${escapeHtml(user.firstName)}</td>
+            <td>${escapeHtml(user.middleInitial || '')}</td>
+            <td>${escapeHtml(user.lastName)}</td>
+            <td>${escapeHtml(user.suffix || '')}</td>
+            <td>${escapeHtml(user.role)}</td>
+            <td><span class="status ${statusClass}">${escapeHtml(user.status)}</span></td>
+            <td>${escapeHtml(user.createdAccount)}</td>
             <td>
                 <div class="dropdown">
                     <button class="dropbtn" onclick="toggleDropdown(this)">⋮</button>
                     <div class="dropdown-content">
-                        <a href="#" onclick="checkUserInfo(${user.id})">Check User Info</a>
-                        <a href="#" onclick="removeUser(${user.id})">Remove User</a>
+                        <a href="#" onclick="return checkUserInfo(${user.id})">Check User Info</a>
+                        <a href="#" onclick="return removeUser(${user.id})">Remove User</a>
                     </div>
                 </div>
             </td>
         `;
+
         tableBody.appendChild(row);
     });
 }
 
-// Example fetchUsers function to simulate user data
-async function fetchUsers() {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve([
-                {
-                    id: 1,
-                    firstName: 'Kim',
-                    middleInitial: '',
-                    lastName: 'Chaewon',
-                    suffix: '',
-                    role: 'Professor',
-                    status: 'Not Verified',
-                    createdAccount: '20/03/2025'
-                },
-                {
-                    id: 2,
-                    firstName: 'Hong',
-                    middleInitial: '',
-                    lastName: 'Eunchae',
-                    suffix: '',
-                    role: 'Student',
-                    status: 'Not Verified',
-                    createdAccount: '21/03/2025'
-                },
-                // Add more user objects as needed
-            ]);
-        }, 500); // Simulated delay
-    });
-}
-
-// Ensure loadUsers is called on page load
-document.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
-});
-
-/*async function loadUsers() {
-    const users = await fetchUsers();
-    const tableBody = document.getElementById('userTableBody');
-    tableBody.innerHTML = ''; // Clear existing entries
-
-    users.forEach(user => {
-        const row = document.createElement('tr');
-        row.id = `userRow-${user.id}`;
-        row.innerHTML = `
-            <td>${user.id}</td>
-            <td>${user.name}</td>
-            <td>${user.role}</td>
-            <td>${user.email}</td>
-            <td>${user.program}</td>
-            <td class="status">Pending</td>
-            <td>
-                <button onclick="checkUserInfo(${user.id})">View</button>
-                <button onclick="approveUser(${user.id})">Approve</button>
-                <button onclick="rejectUser(${user.id})">Reject</button>
-            </td>
-        `;
-        tableBody.appendChild(row);
-    });
-}*/
-
-// Call function on page load
-/*document.addEventListener('DOMContentLoaded', loadUsers);*/
-
-
-/**/
-
-function checkUserInfo(userId) {
-    // Fetch user data (replace with actual backend call if needed)
-    const users = [
-        {
-            id: 1,
-            firstName: 'Kim',
-            middleInitial: '',
-            lastName: 'Chaewon',
-            suffix: '',
-            role: 'Professor',
-            email: 'chae@example.com',
-            program: 'Computer Engineering',
-            yearEnroll: '2023',
-            idNumber: '123456',
-            signUpDate: '20/03/2025'
-        },
-        {
-            id: 2,
-            firstName: 'Hong',
-            middleInitial: '',
-            lastName: 'Eunchae',
-            suffix: '',
-            role: 'Student',
-            email: 'hong@example.com',
-            program: 'Computer Engineering',
-            yearEnroll: '2023',
-            idNumber: '654321',
-            signUpDate: '21/03/2025'
+async function loadUsers() {
+    try {
+        users = await fetchUsersFromApi();
+        renderUsersTable();
+    } catch (error) {
+        console.error(error);
+        const tableBody = document.getElementById('userTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="8">Failed to load users.</td></tr>';
         }
-    ];
+    }
+}
 
-    // Find the user by ID
-    const user = users.find(u => u.id === userId);
-    if (!user) {
-        alert('User not found!');
+function toggleDropdown(button) {
+    const dropdownContent = button.nextElementSibling;
+    if (!dropdownContent) return;
+
+    const willOpen = !dropdownContent.classList.contains('show');
+
+    document.querySelectorAll('.dropdown-content.show').forEach((dropdown) => {
+        dropdown.classList.remove('show');
+    });
+
+    dropdownContent.classList.toggle('show', willOpen);
+
+    const tableBody = button.closest('.table__body');
+    if (tableBody) {
+        tableBody.classList.toggle('dropdown-open', willOpen);
+    }
+}
+
+function toggleUsersDropdown(button) {
+    const searchDropdown = button.parentElement;
+
+    document.querySelectorAll('.search-dropdown.show, .dropdown.show').forEach((el) => {
+        if (el !== searchDropdown) {
+            el.classList.remove('show');
+        }
+    });
+
+    if (searchDropdown) {
+        searchDropdown.classList.toggle('show');
+    }
+}
+
+function toggleInfoDropdown(button) {
+    const parent = button.parentElement;
+    if (parent) {
+        parent.classList.toggle('show');
+    }
+}
+
+function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-content.show').forEach((dropdown) => {
+        dropdown.classList.remove('show');
+    });
+
+    const searchDropdown = document.querySelector('.search-dropdown.show');
+    if (searchDropdown) {
+        searchDropdown.classList.remove('show');
+    }
+
+    document.querySelectorAll('.table__body.dropdown-open').forEach((tableBody) => {
+        tableBody.classList.remove('dropdown-open');
+    });
+}
+
+function closeUserDetailModal() {
+    const modal = document.getElementById('userDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    selectedUserId = null;
+}
+
+function setSelectedAccessRole(roleKey) {
+    selectedAccessRole = roleKey;
+    const roleButtons = document.querySelectorAll('.role-button');
+
+    roleButtons.forEach((button) => {
+        const buttonRole = button.dataset.accessRole || '';
+        button.classList.toggle('selected', buttonRole === roleKey);
+    });
+}
+
+function updateModal(user) {
+    document.getElementById('userName').textContent = user.fullName || 'N/A';
+    document.getElementById('userId').textContent = `ID: ${user.id}`;
+    document.getElementById('userRole').textContent = `Role: ${user.role || 'N/A'}`;
+    document.getElementById('userEmail').textContent = `Email: ${user.email || 'N/A'}`;
+    document.getElementById('userProgram').textContent = `Program: ${user.program || 'N/A'}`;
+    document.getElementById('userYearEnroll').textContent = `Year Enrolled: ${user.yearEnroll || 'N/A'}`;
+    document.getElementById('userIdNumber').textContent = `ID Number: ${user.idNumber || 'N/A'}`;
+    document.getElementById('userSignUpDate').textContent = `Sign-Up Date: ${user.signUpDate || 'N/A'}`;
+
+    setSelectedAccessRole(user.accessRole || 'student');
+}
+
+async function checkUserInfo(userId) {
+    closeAllDropdowns();
+
+    try {
+        const response = await fetch(`get_user_details.php?user_id=${encodeURIComponent(userId)}`);
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Unable to load user details.');
+        }
+
+        updateModal(payload.user);
+        selectedUserId = payload.user.id;
+
+        const modal = document.getElementById('userDetailModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Failed to load user details.');
+    }
+
+    return false;
+}
+
+async function updateUserVerification(action) {
+    if (!selectedUserId) {
+        alert('Please open user details first.');
         return;
     }
 
-    // Populate the modal with user details
-    document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
-    document.getElementById('userId').textContent = `ID: ${user.id}`;
-    document.getElementById('userRole').textContent = `Role: ${user.role}`;
-    document.getElementById('userEmail').textContent = `Email: ${user.email}`;
-    document.getElementById('userProgram').textContent = `Program: ${user.program}`;
-    document.getElementById('userYearEnroll').textContent = `Year Enrolled: ${user.yearEnroll}`;
-    document.getElementById('userIdNumber').textContent = `ID Number: ${user.idNumber}`;
-    document.getElementById('userSignUpDate').textContent = `Sign-Up Date: ${user.signUpDate}`;
+    const body = new URLSearchParams({
+        user_id: String(selectedUserId),
+        action,
+        access_role: selectedAccessRole
+    });
 
-    // Show the modal
-    const modal = document.getElementById('userDetailModal');
-    modal.style.display = 'block';
-}
+    try {
+        const response = await fetch('update_user_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: body.toString()
+        });
 
-// Close the modal
-function closeUserDetailModal() {
-    const modal = document.getElementById('userDetailModal');
-    modal.style.display = 'none';
-}
+        const payload = await response.json();
 
-// Add event listener to close button
-document.addEventListener('DOMContentLoaded', function() {
-    const closeModalButton = document.querySelector('#closeModalButton');
-    if (closeModalButton) {
-        closeModalButton.addEventListener('click', closeUserDetailModal);
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Status update failed.');
+        }
+
+        showActionToast(payload.message || `User ${action}d successfully.`, 'success');
+
+        await loadUsers();
+        await checkUserInfo(selectedUserId);
+    } catch (error) {
+        console.error(error);
+        showActionToast(error.message || 'Failed to update user status.', 'error');
+        alert(error.message || 'Failed to update user status.');
     }
-});
-
-function setUserRole(role) {
-    console.log(`User role set to: ${role}`);
-    // Implement role setting logic here when applying database
 }
 
-/* Assuming users already signed up */
+async function approveUser() {
+    await updateUserVerification('approve');
+}
+
+async function rejectUser() {
+    await updateUserVerification('reject');
+}
+
+async function removeUser(userId) {
+    closeAllDropdowns();
+
+    const shouldDelete = confirm('Are you sure you want to remove this user?');
+    if (!shouldDelete) {
+        return false;
+    }
+
+    const body = new URLSearchParams({ user_id: String(userId) });
+
+    try {
+        const response = await fetch('delete_user.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: body.toString()
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Failed to remove user.');
+        }
+
+        showActionToast(payload.message || 'User removed successfully.', 'success');
+
+        if (selectedUserId === userId) {
+            closeUserDetailModal();
+        }
+
+        await loadUsers();
+    } catch (error) {
+        console.error(error);
+        showActionToast(error.message || 'Failed to remove user.', 'error');
+        alert(error.message || 'Failed to remove user.');
+    }
+
+    return false;
+}
+
+function filterUsers(role) {
+    currentFilter = role || 'all';
+    setFilterLabel(currentFilter);
+
+    const searchDropdown = document.querySelector('.search-dropdown');
+    if (searchDropdown) {
+        searchDropdown.classList.remove('show');
+    }
+
+    loadUsers();
+    return false;
+}
+
 function toggleRole(button) {
-    button.classList.toggle('selected');
+    const selectedRole = button.dataset.accessRole || 'student';
+    setSelectedAccessRole(selectedRole);
 }
 
-async function approveUser(userId) {
-    console.log('User approved:', userId);
-    
-    // Simulating API call (replace with real request later)
-    await fetch(`/api/users/${userId}/approve`, { method: 'POST' });
+function wireSearch() {
+    const userSearchInput = document.getElementById('userSearchInput');
+    if (!userSearchInput) return;
 
-    updateUserStatus(userId, 'Verified');
-    closeUserDetailModal();
-    // Close the dropdown
-    closeAllDropdowns();
-}
+    userSearchInput.addEventListener('input', (event) => {
+        const value = (event.target.value || '').trim();
+        currentSearch = value;
 
-async function rejectUser(userId) {
-    console.log('User rejected:', userId);
+        if (searchDebounceTimer) {
+            clearTimeout(searchDebounceTimer);
+        }
 
-    await fetch(`/api/users/${userId}/reject`, { method: 'POST' });
-
-    updateUserStatus(userId, 'Not Verified');
-    closeUserDetailModal();
-    // Close the dropdown
-    closeAllDropdowns();
-}
-
-// Helper function to close all dropdowns
-function closeAllDropdowns() {
-    document.querySelectorAll('.dropdown-content, .search-dropdown-content').forEach(dropdown => {
-        dropdown.classList.remove('show'); // Remove the 'show' class
-        dropdown.style.display = 'none';  // Optionally set display to 'none'
+        searchDebounceTimer = setTimeout(() => {
+            loadUsers();
+        }, 250);
     });
 }
 
+window.addEventListener('click', (event) => {
+    if (!event.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-content.show').forEach((dropdown) => {
+            dropdown.classList.remove('show');
+        });
 
-/*function approveUser(userId) {
-    console.log('User approved');
-    // Implement user approval logic here when applying database
-    const user = users.find(user => user.id === userId);
-    if (user) {
-        user.status = 'Verified';
-        updateUserStatus(userId, 'Verified');
-        closeUserDetailModal(); // Move this line after the status update
+        document.querySelectorAll('.table__body.dropdown-open').forEach((tableBody) => {
+            tableBody.classList.remove('dropdown-open');
+        });
     }
-}*/
 
-/*function rejectUser(userId) {
-    console.log('User rejected');
-    // Implement user rejection logic here when applying database
-    const user = users.find(user => user.id === userId);
-    if (user) {
-        user.status = 'Not Verified';
-        updateUserStatus(userId, 'Not Verified');
-        closeUserDetailModal(); // Move this line after the status update
+    const searchDropdown = document.querySelector('.search-dropdown');
+    if (searchDropdown && !searchDropdown.contains(event.target)) {
+        searchDropdown.classList.remove('show');
     }
-}*/
 
-function updateUserStatus(userId, status) {
-    const userRow = document.querySelector(`#userRow-${userId}`);
-    if (userRow) {
-        const statusElement = userRow.querySelector('.status');
-        if (statusElement) {
-            statusElement.innerText = status;
-            statusElement.classList.toggle('verified', status === 'Verified');
-            statusElement.classList.toggle('not-verified', status === 'Not Verified');
-        }
+    const infoDropdownContainer = document.querySelector('.info-dropdown-container');
+    if (infoDropdownContainer && !infoDropdownContainer.contains(event.target)) {
+        infoDropdownContainer.classList.remove('show');
     }
-}
 
-// Add event listener to role buttons and approve/reject buttons
-document.addEventListener('DOMContentLoaded', function() {
+    if (!event.target.closest('.header-notifications') && !event.target.closest('.header-profile-menu')) {
+        document.querySelectorAll('.header-menu-dropdown').forEach((menu) => {
+            menu.classList.add('hidden');
+            menu.setAttribute('aria-hidden', 'true');
+        });
+    }
+
+    const modal = document.getElementById('userDetailModal');
+    if (modal && event.target === modal) {
+        closeUserDetailModal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const header = document.querySelector('header');
+    const sidebar = document.getElementById('sidebar');
+    if (header && sidebar) {
+        sidebar.style.top = `${header.offsetHeight}px`;
+    }
+
     const roleButtons = document.querySelectorAll('.role-button');
-    roleButtons.forEach(button => {
-        button.addEventListener('click', function() {
+    roleButtons.forEach((button) => {
+        const buttonText = (button.textContent || '').trim().toLowerCase();
+        if (buttonText === 'admin') button.dataset.accessRole = 'admin';
+        if (buttonText === 'executive director') button.dataset.accessRole = 'executiveDirector';
+        if (buttonText === 'program directors') button.dataset.accessRole = 'programDirector';
+        if (buttonText === 'professors') button.dataset.accessRole = 'professor';
+        if (buttonText === 'students') button.dataset.accessRole = 'student';
+
+        button.addEventListener('click', () => {
             toggleRole(button);
         });
     });
 
     const approveButton = document.getElementById('approveButton');
     const rejectButton = document.getElementById('rejectButton');
-    approveButton.addEventListener('click', function() {
-        const userId = parseInt(document.getElementById('userId').innerText.split(': ')[1]);
-        approveUser(userId);
-    });
-    rejectButton.addEventListener('click', function() {
-        const userId = parseInt(document.getElementById('userId').innerText.split(': ')[1]);
-        rejectUser(userId);
-    });
+
+    if (approveButton) {
+        approveButton.addEventListener('click', approveUser);
+    }
+
+    if (rejectButton) {
+        rejectButton.addEventListener('click', rejectUser);
+    }
+
+    wireSearch();
+    setFilterLabel(currentFilter);
+    setSelectedAccessRole('student');
+    loadCurrentUserContext();
+    loadNotifications();
+    setInterval(() => {
+        loadCurrentUserContext();
+        loadNotifications();
+    }, 15000);
+    loadUsers();
 });
-
-function toggleUsersDropdown(button) {
-    button.parentElement.classList.toggle("show");
-}
-
-function toggleInfoDropdown(button) {
-    button.parentElement.classList.toggle("show");
-}
-
-function filterUsers(role) {
-    console.log("Filtering users by role:", role);
-
-    // Update the selected filter text
-    const selectedFilter = document.getElementById('selectedFilter');
-    selectedFilter.innerText = role.charAt(0).toUpperCase() + role.slice(1).replace(/([A-Z])/g, ' $1').trim();
-
-    // Get all user rows
-    const userRows = document.querySelectorAll('tbody tr');
-
-    // Loop through each user row and filter based on the role
-    userRows.forEach(row => {
-        const roleCell = row.querySelector('td:nth-child(6)'); // Assuming the role is in the 6th column
-        if (role === 'all' || roleCell.innerText.toLowerCase() === role.toLowerCase()) {
-            row.style.display = ''; // Show the row
-        } else {
-            row.style.display = 'none'; // Hide the row
-        }
-    });
-}
-
-function removeUser(userId) {
-    console.log("Removing user with ID:", userId);
-}
