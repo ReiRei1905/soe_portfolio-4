@@ -26,7 +26,7 @@
     </div>
     <div class="header-actions">
         <div class="header-home">
-            <i class="fas fa-home" onclick="goToOverviewPage()"></i>
+            <i class="fas fa-home" data-faculty-action="go-home"></i>
             <h1 class="text-lg">E-PORTFOLIO</h1>
         </div>
         <div class="header-search">
@@ -36,14 +36,14 @@
         <div class="header-profile">
             <div class="header-actions-icons">
                 <div class="header-notifications">
-                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleHeaderMenu('notificationDropdown', this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <i class="fas fa-bell text-lg cursor-pointer" data-faculty-action="toggle-header-menu" data-menu-target="notificationDropdown" aria-haspopup="true" aria-expanded="false"></i>
                     <div id="notificationDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
                         <p class="text-gray-500 text-center">No new notifications at the moment.</p>
                     </div>
                 </div>
 
                 <div class="header-profile-menu">
-                    <div class="profile-avatar-btn" onclick="toggleHeaderMenu('profileDropdown', this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                    <div class="profile-avatar-btn" data-faculty-action="toggle-header-menu" data-menu-target="profileDropdown" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-user text-xl"></i>
                     </div>
                     <div id="profileDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
@@ -60,7 +60,7 @@
     </div>
     <div class="programs-header">
         <div class="header-left">
-            <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+            <i class="fas fa-bars sidebar-toggle" data-faculty-action="toggle-sidebar"></i>
             <h2 class="programs-title">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
@@ -76,7 +76,7 @@
         <nav>
             <a class="text-lg" href="./programs.html">Programs</a>
             <a class="text-lg" href="../classes.html">Classes</a>
-            <a class="text-lg" href="../lists_students.html">Lists of Students</a>
+            <a class="text-lg" href="../list_management/list_students.html">Lists of Students</a>
             <a class="text-lg" href="../faculty_about_us.html">About us</a>
         </nav>
     </div>
@@ -90,6 +90,7 @@
             <input id="programInput" type="text" placeholder="e.g. Computer Engineering [CpE]" />
             <button id="confirmProgramBtn" class="confirm-btn">Confirm</button>
         </div>
+            <p id="pdAssignmentNoticePrograms" class="assignment-pending-notice hidden">Wait for Executive Director assignment. If this is a mistake by an admin, please contact them.</p>
             <h3>School of Engineering Programs</h3>
             <div id="programList" class="program-list"></div>
     </div>
@@ -97,6 +98,7 @@
     <template id="programItemTemplate">
         <div class="program-item">
             <span class="program_name"></span>
+            <small class="assigned-pd-label"></small>
             <div class="inline-edit hidden">
                 <input class="edit-input" type="text" />
                 <button class="save-edit-btn">Save</button>
@@ -107,11 +109,33 @@
             </span>
             <div class="dropdown hidden">
                 <button class="assign-PD-btn">Assign Program Director</button>
+                <button class="revoke-PD-btn">Revoke Program Director</button>
                 <button class="edit-btn">Edit Program</button>
                 <button class="remove-btn">Remove Program</button>
             </div>
         </div>
     </template>
+
+    <div class="modal fade" id="assignProgramDirectorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Program Director</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="assignProgramTitle" class="mb-2 fw-semibold"></p>
+                    <label for="programDirectorSelect" class="form-label">Select verified faculty user</label>
+                    <select id="programDirectorSelect" class="form-select"></select>
+                    <small class="text-muted d-block mt-2">Only verified faculty users are listed.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmAssignProgramDirectorBtn">Assign</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
 </main>

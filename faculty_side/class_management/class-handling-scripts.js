@@ -1,3 +1,8 @@
+if (typeof window.previewRole === 'undefined') {
+    // Client-side preview mode only; backend access checks remain authoritative.
+    window.previewRole = null;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // Select elements
     const createOutputBtn = document.getElementById('createOutputBtn');
@@ -6,6 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelOutputBtn = document.getElementById('cancelOutputBtn');
     const outputsList = document.getElementById('outputsList');
     const requiredFormatSelect = document.getElementById('requiredFormat');
+    const outputSortToggleBtn = document.getElementById('outputSortToggleBtn');
+
+    let outputsCache = [];
+    let outputSortOrder = 'recent';
 
     const FORMAT_RULES = {
         '.docx': ['docx'],
@@ -19,6 +28,130 @@ document.addEventListener("DOMContentLoaded", () => {
         const extension = (String(fileName || '').split('.').pop() || '').trim().toLowerCase();
         const allowed = FORMAT_RULES[normalizedRequired] || [];
         return extension && allowed.includes(extension);
+    }
+
+    function formatOutputTimestamp(rawValue) {
+        if (!rawValue) {
+            return 'N/A';
+        }
+
+        const parsed = new Date(String(rawValue).replace(' ', 'T'));
+        if (Number.isNaN(parsed.getTime())) {
+            return String(rawValue);
+        }
+
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        let hours = parsed.getHours();
+        const minutes = String(parsed.getMinutes()).padStart(2, '0');
+        const period = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+
+        return `${year}-${month}-${day} ${hours}:${minutes} ${period}`;
+    }
+
+    function getOutputSortValue(output) {
+        const raw = outputSortOrder === 'recent'
+            ? (output.updated_at || output.created_at || '')
+            : (output.created_at || output.updated_at || '');
+        const timestamp = Date.parse(String(raw).replace(' ', 'T'));
+        if (Number.isNaN(timestamp)) {
+            return 0;
+        }
+        return timestamp;
+    }
+
+    function sortOutputs(entries) {
+        const next = Array.isArray(entries) ? entries.slice() : [];
+        next.sort((a, b) => {
+            const aValue = getOutputSortValue(a);
+            const bValue = getOutputSortValue(b);
+            if (outputSortOrder === 'recent') {
+                if (bValue !== aValue) return bValue - aValue;
+                return Number(b.output_id || 0) - Number(a.output_id || 0);
+            }
+            if (aValue !== bValue) return aValue - bValue;
+            return Number(a.output_id || 0) - Number(b.output_id || 0);
+        });
+        return next;
+    }
+
+    function renderOutputs() {
+        outputsList.innerHTML = '';
+
+        if (!Array.isArray(outputsCache) || outputsCache.length === 0) {
+            outputsList.innerHTML = '<li><span class="requirement-text">No required outputs yet.</span></li>';
+            return;
+        }
+
+        const view = getViewRole();
+        const orderedOutputs = sortOutputs(outputsCache);
+
+        orderedOutputs.forEach(output => {
+            const listItem = document.createElement('li');
+            listItem.dataset.outputId = output.output_id;
+            listItem.dataset.outputName = output.output_name;
+            listItem.dataset.totalScore = output.total_score;
+            listItem.dataset.requiredFormat = output.required_file_format || '';
+
+            const requiredFormatLabel = output.required_file_format || 'Not set';
+            const createdAtLabel = formatOutputTimestamp(output.created_at);
+            const updatedAtLabel = formatOutputTimestamp(output.updated_at);
+            const outputHeader = `
+                <div class="output-header">
+                    <span>${output.output_name} (Total Score: ${output.total_score})</span>
+                    <div><span class="required-format-chip">Required format: ${requiredFormatLabel}</span></div>
+                </div>
+                <div class="output-date-meta">Created: ${createdAtLabel} | Modified: ${updatedAtLabel}</div>
+            `;
+
+            if (view === 'professor') {
+                listItem.innerHTML = `
+                    ${outputHeader}
+                    ${renderAttachControls(output, true)}
+                    <div class="input-and-buttons">
+                        <div class="score-input-row">
+                            <label class="score-input-label">Enter your score</label>
+                            <input type="number" placeholder="Enter your score" class="user-score" disabled />
+                        </div>
+                        <div class="button-group">
+                            <button class="editOutput-btn">Edit</button>
+                            <button class="delete-btn">Delete</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const isSubmitted = output.status === 'submitted';
+                const scoreValue = output.student_score !== null && output.student_score !== undefined ? output.student_score : '';
+                listItem.innerHTML = `
+                    ${outputHeader}
+                    ${renderAttachControls(output, false)}
+                    <div class="input-and-buttons">
+                        <div class="score-input-row">
+                            <label class="score-input-label">Enter your score</label>
+                            <input type="number" placeholder="Enter your score" class="user-score" value="${scoreValue}" ${isSubmitted ? 'disabled' : ''} />
+                        </div>
+                        <div class="button-group">
+                            <button class="student-submit-btn" ${isSubmitted ? 'style="display:none"' : ''}>Submit</button>
+                            <button class="student-undo-btn" ${isSubmitted ? '' : 'style="display:none"'}>Undo Turn in</button>
+                        </div>
+                    </div>
+                `;
+
+                if (isSubmitted) {
+                    listItem.dataset.submitted = 'true';
+                    const attachTextInput = listItem.querySelector('.attach-output-name');
+                    const attachBtn = listItem.querySelector('.attach-output-btn');
+                    const attachFileInput = listItem.querySelector('.required-output-file-input');
+                    if (attachTextInput) attachTextInput.disabled = true;
+                    if (attachBtn) attachBtn.disabled = true;
+                    if (attachFileInput) attachFileInput.disabled = true;
+                }
+            }
+
+            outputsList.appendChild(listItem);
+        });
     }
 
     function renderAttachControls(output, isProfessorView) {
@@ -92,72 +225,19 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(`fetch_class_outputs.php?class_id=${encodeURIComponent(classId)}`)
             .then(response => response.json())
             .then(data => {
-                outputsList.innerHTML = '';
-                if (data.success && data.outputs.length > 0) {
-                    const view = getViewRole();
-                    data.outputs.forEach(output => {
-                        const listItem = document.createElement('li');
-                        listItem.dataset.outputId = output.output_id;
-                        listItem.dataset.outputName = output.output_name;
-                        listItem.dataset.totalScore = output.total_score;
-                        listItem.dataset.requiredFormat = output.required_file_format || '';
-
-                        const requiredFormatLabel = output.required_file_format || 'Not set';
-                        const outputHeader = `
-                            <div class="output-header">
-                                <span>${output.output_name} (Total Score: ${output.total_score})</span>
-                                <div><span class="required-format-chip">Required format: ${requiredFormatLabel}</span></div>
-                            </div>
-                        `;
-
-                        if (view === 'professor') {
-                            listItem.innerHTML = `
-                                ${outputHeader}
-                                ${renderAttachControls(output, true)}
-                                <div class="input-and-buttons">
-                                    <div class="score-input-row">
-                                        <label class="score-input-label">Enter your score</label>
-                                        <input type="number" placeholder="Enter your score" class="user-score" disabled />
-                                    </div>
-                                    <div class="button-group">
-                                        <button class="editOutput-btn">Edit</button>
-                                        <button class="delete-btn">Delete</button>
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            const isSubmitted = output.status === 'submitted';
-                            const scoreValue = output.student_score !== null && output.student_score !== undefined ? output.student_score : '';
-                            // student view: enable input and show Submit/Undo buttons
-                            listItem.innerHTML = `
-                                ${outputHeader}
-                                ${renderAttachControls(output, false)}
-                                <div class="input-and-buttons">
-                                    <div class="score-input-row">
-                                        <label class="score-input-label">Enter your score</label>
-                                        <input type="number" placeholder="Enter your score" class="user-score" value="${scoreValue}" ${isSubmitted ? 'disabled' : ''} />
-                                    </div>
-                                    <div class="button-group">
-                                        <button class="student-submit-btn" ${isSubmitted ? 'style="display:none"' : ''}>Submit</button>
-                                        <button class="student-undo-btn" ${isSubmitted ? '' : 'style="display:none"'}>Undo Turn in</button>
-                                    </div>
-                                </div>
-                            `;
-
-                            if (isSubmitted) {
-                                listItem.dataset.submitted = 'true';
-                                const attachTextInput = listItem.querySelector('.attach-output-name');
-                                const attachBtn = listItem.querySelector('.attach-output-btn');
-                                const attachFileInput = listItem.querySelector('.required-output-file-input');
-                                if (attachTextInput) attachTextInput.disabled = true;
-                                if (attachBtn) attachBtn.disabled = true;
-                                if (attachFileInput) attachFileInput.disabled = true;
-                            }
-                        }
-                        outputsList.appendChild(listItem);
-                    });
-                }
+                outputsCache = data.success && Array.isArray(data.outputs) ? data.outputs : [];
+                renderOutputs();
             });
+    }
+
+    if (outputSortToggleBtn) {
+        outputSortToggleBtn.addEventListener('click', () => {
+            outputSortOrder = outputSortOrder === 'recent' ? 'oldest' : 'recent';
+            outputSortToggleBtn.textContent = outputSortOrder === 'recent'
+                ? 'Recent to Oldest'
+                : 'Oldest to Recent';
+            renderOutputs();
+        });
     }
 
     confirmOutputBtn.addEventListener('click', () => {
@@ -261,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
-                        listItem.remove();
+                        fetchAndDisplayOutputs(classId);
                     } else {
                         alert("Failed to delete output.");
                     }
@@ -510,6 +590,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const classId = urlParams.get('class_id');
 
     if (classId) {
+        const tabPosts = document.getElementById('tabPosts');
+        const tabMembers = document.getElementById('tabMembers');
+        const tabReports = document.getElementById('tabReports');
+
+        if (tabPosts) tabPosts.href = `./class-handling.html?class_id=${encodeURIComponent(classId)}`;
+        if (tabMembers) tabMembers.href = `./student_members.html?class_id=${encodeURIComponent(classId)}`;
+        if (tabReports) tabReports.href = `./class_reports.html?class_id=${encodeURIComponent(classId)}`;
+    }
+
+    if (classId) {
         fetch("fetch_classes.php")
             .then(response => response.json())
             .then(data => {
@@ -522,11 +612,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             const buildClassName = (ci) => {
                                 // Start with the raw class_name
                                 let base = String(ci.class_name || '').trim();
-
-                                // If course_name is not already part of class_name, prepend it
-                                if (ci.course_name && !base.includes(ci.course_name)) {
-                                    base = `${ci.course_name} ${base}`.trim();
-                                }
 
                                 // If class_name already contains 'Term' or the years, don't append them again
                                 const hasTerm = /Term\s*\d+/i.test(base);
@@ -555,14 +640,14 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(data => {
                 if (data.success) {
                     const details = data.details;
+                    setRolePreviewVisibility(Boolean(details.can_manage_class));
                     document.querySelector('.class-details').innerHTML = `
                         <h3>CLASS DETAILS</h3>
                         <p><strong>Course Instructor:</strong> [Show instructor here]</p>
                         <p><strong>Program:</strong> ${details.program_name}</p>
-                        <p><strong>Course Name:</strong> ${details.course_name}</p>
                         <p><strong>Class:</strong> ${details.class_name}</p>
                         <h3>REQUIREMENTS</h3>
-                        <p>List here the ff. requirements:</p>
+                        <p id="requirementsHelperText">List here the ff. requirements:</p>
                         <ul id="requirementsList"></ul>
                         <button id="showRequirementInputBtn" class="action-btn prof-only">Add Requirement</button>
                         <div class="add-requirement-container hidden">
@@ -605,6 +690,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                             listItem.innerHTML = inner;
                                             requirementsList.appendChild(listItem);
                                         });
+                                syncRequirementsHelperText();
                             }
                         });
 
@@ -614,7 +700,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     const requirementInput = document.getElementById("requirementInput");
                     const addRequirementBtn = document.getElementById("addRequirementBtn");
                     const requirementsList = document.getElementById("requirementsList");
+                    const requirementsHelperText = document.getElementById("requirementsHelperText");
                     let editingRequirement = null;
+
+                    const syncRequirementsHelperText = () => {
+                        if (!requirementsHelperText) return;
+                        const hasRequirement = !!requirementsList.querySelector('li');
+                        requirementsHelperText.style.display = hasRequirement ? 'none' : '';
+                    };
 
                     showRequirementInputBtn.addEventListener("click", () => {
                         addRequirementContainer.classList.remove("hidden");
@@ -648,6 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 .then(result => {
                                     if (result.success) {
                                         listItem.remove();
+                                        syncRequirementsHelperText();
                                     } else {
                                         alert("Failed to delete requirement.");
                                     }
@@ -705,12 +799,15 @@ document.addEventListener("DOMContentLoaded", () => {
                                     requirementInput.value = "";
                                     addRequirementContainer.classList.add("hidden");
                                     showRequirementInputBtn.classList.remove("hidden");
+                                    syncRequirementsHelperText();
                                 } else {
                                     alert("Failed to add requirement.");
                                 }
                             });
                         }
                     });
+
+                    syncRequirementsHelperText();
 
 
                     confirmDeadlineBtn.addEventListener('click', () => {
@@ -772,11 +869,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const rpMinimizeBtn = document.getElementById('rpMinimizeBtn');
     const rpCloseBtn = document.getElementById('rpCloseBtn');
 
-    // Show the preview toggle only when a class_id is present in the URL (i.e., we're viewing a class-item)
+    const setRolePreviewVisibility = (shouldShow) => {
+        if (!rolePreviewDiv) return;
+        rolePreviewDiv.style.display = shouldShow ? '' : 'none';
+    };
+
+    // Hide by default. Visibility is enabled only for users who can manage this class.
     try {
         const urlParamsCheck = new URLSearchParams(window.location.search);
         const classIdCheck = urlParamsCheck.get('class_id');
-        if (rolePreviewDiv) rolePreviewDiv.style.display = classIdCheck ? '' : 'none';
+        setRolePreviewVisibility(false);
+        if (!classIdCheck) {
+            setRolePreviewVisibility(false);
+        }
     } catch (e) {
         // ignore
     }

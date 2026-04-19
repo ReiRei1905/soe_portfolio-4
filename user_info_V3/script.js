@@ -7,6 +7,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const signUpButton = document.getElementById('signUpButton');
     const roleTypeSelectors = document.querySelectorAll('select[name="role_type"]');
+    const signInErrorMessage = document.getElementById('signInErrorMessage');
+
+    function clearSignInError() {
+        if (!signInErrorMessage) {
+            return;
+        }
+        signInErrorMessage.remove();
+    }
+
+    const signInEmailInput = document.querySelector('#signIn input[name="email"]');
+    const signInPasswordInput = document.querySelector('#signIn input[name="password"]');
+    [signInEmailInput, signInPasswordInput].forEach((input) => {
+        if (!input) {
+            return;
+        }
+        input.addEventListener('input', clearSignInError);
+    });
 
     // Show student sign-up form when clicking Sign Up
     signUpButton.addEventListener('click', (e) => {
@@ -83,17 +100,26 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Add event listeners for buttons to show specific forms
-    document.getElementById("showStudent").addEventListener("click", function () {
-        showForm("studentSignUp", "student");
-    });
+    const showStudentButton = document.getElementById("showStudent");
+    if (showStudentButton) {
+        showStudentButton.addEventListener("click", function () {
+            showForm("studentSignUp", "student");
+        });
+    }
 
-    document.getElementById("showFaculty").addEventListener("click", function () {
-        showForm("facultySignUp", "faculty");
-    });
+    const showFacultyButton = document.getElementById("showFaculty");
+    if (showFacultyButton) {
+        showFacultyButton.addEventListener("click", function () {
+            showForm("facultySignUp", "faculty");
+        });
+    }
 
-    document.getElementById("showAdmin").addEventListener("click", function () {
-        showForm("adminSignUp", "admin");
-    });
+    const showAdminButton = document.getElementById("showAdmin");
+    if (showAdminButton) {
+        showAdminButton.addEventListener("click", function () {
+            showForm("adminSignUp", "admin");
+        });
+    }
 
     // Function to show the correct form and sync the role_type dropdown
     function showForm(containerId, roleValue) {
@@ -128,6 +154,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('.password-group .password-input').forEach(function(input) {
     input.addEventListener('input', function() {
         const strengthDiv = this.parentElement.querySelector('.password-strength');
+        if (!strengthDiv) {
+            return;
+        }
         const value = this.value;
         let messages = [];
 
@@ -140,12 +169,49 @@ document.addEventListener("DOMContentLoaded", function () {
         if (/!/.test(value)) messages.push("No exclamation point (!) allowed");
 
         if (messages.length === 0) {
-            strengthDiv.style.color = "green";
+            strengthDiv.classList.remove('is-invalid');
+            strengthDiv.classList.add('is-valid');
             strengthDiv.textContent = "Strong password!";
         } else {
-            strengthDiv.style.color = "red";
+            strengthDiv.classList.remove('is-valid');
+            strengthDiv.classList.add('is-invalid');
             strengthDiv.textContent = "Password must have: " + messages.join(", ");
         }
     });
+    });
+
+    // Prevent double submit on Sign-Up and show loading spinner.
+    document.querySelectorAll('form').forEach((form) => {
+        const signUpButton = form.querySelector('input[name="signUp"].btn');
+        if (!signUpButton) {
+            return;
+        }
+
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.isSubmitting === '1') {
+                event.preventDefault();
+                return;
+            }
+
+            form.dataset.isSubmitting = '1';
+
+            // Keep the original signUp POST signal even after disabling the submit input.
+            const existingMarker = form.querySelector('input[type="hidden"][name="signUp"]');
+            if (!existingMarker) {
+                const marker = document.createElement('input');
+                marker.type = 'hidden';
+                marker.name = 'signUp';
+                marker.value = signUpButton.value || 'Sign-Up';
+                form.appendChild(marker);
+            }
+
+            signUpButton.disabled = true;
+            signUpButton.value = 'Signing Up...';
+
+            const submitWrap = signUpButton.closest('.signup-submit-wrap');
+            if (submitWrap) {
+                submitWrap.classList.add('is-loading');
+            }
+        });
     });
 });

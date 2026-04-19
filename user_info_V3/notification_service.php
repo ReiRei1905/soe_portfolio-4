@@ -2,6 +2,60 @@
 
 declare(strict_types=1);
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+function mailer_runtime_ready(): bool
+{
+    $autoloadPath = __DIR__ . '/vendor/autoload.php';
+    $mailSettingsPath = __DIR__ . '/mail_settings.php';
+
+    if (!file_exists($autoloadPath) || !file_exists($mailSettingsPath)) {
+        return false;
+    }
+
+    if (!class_exists(PHPMailer::class)) {
+        require_once $autoloadPath;
+    }
+
+    if (!function_exists('configureSmtpMailer')) {
+        require_once $mailSettingsPath;
+    }
+
+    return class_exists(PHPMailer::class) && function_exists('configureSmtpMailer');
+}
+
+function send_user_email_notification(string $toEmail, string $fullName, string $subject, string $bodyMessage): bool
+{
+    $toEmail = trim($toEmail);
+    if ($toEmail === '' || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
+    if (!mailer_runtime_ready()) {
+        return false;
+    }
+
+    $mail = new PHPMailer(true);
+
+    try {
+        configureSmtpMailer($mail, 'SOE Portfolio Notifications');
+        $mail->addAddress($toEmail, $fullName !== '' ? $fullName : $toEmail);
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = sprintf(
+            '<p>Hello %s,</p><p>%s</p><p>With regards,<br>SOE Portfolio</p>',
+            htmlspecialchars($fullName !== '' ? $fullName : 'User', ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($bodyMessage, ENT_QUOTES, 'UTF-8')
+        );
+
+        return $mail->send();
+    } catch (Exception $error) {
+        error_log('User notification email failed for ' . $toEmail . ': ' . $mail->ErrorInfo);
+        return false;
+    }
+}
+
 function add_system_notification(mysqli $conn, int $userId, string $message): bool
 {
     if ($userId <= 0 || trim($message) === '') {

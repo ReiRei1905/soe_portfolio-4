@@ -1,32 +1,31 @@
 <?php
-$host = "localhost";
-$user = "root";
-$password = "";
-$dbname = "soe_portfolio";
 
-// filepath: c:\xampp\htdocs\SOE-portfolio\faculty_side\program_management\create_program.php
-header('Content-Type: application/json');
+declare(strict_types=1);
 
-$connection = new mysqli("localhost", "root", "", "soe_portfolio");
+require_once __DIR__ . '/program_access_common.php';
 
-if ($connection->connect_error) {
-    die(json_encode(["success" => false, "message" => "Database connection failed"]));
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    send_program_json(['success' => false, 'message' => 'Method not allowed.'], 405);
 }
 
-$programName = $_POST['programName'] ?? '';
+require_executive_director($conn);
 
-if (!empty($programName)) {
-    $stmt = $connection->prepare("INSERT INTO programs (program_name) VALUES (?)");
-    $stmt->bind_param("s", $programName);
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Failed to create program"]);
-    }
-    $stmt->close();
-} else {
-    echo json_encode(["success" => false, "message" => "Invalid program name"]);
+$programName = trim((string) ($_POST['programName'] ?? ''));
+if ($programName === '') {
+    send_program_json(['success' => false, 'message' => 'Invalid program name.'], 400);
 }
 
-$connection->close();
-?>
+$stmt = $conn->prepare('INSERT INTO programs (program_name) VALUES (?)');
+if (!$stmt) {
+    send_program_json(['success' => false, 'message' => 'Failed to create program.'], 500);
+}
+
+$stmt->bind_param('s', $programName);
+$ok = $stmt->execute();
+$stmt->close();
+
+if (!$ok) {
+    send_program_json(['success' => false, 'message' => 'Failed to create program.'], 500);
+}
+
+send_program_json(['success' => true, 'message' => 'Program created successfully.']);

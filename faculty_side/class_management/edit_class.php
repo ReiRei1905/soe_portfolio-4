@@ -1,33 +1,36 @@
 <?php
-// Database connection
-$conn = new mysqli("localhost", "root", "", "soe_portfolio");
 
-if ($conn->connect_error) {
-    die(json_encode(["success" => false, "message" => "Connection failed: " . $conn->connect_error]));
+declare(strict_types=1);
+
+require_once __DIR__ . '/../faculty_access_common.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    faculty_send_json(['success' => false, 'message' => 'Method not allowed.'], 405);
 }
 
-// Get class ID and new class name from POST request
-$classId = isset($_POST['classId']) ? intval($_POST['classId']) : 0;
-$newClassName = isset($_POST['newClassName']) ? trim($_POST['newClassName']) : "";
+$sessionUser = faculty_require_verified_faculty($conn);
+$classId = isset($_POST['classId']) ? (int) $_POST['classId'] : 0;
+$newClassName = trim((string) ($_POST['newClassName'] ?? ''));
 
-if ($classId > 0 && $newClassName !== "") {
-    $stmt = $conn->prepare("UPDATE classes SET class_name = ?, updated_at = NOW() WHERE class_id = ?");
-    if (!$stmt) {
-        echo json_encode(["success" => false, "message" => "Failed to prepare statement: " . $conn->error]);
-        exit;
-    }
-    $stmt->bind_param("si", $newClassName, $classId);
-
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "Class name updated successfully."]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Failed to update class name."]);
-    }
-
-    $stmt->close();
-} else {
-    echo json_encode(["success" => false, "message" => "Invalid input."]);
+if ($classId <= 0 || $newClassName === '') {
+    faculty_send_json(['success' => false, 'message' => 'Invalid input.'], 400);
 }
 
-$conn->close();
-?>
+if (!faculty_can_manage_class($conn, $sessionUser, $classId)) {
+    faculty_send_json(['success' => false, 'message' => 'You are not allowed to edit this class.'], 403);
+}
+
+$stmt = $conn->prepare('UPDATE classes SET class_name = ?, updated_at = NOW() WHERE class_id = ?');
+if (!$stmt) {
+    faculty_send_json(['success' => false, 'message' => 'Failed to prepare statement.'], 500);
+}
+
+$stmt->bind_param('si', $newClassName, $classId);
+$ok = $stmt->execute();
+$stmt->close();
+
+if (!$ok) {
+    faculty_send_json(['success' => false, 'message' => 'Failed to update class name.'], 500);
+}
+
+faculty_send_json(['success' => true, 'message' => 'Class name updated successfully.']);

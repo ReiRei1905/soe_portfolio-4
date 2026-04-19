@@ -27,7 +27,7 @@ function get_request_string(string $key, string $default = ''): string
 
 function require_category_key(string $key): string
 {
-    $allowed = ['assessment', 'projects', 'certificates'];
+    $allowed = ['assessment', 'projects', 'certificates', 'other_files'];
     if (!in_array($key, $allowed, true)) {
         json_response(422, ['ok' => false, 'message' => 'Invalid category.']);
     }
@@ -94,8 +94,10 @@ function current_student_id(mysqli $conn): int
         }
     }
 
-    // Dev fallback for solo/local testing.
-    return 1;
+    json_response(401, [
+        'ok' => false,
+        'message' => 'Unauthorized student session. Please sign in again.'
+    ]);
 }
 
 function category_id_by_key(mysqli $conn, string $categoryKey): int

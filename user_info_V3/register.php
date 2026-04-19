@@ -5,6 +5,21 @@ include 'connect.php';
 require_once __DIR__ . '/notification_service.php';
 require_once __DIR__ . '/user_access_common.php';
 
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+function redirect_with_alert(string $message, string $target = 'index.php'): void {
+    $_SESSION['flash_message'] = $message;
+    header('Location: ' . $target, true, 303);
+    exit();
+}
+
+if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    header('Location: index.php', true, 303);
+    exit();
+}
+
 $mailerAvailable = false;
 $autoloadPath = __DIR__ . '/vendor/autoload.php';
 if (file_exists($autoloadPath)) {
@@ -13,7 +28,6 @@ if (file_exists($autoloadPath)) {
     $mailerAvailable = true;
 } else {
     error_log("PHPMailer autoload not found at: $autoloadPath. Run 'composer install' in project root.");
-    echo "Notice: PHPMailer not installed. OTP emails will not be sent. Run 'composer install' in the project root.";
 }
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -37,8 +51,7 @@ if (isset($_POST['signUp'])) {
     !preg_match('/@apc\.edu\.ph$/', $email) &&
     !preg_match('/@gmail\.com$/', $email) // Allow Gmail for testing purposes
     ) {
-        echo "Only APC email addresses are allowed for registration!";
-        exit();
+        redirect_with_alert('Only APC email addresses are allowed for registration!', 'index.php?showSignup=1');
     }
 
     //aaaaaaaaaaaa
@@ -59,8 +72,7 @@ function isPasswordStrong($password) {
 }
 
 if (!isPasswordStrong($password)) {
-    echo "<script>alert('Password does not meet the policy: Minimum 12 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character (except !).'); window.history.back();</script>";
-    exit();
+    redirect_with_alert('Password does not meet the policy: Minimum 12 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character (except !).', 'index.php?showSignup=1');
 }
     
     // Only check for program_id if the role is 'student' or 'faculty'
@@ -69,19 +81,16 @@ if (!isPasswordStrong($password)) {
         if (isset($_POST['program_id'])) {
             $program_id = sanitizeInput($conn, $_POST['program_id']);
         } else {
-            echo "Please select a valid program.";
-            exit();
+            redirect_with_alert('Please select a valid program.', 'index.php?showSignup=1');
         }
     }
 
     if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
-        echo "Please fill in all required fields!";
-        exit();
+        redirect_with_alert('Please fill in all required fields!', 'index.php?showSignup=1');
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo "Invalid email format!";
-        exit();
+        redirect_with_alert('Invalid email format!', 'index.php?showSignup=1');
     }
 
     $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
@@ -90,8 +99,7 @@ if (!isPasswordStrong($password)) {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        echo " Email already exists. Please use a different email!";
-        exit();
+        redirect_with_alert('Email already exists. Please use a different email!', 'index.php?showSignup=1');
     }
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -113,13 +121,11 @@ if (!isPasswordStrong($password)) {
         $stmt2 = $conn->prepare("INSERT INTO admins (user_id, first_name, middle_name, last_name, suffix, id_number, email, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt2->bind_param("issssiss", $user_id, $first_name, $middle_name, $last_name, $suffix, $id_number, $email, $hashedPassword);
     } else {
-        echo "Invalid role type!";
-        exit();
+        redirect_with_alert('Invalid role type!', 'index.php?showSignup=1');
     }
 
     if (!$stmt2->execute()) {
-        echo "Error inserting into role-specific table: " . $stmt2->error;
-        exit();
+        redirect_with_alert('Error inserting into role-specific table: ' . $stmt2->error, 'index.php?showSignup=1');
     }
 
     // Generate OTP
@@ -139,14 +145,14 @@ if (!isPasswordStrong($password)) {
         $mail->Body = "<p>Dear user,</p><h3>Your OTP code is $otp</h3><br><p>With regards,<br>SOE Portfolio</p>";
 
         $mail->send();
-        echo "<script>alert('Registration successful! OTP sent to $email'); window.location.replace('verification.php');</script>";
+        redirect_with_alert("Registration successful! OTP sent to {$email}", 'verification.php');
     } catch (Exception $e) {
         error_log("OTP mail send failed for {$email}: " . $mail->ErrorInfo);
 
         if (isLocalMailFallbackEnabled()) {
-            echo "<script>alert('Registration successful. SMTP failed, so local fallback is active. Your OTP is: {$otp}'); window.location.replace('verification.php');</script>";
+            redirect_with_alert("Registration successful. SMTP failed, so local fallback is active. Your OTP is: {$otp}", 'verification.php');
         } else {
-            echo "<script>alert('Registration successful, but OTP email could not be sent. Mailer Error: {$mail->ErrorInfo}');</script>";
+            redirect_with_alert("Registration successful, but OTP email could not be sent. Mailer Error: {$mail->ErrorInfo}", 'index.php?showSignup=1');
         }
     }
     exit();
@@ -160,8 +166,7 @@ if (isset($_POST['signIn'])) {
     $password = $_POST['password'] ?? '';
 
     if (empty($email) || empty($password)) {
-        echo "Email and password are required!";
-        exit();
+        redirect_with_alert('Email and password are required!', 'index.php');
     }
 
     // CHANGED: select user by email only so we can show clear verification message
@@ -175,8 +180,7 @@ if (isset($_POST['signIn'])) {
 
         // check verification status explicitly
         if ((int)$row['status'] !== 1) {
-            echo "Account not verified. Please check your email for the OTP and complete verification before signing in.";
-            exit();
+            redirect_with_alert('Account not verified. Please check your email for the OTP and complete verification before signing in.', 'index.php');
         }
 
         if (password_verify($password, $row['password'])) {
@@ -188,6 +192,15 @@ if (isset($_POST['signIn'])) {
             $_SESSION['role_type'] = $row['role_type'];
             $_SESSION['is_verified'] = (int) ($row['is_verified'] ?? 0);
 
+            // Remember the last local owner account on this browser for localhost owner-mode fallback.
+            setcookie('local_owner_email', (string) $row['email'], [
+                'expires' => time() + (86400 * 30),
+                'path' => '/',
+                'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+
             $fullName = trim((string) $row['first_name'] . ' ' . (string) $row['last_name']);
             if ((int) ($_SESSION['user_id'] ?? 0) > 0 && $fullName !== '') {
                 add_system_notification(
@@ -198,13 +211,13 @@ if (isset($_POST['signIn'])) {
             }
             
             $targetPath = resolve_effective_route($row);
-            header("Location: {$targetPath}");
+            header("Location: {$targetPath}", true, 303);
             exit();
         } else {
-            echo " Invalid email or password!";
+            redirect_with_alert('Invalid email or password!', 'index.php');
         }
     } else {
-        echo " Invalid email or password!";
+        redirect_with_alert('Invalid email or password!', 'index.php');
     }
 }
 ?>

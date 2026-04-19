@@ -28,10 +28,15 @@ let currentFilter = 'all';
 let currentSearch = '';
 let selectedUserId = null;
 let selectedAccessRole = 'student';
+let selectedUserStatus = '';
+let selectedCurrentAccessRole = 'student';
 let users = [];
 let searchDebounceTimer = null;
 let isAdminSessionContext = false;
 let actionToastTimer = null;
+let isVerificationActionInProgress = false;
+let pendingVerificationAction = '';
+let isConfirmActionSubmitting = false;
 
 function showActionToast(message, type = 'success') {
     const toast = document.getElementById('actionToast');
@@ -332,7 +337,199 @@ function closeUserDetailModal() {
     if (modal) {
         modal.style.display = 'none';
     }
+    const emailStatusEl = document.getElementById('emailDeliveryStatus');
+    if (emailStatusEl) {
+        emailStatusEl.textContent = '';
+        emailStatusEl.classList.add('hidden');
+        emailStatusEl.classList.remove('success', 'error');
+    }
     selectedUserId = null;
+    selectedUserStatus = '';
+    selectedCurrentAccessRole = 'student';
+    setVerificationButtonsBusy(false);
+    setActionButtonsByUserState();
+    closeActionConfirmModal();
+}
+
+function openActionConfirmModal(action) {
+    if (!selectedUserId) {
+        alert('Please open user details first.');
+        return;
+    }
+
+    if (isVerificationActionInProgress) {
+        return;
+    }
+
+    const targetUserName = (document.getElementById('userName')?.textContent || 'This user').trim();
+    if (isActionDuplicate(action)) {
+        const duplicateMessage = action === 'approve'
+            ? `The ${targetUserName} has already been approved.`
+            : action === 'revoke'
+                ? `The ${targetUserName}'s access has already been revoked.`
+                : `The ${targetUserName} is already set to Not Verified.`;
+
+        setModalActionStatusLine(duplicateMessage, false);
+        showActionToast(duplicateMessage, 'error');
+        alert(duplicateMessage);
+        return;
+    }
+
+    pendingVerificationAction = action;
+
+    const confirmModal = document.getElementById('actionConfirmModal');
+    const confirmText = document.getElementById('actionConfirmText');
+    const confirmProceedButton = document.getElementById('confirmProceedButton');
+    if (!confirmModal || !confirmText || !confirmProceedButton) {
+        return;
+    }
+
+    if (action === 'approve') {
+        const selectedRoleName = getAccessRoleDisplayName(selectedAccessRole);
+        confirmText.textContent = `Approve ${targetUserName} as ${selectedRoleName}? This will verify the account and send the notification email.`;
+        confirmProceedButton.textContent = 'Yes, Approve';
+        confirmProceedButton.dataset.defaultLabel = 'Yes, Approve';
+    } else if (action === 'revoke') {
+        const roleName = getAccessRoleDisplayName(selectedCurrentAccessRole);
+        confirmText.textContent = `Revoke ${targetUserName}'s ${roleName} access? This will set the account to Not Verified and notify the user.`;
+        confirmProceedButton.textContent = 'Yes, Revoke Access';
+        confirmProceedButton.dataset.defaultLabel = 'Yes, Revoke Access';
+    } else {
+        confirmText.textContent = `Reject ${targetUserName}? This account will be marked as rejected and set to Not Verified.`;
+        confirmProceedButton.textContent = 'Yes, Reject';
+        confirmProceedButton.dataset.defaultLabel = 'Yes, Reject';
+    }
+
+    setActionConfirmModalBusy(false);
+    confirmModal.style.display = 'block';
+}
+
+function closeActionConfirmModal() {
+    if (isConfirmActionSubmitting) {
+        return;
+    }
+
+    const confirmModal = document.getElementById('actionConfirmModal');
+    if (confirmModal) {
+        confirmModal.style.display = 'none';
+    }
+    setActionConfirmModalBusy(false);
+    pendingVerificationAction = '';
+}
+
+function setActionConfirmModalBusy(isBusy) {
+    const confirmProceedButton = document.getElementById('confirmProceedButton');
+    const confirmCancelButton = document.getElementById('confirmCancelButton');
+    const confirmCloseButton = document.querySelector('#actionConfirmModal .confirmation-modal-header button');
+
+    if (confirmProceedButton) {
+        const defaultLabel = confirmProceedButton.dataset.defaultLabel || 'Continue';
+        confirmProceedButton.disabled = isBusy;
+        confirmProceedButton.textContent = isBusy ? 'Processing...' : defaultLabel;
+        confirmProceedButton.classList.toggle('is-loading', isBusy);
+    }
+
+    if (confirmCancelButton) {
+        confirmCancelButton.disabled = isBusy;
+    }
+
+    if (confirmCloseButton) {
+        confirmCloseButton.disabled = isBusy;
+    }
+}
+
+async function confirmPendingVerificationAction() {
+    const action = pendingVerificationAction;
+    if (!action || isConfirmActionSubmitting) {
+        return;
+    }
+
+    isConfirmActionSubmitting = true;
+    setActionConfirmModalBusy(true);
+
+    try {
+        await updateUserVerification(action);
+    } finally {
+        isConfirmActionSubmitting = false;
+        closeActionConfirmModal();
+    }
+}
+
+function setVerificationButtonsBusy(isBusy, action = '') {
+    const approveButton = document.getElementById('approveButton');
+    const rejectButton = document.getElementById('rejectButton');
+    const revokeButton = document.getElementById('revokeAccessButton');
+    if (!approveButton || !rejectButton || !revokeButton) return;
+
+    approveButton.disabled = isBusy;
+    rejectButton.disabled = isBusy;
+    revokeButton.disabled = isBusy;
+    approveButton.classList.toggle('is-disabled', isBusy);
+    rejectButton.classList.toggle('is-disabled', isBusy);
+    revokeButton.classList.toggle('is-disabled', isBusy);
+
+    approveButton.textContent = isBusy && action === 'approve' ? 'Approving...' : 'Approve';
+    rejectButton.textContent = isBusy && action === 'reject' ? 'Rejecting...' : 'Reject';
+    revokeButton.textContent = isBusy && action === 'revoke' ? 'Revoking...' : 'Revoke Access';
+}
+
+function getNormalizedStatus(status) {
+    return String(status || '').trim().toLowerCase();
+}
+
+function setModalActionStatusLine(message, isSuccess) {
+    const emailStatusEl = document.getElementById('emailDeliveryStatus');
+    if (!emailStatusEl) return;
+
+    emailStatusEl.textContent = message;
+    emailStatusEl.classList.remove('hidden', 'success', 'error');
+    emailStatusEl.classList.add(isSuccess ? 'success' : 'error');
+}
+
+function getAccessRoleDisplayName(roleKey) {
+    const roleNameMap = {
+        admin: 'Admin',
+        executiveDirector: 'Executive Director',
+        programDirector: 'Program Director',
+        professor: 'Professor',
+        student: 'Student'
+    };
+
+    return roleNameMap[roleKey] || 'Student';
+}
+
+function isActionDuplicate(action) {
+    const normalizedStatus = getNormalizedStatus(selectedUserStatus);
+    return (action === 'approve' && normalizedStatus === 'verified')
+        || ((action === 'reject' || action === 'revoke') && normalizedStatus === 'not verified');
+}
+
+function isRevocableAccessRole(roleKey) {
+    return roleKey === 'admin'
+        || roleKey === 'executiveDirector'
+        || roleKey === 'programDirector'
+        || roleKey === 'professor'
+        || roleKey === 'student';
+}
+
+function setActionButtonsByUserState() {
+    const approveButton = document.getElementById('approveButton');
+    const rejectButton = document.getElementById('rejectButton');
+    const revokeButton = document.getElementById('revokeAccessButton');
+    if (!approveButton || !rejectButton || !revokeButton) return;
+
+    const isVerified = getNormalizedStatus(selectedUserStatus) === 'verified';
+    const canRevokeAccess = isVerified && isRevocableAccessRole(selectedCurrentAccessRole);
+
+    if (canRevokeAccess) {
+        approveButton.classList.add('hidden');
+        rejectButton.classList.add('hidden');
+        revokeButton.classList.remove('hidden');
+    } else {
+        approveButton.classList.remove('hidden');
+        rejectButton.classList.remove('hidden');
+        revokeButton.classList.add('hidden');
+    }
 }
 
 function setSelectedAccessRole(roleKey) {
@@ -354,6 +551,18 @@ function updateModal(user) {
     document.getElementById('userYearEnroll').textContent = `Year Enrolled: ${user.yearEnroll || 'N/A'}`;
     document.getElementById('userIdNumber').textContent = `ID Number: ${user.idNumber || 'N/A'}`;
     document.getElementById('userSignUpDate').textContent = `Sign-Up Date: ${user.signUpDate || 'N/A'}`;
+
+    const emailStatusEl = document.getElementById('emailDeliveryStatus');
+    if (emailStatusEl) {
+        emailStatusEl.textContent = '';
+        emailStatusEl.classList.add('hidden');
+        emailStatusEl.classList.remove('success', 'error');
+    }
+
+    selectedUserStatus = user.status || '';
+    selectedCurrentAccessRole = user.accessRole || 'student';
+    setVerificationButtonsBusy(false);
+    setActionButtonsByUserState();
 
     setSelectedAccessRole(user.accessRole || 'student');
 }
@@ -377,7 +586,6 @@ async function checkUserInfo(userId) {
             modal.style.display = 'block';
         }
     } catch (error) {
-        console.error(error);
         alert(error.message || 'Failed to load user details.');
     }
 
@@ -385,8 +593,26 @@ async function checkUserInfo(userId) {
 }
 
 async function updateUserVerification(action) {
+    if (isVerificationActionInProgress) {
+        return;
+    }
+
     if (!selectedUserId) {
         alert('Please open user details first.');
+        return;
+    }
+
+    const targetUserName = (document.getElementById('userName')?.textContent || 'This user').trim();
+    if (isActionDuplicate(action)) {
+        const duplicateMessage = action === 'approve'
+            ? `The ${targetUserName} has already been approved.`
+            : action === 'revoke'
+                ? `The ${targetUserName}'s access has already been revoked.`
+                : `The ${targetUserName} is already set to Not Verified.`;
+
+        setModalActionStatusLine(duplicateMessage, false);
+        showActionToast(duplicateMessage, 'error');
+        alert(duplicateMessage);
         return;
     }
 
@@ -396,20 +622,47 @@ async function updateUserVerification(action) {
         access_role: selectedAccessRole
     });
 
+    isVerificationActionInProgress = true;
+    setVerificationButtonsBusy(true, action);
+    const controller = new AbortController();
+    const timeoutMs = 15000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
         const response = await fetch('update_user_status.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
             },
-            body: body.toString()
+            body: body.toString(),
+            signal: controller.signal
         });
 
         const payload = await response.json();
 
         if (!response.ok || !payload.success) {
+            if (response.status === 409 && payload?.message) {
+                selectedUserStatus = payload.currentStatus || selectedUserStatus;
+                setModalActionStatusLine(payload.message, false);
+                showActionToast(payload.message, 'error');
+                alert(payload.message);
+                return;
+            }
             throw new Error(payload.message || 'Status update failed.');
         }
+
+        const emailSent = payload.emailNotificationSent === true;
+        const emailDeferred = payload.emailDispatchMode === 'deferred';
+        setModalActionStatusLine(
+            emailDeferred
+                ? 'Email notification queued for background sending.'
+                : (emailSent
+                    ? 'Email notification sent successfully.'
+                    : 'Email notification failed or SMTP not configured.'),
+            emailDeferred ? true : emailSent
+        );
+
+        selectedUserStatus = payload.status || selectedUserStatus;
 
         showActionToast(payload.message || `User ${action}d successfully.`, 'success');
 
@@ -417,17 +670,29 @@ async function updateUserVerification(action) {
         await checkUserInfo(selectedUserId);
     } catch (error) {
         console.error(error);
-        showActionToast(error.message || 'Failed to update user status.', 'error');
-        alert(error.message || 'Failed to update user status.');
+        const message = error?.name === 'AbortError'
+            ? 'Request timed out while updating user status. Please try again.'
+            : (error.message || 'Failed to update user status.');
+
+        showActionToast(message, 'error');
+        alert(message);
+    } finally {
+        clearTimeout(timeoutId);
+        isVerificationActionInProgress = false;
+        setVerificationButtonsBusy(false);
     }
 }
 
 async function approveUser() {
-    await updateUserVerification('approve');
+    openActionConfirmModal('approve');
 }
 
 async function rejectUser() {
-    await updateUserVerification('reject');
+    openActionConfirmModal('reject');
+}
+
+async function revokeUserAccess() {
+    openActionConfirmModal('revoke');
 }
 
 async function removeUser(userId) {
@@ -539,6 +804,11 @@ window.addEventListener('click', (event) => {
     if (modal && event.target === modal) {
         closeUserDetailModal();
     }
+
+    const actionConfirmModal = document.getElementById('actionConfirmModal');
+    if (actionConfirmModal && event.target === actionConfirmModal) {
+        closeActionConfirmModal();
+    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -564,6 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const approveButton = document.getElementById('approveButton');
     const rejectButton = document.getElementById('rejectButton');
+    const revokeButton = document.getElementById('revokeAccessButton');
 
     if (approveButton) {
         approveButton.addEventListener('click', approveUser);
@@ -571,6 +842,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (rejectButton) {
         rejectButton.addEventListener('click', rejectUser);
+    }
+
+    if (revokeButton) {
+        revokeButton.addEventListener('click', revokeUserAccess);
     }
 
     wireSearch();

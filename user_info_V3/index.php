@@ -1,3 +1,20 @@
+<?php
+session_start();
+
+$flashMessage = $_SESSION['flash_message'] ?? '';
+unset($_SESSION['flash_message']);
+
+$signInErrorMessage = '';
+if ($flashMessage !== '') {
+    $normalized = strtolower(trim((string) $flashMessage));
+    if (
+        str_contains($normalized, 'invalid email or password') ||
+        str_contains($normalized, 'email and password are required')
+    ) {
+        $signInErrorMessage = 'You entered a wrong password!, Please try again carefully:D';
+    }
+}
+?>
 <!-- filepath: \\192.168.80.4\sambashare\soe_portfolio\user_info_V2 - For Debugging\index.php -->
 <!DOCTYPE html>
 <html lang="en">
@@ -65,7 +82,8 @@
             <div class="input-group password-group">
                 <i class="fas fa-lock"></i>
                 <input type="password" name="password" class="password-input" placeholder="Password" required>
-                <div class="password-strength" style="font-size:12px; color:#888; margin-top:5px;"></div>
+                <i class="fas fa-eye toggle-password" aria-hidden="true"></i>
+                <div class="password-strength"></div>
             </div>
             <div class="input-group">
                 <label for="role_type">Sign-Up as:</label>
@@ -75,7 +93,10 @@
                     <option value="admin" <?= isset($role) && $role === 'admin' ? 'selected' : '' ?>>Admin</option>
                 </select>
             </div>
-            <input type="submit" class="btn" value="Sign-Up" name="signUp">
+            <div class="signup-submit-wrap">
+                <input type="submit" class="btn" value="Sign-Up" name="signUp">
+                <span class="signup-loading-spinner" aria-hidden="true"></span>
+            </div>
             <div class="back-button-container">
                 <button class="back-button">Back</button>
             </div>
@@ -141,7 +162,8 @@
             <div class="input-group password-group">
                 <i class="fas fa-lock"></i>
                 <input type="password" name="password" class="password-input" placeholder="Password" required>
-                <div class="password-strength" style="font-size:12px; color:#888; margin-top:5px;"></div>
+                <i class="fas fa-eye toggle-password" aria-hidden="true"></i>
+                <div class="password-strength"></div>
             </div>
             <div class="input-group">
                 <label for="role_type">Sign-Up as:</label>
@@ -151,7 +173,10 @@
                     <option value="admin" <?= isset($role) && $role === 'admin' ? 'selected' : '' ?>>Admin</option>
                 </select>
             </div>
-            <input type="submit" class="btn" value="Sign-Up" name="signUp">
+            <div class="signup-submit-wrap">
+                <input type="submit" class="btn" value="Sign-Up" name="signUp">
+                <span class="signup-loading-spinner" aria-hidden="true"></span>
+            </div>
             <div class="back-button-container">
                 <button class="back-button">Back</button>
             </div>
@@ -189,7 +214,8 @@
             <div class="input-group password-group">
                 <i class="fas fa-lock"></i>
                 <input type="password" name="password" class="password-input" placeholder="Password" required>
-                <div class="password-strength" style="font-size:12px; color:#888; margin-top:5px;"></div>
+                <i class="fas fa-eye toggle-password" aria-hidden="true"></i>
+                <div class="password-strength"></div>
             </div>
             <div class="input-group">
                 <label for="role_type">Sign-Up as:</label>
@@ -199,7 +225,10 @@
                     <option value="admin" <?= isset($role) && $role === 'admin' ? 'selected' : '' ?>>Admin</option>
                 </select>
             </div>
-            <input type="submit" class="btn" value="Sign-Up" name="signUp">
+            <div class="signup-submit-wrap">
+                <input type="submit" class="btn" value="Sign-Up" name="signUp">
+                <span class="signup-loading-spinner" aria-hidden="true"></span>
+            </div>
             <div class="back-button-container">
                 <button class="back-button">Back</button>
             </div>
@@ -217,8 +246,12 @@
             <div class="input-group password-group">
                 <i class="fas fa-lock"></i>
                 <input type="password" name="password" class="password-input" placeholder="Password" required>
+                <i class="fas fa-eye toggle-password" aria-hidden="true"></i>
                 
             </div>
+            <?php if ($signInErrorMessage !== ''): ?>
+                <p id="signInErrorMessage" class="sign-in-error-message"><?php echo htmlspecialchars($signInErrorMessage, ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php endif; ?>
             <p class="recover">
                 <a href="recover_psw.php">Forgot Password?</a>
             </p>

@@ -16,11 +16,276 @@ document.addEventListener("DOMContentLoaded", () => {
     const termNumberSelect = document.getElementById("term_number");
     const startYearSelect = document.getElementById("startYear");
     const endYearSelect = document.getElementById("endYear");
+    const assignConfirmBtn = document.getElementById('confirmAssignProfessorBtn');
+    const assignModalElement = document.getElementById('assignProfessorModal');
+    let canManageClasses = false;
+    let canCreateClasses = false;
+    let isProgramDirector = false;
+    let isProfessorUser = false;
+    let hasAssignedProgram = false;
+    let assignProfessorModal = null;
+    let currentAssignClassId = 0;
+    let currentAssignClassName = '';
+
+    function redirectToLogin() {
+        window.location.href = '../../user_info_V3/index.php';
+    }
+
+    function normalizeRoleLabel(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ');
+    }
+
+    function updateProgramDirectorNotice() {
+        const notice = document.getElementById('pdAssignmentNoticeClasses');
+        if (!notice) return;
+
+        const shouldShow = isProgramDirector && !hasAssignedProgram;
+        notice.classList.toggle('hidden', !shouldShow);
+    }
+
+    if (assignModalElement && window.bootstrap && window.bootstrap.Modal) {
+        assignProfessorModal = new window.bootstrap.Modal(assignModalElement);
+    }
+
+    async function loadClassAccessContext() {
+        try {
+            const response = await fetch('../../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
+            const payload = await response.json();
+            if (response.status === 401 || response.status === 403 || !response.ok || !payload.success) {
+                redirectToLogin();
+                canManageClasses = false;
+                throw new Error('Unauthorized');
+            }
+
+            const roleType = normalizeRoleLabel(payload.user?.roleType || '');
+            const facultyRole = normalizeRoleLabel(payload.user?.facultyRole || '');
+            const status = Number(payload.user?.status || 0);
+            const isVerified = Number(payload.user?.isVerified || 0);
+            const currentUserId = Number(payload.user?.userId || 0);
+            const isExecDirectorRole = facultyRole.includes('executive director');
+            const isProgramDirectorRole = facultyRole.includes('program director') || facultyRole.includes('program directors');
+            const isProfessorRole = facultyRole.includes('professor');
+
+            isProgramDirector = roleType === 'faculty'
+                && status === 1
+                && isVerified === 1
+                && isProgramDirectorRole;
+
+            isProfessorUser = roleType === 'faculty'
+                && status === 1
+                && isVerified === 1
+                && isProfessorRole
+                && !isExecDirectorRole
+                && !isProgramDirectorRole;
+
+            hasAssignedProgram = false;
+            if (isProgramDirector) {
+                const programResponse = await fetch('../program_management/fetch_programs.php', { credentials: 'same-origin' });
+                const programs = await programResponse.json();
+
+                if (programResponse.ok && Array.isArray(programs)) {
+                    hasAssignedProgram = programs.some((program) => Number(program.assignedProgramDirectorUserId || 0) === currentUserId);
+                }
+            }
+
+            canManageClasses = roleType === 'faculty'
+                && status === 1
+                && isVerified === 1
+                && (isExecDirectorRole || (isProgramDirectorRole && hasAssignedProgram));
+
+            canCreateClasses = roleType === 'faculty'
+                && status === 1
+                && isVerified === 1
+                && (isExecDirectorRole || (isProgramDirectorRole && hasAssignedProgram) || isProfessorUser);
+        } catch (error) {
+            canManageClasses = false;
+            canCreateClasses = false;
+            isProgramDirector = false;
+            isProfessorUser = false;
+            hasAssignedProgram = false;
+            console.warn('Unable to load classes access context:', error);
+            if (String(error && error.message || '').toLowerCase().includes('unauthorized')) {
+                throw error;
+            }
+        }
+
+        updateProgramDirectorNotice();
+
+        if (!canCreateClasses) {
+            createClassBtn.style.display = 'none';
+            classInputContainer.classList.add('hidden');
+        }
+    }
 
     createClassBtn.addEventListener("click", () => {
+        if (!canCreateClasses) {
+            alert('You only have view access for classes.');
+            return;
+        }
         classInputContainer.classList.remove("hidden");
         classInput.focus();
     });
+
+    async function fetchAssignableProfessors(classId) {
+        const response = await fetch(`get_verified_professors.php?classId=${encodeURIComponent(classId)}`, {
+            credentials: 'same-origin'
+        });
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Failed to load professors.');
+        }
+
+        return payload.professors || [];
+    }
+
+    function renderProfessorSelectOptions(professors, selectedUserId = 0) {
+        const select = document.getElementById('professorSelect');
+        if (!select) return;
+
+        select.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select Professor';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        select.appendChild(placeholder);
+
+        professors.forEach((professor) => {
+            const option = document.createElement('option');
+            option.value = String(professor.userId);
+            const roleLabel = String(professor.facultyRole || '').trim();
+            const roleSuffix = roleLabel ? ` (${roleLabel})` : '';
+            option.textContent = `${professor.fullName}${roleSuffix} - ${professor.email}`;
+            if (Number(professor.userId) === Number(selectedUserId)) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+    }
+
+    async function openAssignProfessorModal(classId, className, selectedUserId = 0) {
+        if (!canManageClasses) return;
+
+        currentAssignClassId = Number(classId);
+        currentAssignClassName = className;
+
+        const titleEl = document.getElementById('assignProfessorClassTitle');
+        if (titleEl) {
+            titleEl.textContent = `Class: ${className}`;
+        }
+
+        const professors = await fetchAssignableProfessors(classId);
+        if (!Array.isArray(professors) || professors.length === 0) {
+            alert('No verified faculty users are available for assignment.');
+            return;
+        }
+
+        renderProfessorSelectOptions(professors, selectedUserId);
+
+        if (assignProfessorModal) {
+            assignProfessorModal.show();
+        }
+    }
+
+    async function assignProfessorToCurrentClass() {
+        if (!canManageClasses || currentAssignClassId <= 0) return;
+
+        const select = document.getElementById('professorSelect');
+        if (!select || !select.value) {
+            alert('Please select a professor first.');
+            return;
+        }
+
+        const body = new URLSearchParams({
+            classId: String(currentAssignClassId),
+            professorUserId: String(select.value)
+        });
+
+        const assignResponse = await fetch('assign_professor.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: body.toString()
+        });
+        const assignPayload = await assignResponse.json();
+
+        if (!assignResponse.ok || !assignPayload.success) {
+            throw new Error(assignPayload.message || 'Failed to assign professor.');
+        }
+
+        if (assignProfessorModal) {
+            assignProfessorModal.hide();
+        }
+
+        alert(assignPayload.message || `Professor assigned for ${currentAssignClassName}.`);
+        await fetchClasses();
+    }
+
+    async function revokeProfessorForClass(classId) {
+        if (!canManageClasses || Number(classId) <= 0) {
+            return;
+        }
+
+        const confirmed = confirm('Revoke the current Professor assignment for this class?');
+        if (!confirmed) return;
+
+        const body = new URLSearchParams({
+            classId: String(classId)
+        });
+
+        const response = await fetch('revoke_professor.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: body.toString()
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Failed to revoke professor assignment.');
+        }
+
+        alert(payload.message || 'Professor assignment revoked.');
+    }
+
+    async function reviewClassRequest(requestId, action, rejectionReason = '') {
+        if (!canManageClasses || Number(requestId) <= 0) {
+            return;
+        }
+
+        const body = new URLSearchParams({
+            requestId: String(requestId),
+            action: String(action)
+        });
+
+        if (action === 'reject' && rejectionReason.trim() !== '') {
+            body.set('rejectionReason', rejectionReason.trim());
+        }
+
+        const response = await fetch('review_class_request.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: body.toString()
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'Failed to review class request.');
+        }
+
+        alert(payload.message || 'Class request reviewed successfully.');
+    }
 
     const DEBUG_LOGS = true;
     // Cache courses client-side to avoid repeated network requests while typing
@@ -34,22 +299,55 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(fetchUrl);
             if (!response.ok) throw new Error("Failed to fetch courses");
             const courses = await response.json();
+            const dedupedCourses = dedupeCoursesByLogicalIdentity(courses);
             if (DEBUG_LOGS) {
                 try {
-                    console.groupCollapsed(`Course fetch — term: "${searchTerm}" (${courses.length || 0} results)`);
-                    console.log(courses);
-                    if (Array.isArray(courses) && courses.length) console.table(courses);
+                    console.groupCollapsed(`Course fetch — term: "${searchTerm}" (${dedupedCourses.length || 0} results)`);
+                    console.log(dedupedCourses);
+                    if (Array.isArray(dedupedCourses) && dedupedCourses.length) console.table(dedupedCourses);
                     console.groupEnd();
                 } catch (e) {
-                    console.log('Fetched courses (raw):', courses);
+                    console.log('Fetched courses (deduped):', dedupedCourses);
                 }
             }
-            return courses;
+            return dedupedCourses;
         } catch (error) {
             console.error(error);
             return [];
         }
     };
+
+    function dedupeCoursesByLogicalIdentity(courses) {
+        if (!Array.isArray(courses) || courses.length === 0) {
+            return [];
+        }
+
+        const map = new Map();
+
+        courses.forEach((course) => {
+            const id = Number(course.id || course.course_id || 0);
+            const rawCode = String(course.course_code || '').trim().toUpperCase();
+            const rawName = String(course.name || course.course_name || '').trim();
+            const normalizedName = rawName.toLowerCase().replace(/\s+/g, ' ');
+            const key = rawCode ? `code:${rawCode}` : `name:${normalizedName}`;
+
+            if (!map.has(key)) {
+                map.set(key, course);
+                return;
+            }
+
+            const existing = map.get(key) || {};
+            const existingId = Number(existing.id || existing.course_id || 0);
+            const existingHasCode = String(existing.course_code || '').trim() !== '';
+            const currentHasCode = rawCode !== '';
+
+            if ((!existingHasCode && currentHasCode) || (id > 0 && (existingId <= 0 || id < existingId))) {
+                map.set(key, course);
+            }
+        });
+
+        return Array.from(map.values());
+    }
 
     // Render a dropdown of matching courses (used by the create-class course search)
     function renderDropdown(matches) {
@@ -94,6 +392,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchClasses = async () => {
         try {
             const response = await fetch("fetch_classes.php");
+            if (response.status === 401 || response.status === 403) {
+                redirectToLogin();
+                return;
+            }
             if (!response.ok) throw new Error("Failed to fetch classes");
             const data = await response.json();
             console.debug('fetchClasses response:', data);
@@ -159,31 +461,158 @@ document.addEventListener("DOMContentLoaded", () => {
                 return `${base} ${termPart}`.trim();
             }
 
-            item.querySelector(".class-name").textContent = buildClassDisplay(classItem);
+            const classNameEl = item.querySelector('.class-name');
+            const assignedProfEl = item.querySelector('.assigned-prof-label');
+            const optionsIcon = item.querySelector('.class-options');
+            const dropdown = item.querySelector('.dropdown');
+            const approveRequestBtn = item.querySelector('.approve-request-btn');
+            const rejectRequestBtn = item.querySelector('.reject-request-btn');
+            const assignProfBtn = item.querySelector('.assign-Prof-btn');
+            const revokeProfBtn = item.querySelector('.revoke-Prof-btn');
+            const editBtn = item.querySelector('.edit-btn');
+            const removeBtn = item.querySelector('.remove-btn');
+            const isPendingRequest = Number(classItem.is_pending_request || 0) === 1;
+            const requestId = Number(classItem.request_id || 0);
 
-            item.querySelector(".class-item").addEventListener("click", () => {
-                // class-handling is now in the same folder (class_management)
-                window.location.href = `./class-handling.html?class_id=${classItem.class_id}`;
-            });
+            classNameEl.textContent = buildClassDisplay(classItem);
 
-            item.querySelector(".class-options").addEventListener("click", (e) => {
+            const assignedProfessorName = String(classItem.assigned_professor_name || '').trim();
+            const assignedProfessorUserId = Number(classItem.assigned_professor_user_id || 0);
+            const hasAssignedProfessor = assignedProfessorUserId > 0;
+            if (isPendingRequest && isProfessorUser) {
+                const programDirectorName = String(classItem.program_director_name || '').trim();
+                if (programDirectorName) {
+                    const hasMultipleDirectors = programDirectorName.includes(' and ') || programDirectorName.includes(',');
+                    assignedProfEl.textContent = hasMultipleDirectors
+                        ? `Waiting for approval by Program Directors: ${programDirectorName}`
+                        : `Waiting for approval by Program Director: ${programDirectorName}`;
+                } else {
+                    assignedProfEl.textContent = 'Waiting for Program Director approval';
+                }
+            } else if (isPendingRequest && canManageClasses) {
+                const createdByProfessorName = String(classItem.created_by_professor_name || '').trim();
+                assignedProfEl.textContent = createdByProfessorName
+                    ? `Created by Professor: ${createdByProfessorName}`
+                    : 'Created by Professor: Unknown';
+            } else if (isProfessorUser) {
+                const assignedByProgramDirectorName = String(classItem.assigned_by_program_director_name || '').trim();
+                assignedProfEl.textContent = assignedByProgramDirectorName
+                    ? `Assigned by Program Director: ${assignedByProgramDirectorName}`
+                    : 'Assigned by Program Director: Not available';
+            } else {
+                assignedProfEl.textContent = assignedProfessorName
+                    ? `Professor: ${assignedProfessorName}`
+                    : 'Professor: Not assigned';
+            }
+
+            if (revokeProfBtn) {
+                revokeProfBtn.disabled = !hasAssignedProfessor;
+                revokeProfBtn.classList.toggle('is-disabled', !hasAssignedProfessor);
+            }
+
+            if (!isPendingRequest) {
+                item.querySelector(".class-item").addEventListener("click", () => {
+                    // class-handling is now in the same folder (class_management)
+                    window.location.href = `./class-handling.html?class_id=${classItem.class_id}`;
+                });
+            }
+
+            optionsIcon.addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleDropdown(e.target);
             });
 
-            item.querySelector(".dropdown").addEventListener("click", (e) => {
+            dropdown.addEventListener("click", (e) => {
                 e.stopPropagation();
             });
 
-            item.querySelector(".edit-btn").setAttribute("onclick", `editClass(this, ${classItem.class_id})`);
-            item.querySelector(".remove-btn").setAttribute("onclick", `removeClass(this, ${classItem.class_id})`);
+            if (!canManageClasses) {
+                if (optionsIcon) optionsIcon.style.display = 'none';
+                if (dropdown) dropdown.classList.add('hidden');
+            }
+
+            if (isPendingRequest) {
+                assignProfBtn.classList.add('hidden');
+                revokeProfBtn.classList.add('hidden');
+                editBtn.classList.add('hidden');
+                removeBtn.classList.add('hidden');
+
+                if (canManageClasses) {
+                    approveRequestBtn.classList.remove('hidden');
+                    rejectRequestBtn.classList.remove('hidden');
+                } else if (optionsIcon) {
+                    optionsIcon.style.display = 'none';
+                }
+            } else {
+                approveRequestBtn.classList.add('hidden');
+                rejectRequestBtn.classList.add('hidden');
+            }
+
+            assignProfBtn.addEventListener('click', async () => {
+                if (!canManageClasses) return;
+                try {
+                    await openAssignProfessorModal(classItem.class_id, buildClassDisplay(classItem), assignedProfessorUserId);
+                    dropdown.classList.add('hidden');
+                } catch (error) {
+                    alert(error.message || 'Failed to load professors.');
+                }
+            });
+
+            if (revokeProfBtn) {
+                revokeProfBtn.addEventListener('click', async () => {
+                    if (!canManageClasses || !hasAssignedProfessor) return;
+                    try {
+                        await revokeProfessorForClass(classItem.class_id);
+                        dropdown.classList.add('hidden');
+                        await fetchClasses();
+                    } catch (error) {
+                        alert(error.message || 'Failed to revoke professor assignment.');
+                    }
+                });
+            }
+
+            if (approveRequestBtn) {
+                approveRequestBtn.addEventListener('click', async () => {
+                    if (!canManageClasses || !isPendingRequest || requestId <= 0) return;
+                    try {
+                        await reviewClassRequest(requestId, 'approve');
+                        dropdown.classList.add('hidden');
+                        await fetchClasses();
+                    } catch (error) {
+                        alert(error.message || 'Failed to approve class request.');
+                    }
+                });
+            }
+
+            if (rejectRequestBtn) {
+                rejectRequestBtn.addEventListener('click', async () => {
+                    if (!canManageClasses || !isPendingRequest || requestId <= 0) return;
+                    const reason = prompt('Optional rejection reason:') || '';
+                    try {
+                        await reviewClassRequest(requestId, 'reject', reason);
+                        dropdown.classList.add('hidden');
+                        await fetchClasses();
+                    } catch (error) {
+                        alert(error.message || 'Failed to reject class request.');
+                    }
+                });
+            }
+
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editClass(editBtn, classItem.class_id);
+            });
+
+            removeBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await removeClass(removeBtn, classItem.class_id);
+            });
 
             // inline edit wiring
             const inlineEdit = item.querySelector('.inline-edit');
             const editInput = inlineEdit.querySelector('.edit-input');
             const saveBtn = inlineEdit.querySelector('.save-edit-btn');
             const cancelBtn = inlineEdit.querySelector('.cancel-edit-btn');
-            const editBtn = item.querySelector('.edit-btn');
             const itemEl = item.querySelector('.class-item');
 
             if (editBtn) {
@@ -367,6 +796,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     confirmClassBtn.addEventListener("click", async () => {
+        if (!canCreateClasses) {
+            alert('You are not allowed to create classes.');
+            return;
+        }
         const courseName = courseSearchInput.value.trim();
         const className = classInput.value.trim();
         const termNumber = termNumberSelect.value.replace("term_", "");
@@ -484,6 +917,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function editClass(button, classId) {
+    if (!canManageClasses) {
+            alert('You are not allowed to edit classes.');
+            return;
+        }
     // Open the inline editor directly for the given item instead of
     // triggering a click on the edit button (which could cause recursion
     // or ordering issues). Also ensure dropdowns are hidden.
@@ -512,7 +949,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.editClass = editClass;
 
-    function removeClass(button, classId) {
+    async function removeClass(button, classId) {
+        if (!canManageClasses) {
+            alert('You are not allowed to delete classes.');
+            return;
+        }
         if (confirm("Are you sure you want to delete this class?")) {
             fetch('delete_class.php', {
                 method: "POST",
@@ -539,6 +980,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.removeClass = removeClass;
 
+    if (assignConfirmBtn) {
+        assignConfirmBtn.addEventListener('click', async () => {
+            try {
+                await assignProfessorToCurrentClass();
+            } catch (error) {
+                alert(error.message || 'Failed to assign professor.');
+            }
+        });
+    }
+
     // Initial load: fetch classes so the list is populated when the page opens
-    fetchClasses();
+    loadClassAccessContext()
+        .then(() => {
+            fetchClasses();
+        })
+        .catch(() => {
+            // Redirect is already handled for unauthorized sessions.
+        });
 });

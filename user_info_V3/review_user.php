@@ -2,6 +2,7 @@
 session_start();
 include ("connect.php");
 require_once __DIR__ . '/user_access_common.php';
+require_once __DIR__ . '/notification_service.php';
 
 if (!empty($_SESSION['email'])) {
     $email = trim((string) $_SESSION['email']);
@@ -22,6 +23,28 @@ if (!empty($_SESSION['email'])) {
                 $targetPath = resolve_dashboard_path($userRow);
                 header('Location: ' . $targetPath);
                 exit();
+            }
+
+            // Send pending-approval email at most once per 30 minutes per session.
+            $now = time();
+            $cooldownSeconds = 1800;
+            $lastSent = (int) ($_SESSION['pending_review_email_last_sent'] ?? 0);
+
+            if ($now - $lastSent >= $cooldownSeconds) {
+                $fullName = trim((string) ($userRow['first_name'] ?? '') . ' ' . (string) ($userRow['last_name'] ?? ''));
+                $emailAddress = trim((string) ($userRow['email'] ?? ''));
+                $pendingMessage = 'Your account is pending approval by the admin of this system. You will receive an email once your account is approved.';
+
+                $sent = send_user_email_notification(
+                    $emailAddress,
+                    $fullName,
+                    'Your account is pending approval',
+                    $pendingMessage
+                );
+
+                if ($sent) {
+                    $_SESSION['pending_review_email_last_sent'] = $now;
+                }
             }
         }
     }

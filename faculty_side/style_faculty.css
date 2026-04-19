@@ -800,41 +800,57 @@ main {
 .program-item {
     position: relative; /* Required for the dropdown to position correctly */
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
     background-color: #e9ecef;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 3rem 0.75rem 1rem;
     margin-bottom: 0.5rem;
-    height: 3rem; /* Fixed height to prevent resizing */
+    min-height: 4rem;
     width: 70%; /* Center alignment */
     overflow: visible; /* Ensure dropdown is not clipped */
+    gap: 0.2rem;
 }
 
-.program-item span {
+.program-item .program_name {
     font-size: 1rem;
     font-weight: bold;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.assigned-pd-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4b5563;
+    line-height: 1.2;
 }
 
 .program-options {
-    display: flex;                /* Center the icon */
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;                  /* Increase width */
-    height: 20px;                 /* Increase height */
-    border-radius: 50%;           /* Optional: make it circular */
-    background: transparent;      /* No background unless hovered */
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     color: #6c757d;
-    font-size: 5rem;
+    font-size: 1rem;
     transition: 0.2s, color 0.3s;
     position: absolute;
     top: 50%;
-    right: 1rem;
+    right: 0.75rem;
     transform: translateY(-50%);
-    /* Remove margin-left if present */
-    margin-left: 0;
+}
+
+.program-options i {
+    font-size: 1rem;
+    pointer-events: none;
 }
 
 @media (max-width: 768px) {
@@ -845,45 +861,34 @@ main {
 }
 
 .program-options:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
     color: #343a40; /* Darker gray on hover */
 }
 
-/* Dropdown menu styling */
-.dropdown {
-    position: absolute; /* Position relative to the nearest positioned ancestor */
-    top: calc(100% + 5px); /* Position below the ellipsis icon */
-    right: 0; /* Align to the right edge of the parent */
-    background-color: white;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 0.5rem;
-    z-index: 10;
-    display: none; /* Initially hidden */
-    width: max-content; /* Ensure dropdown width doesn't affect layout */
-    white-space: nowrap; /* Prevent text wrapping */
-}
-
-/* Dropdown menu styling */
-.dropdown {
+.program-item .dropdown {
     position: absolute;
-    top: 100%;
-    right: 0;
+    top: calc(100% - 0.25rem);
+    right: 0.5rem;
     background-color: white;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 0.5rem;
-    z-index: 10;
-    display: flex; /* Use flexbox */
-    flex-direction: column; /* Align items vertically */
-    gap: 0.5rem; /* Add spacing between buttons */
-
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 13.5rem;
 }
 
-
-.dropdown.hidden {
+.program-item .dropdown.hidden {
     display: none;
+}
+
+.program-item .dropdown button {
+    text-align: left;
+    font-weight: 600;
 }
 
 .assign-PD-btn {
@@ -902,6 +907,29 @@ main {
     background-color: #138496; /* Darker teal on hover */
 }
 
+.revoke-PD-btn {
+    display: block;
+    background-color: #64748b;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.revoke-PD-btn:hover {
+    background-color: #475569;
+}
+
+.revoke-PD-btn.is-disabled,
+.revoke-PD-btn:disabled {
+    background-color: #cbd5e1;
+    color: #475569;
+    cursor: not-allowed;
+}
+
 .assign-Prof-btn {
     display: block; /* Ensure buttons stack vertically */
     background-color: #17a2b8; /* Teal background */
@@ -916,6 +944,61 @@ main {
 
 .assign-Prof-btn:hover {
     background-color: #138496; /* Darker teal on hover */
+}
+
+.revoke-Prof-btn {
+    display: block;
+    background-color: #64748b;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.revoke-Prof-btn:hover {
+    background-color: #475569;
+}
+
+.revoke-Prof-btn.is-disabled,
+.revoke-Prof-btn:disabled {
+    background-color: #cbd5e1;
+    color: #475569;
+    cursor: not-allowed;
+}
+
+.approve-request-btn {
+    display: block;
+    background-color: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.approve-request-btn:hover {
+    background-color: #15803d;
+}
+
+.reject-request-btn {
+    display: block;
+    background-color: #d97706;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.reject-request-btn:hover {
+    background-color: #b45309;
 }
 
 .remove-btn {
@@ -1004,7 +1087,7 @@ main {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     border-radius: 0.5rem; /* Rounded corners */
     padding: 1.5rem; /* Padding around content */
-    margin-top: 1rem; /* Space from the header */
+    margin-top: 3rem; /* Space from the header */
     margin-bottom: 2rem; /* Add space to prevent cutoff */
 }
 
@@ -1340,6 +1423,23 @@ main {
     margin-top: 1.5rem; /* Space below the search bar */
 }
 
+.classes-subtitle {
+    font-weight: 400;
+}
+
+.assignment-pending-notice {
+    margin: 0.5rem auto 0.75rem;
+    width: 70%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #f0c36d;
+    background: #fff7e6;
+    color: #7a4f01;
+    border-radius: 0.4rem;
+    font-size: 0.92rem;
+    line-height: 1.35;
+    text-align: left;
+}
+
 .class-search i {
     position: absolute;
     left: 0.5rem; /* Equivalent to left-2 */
@@ -1431,19 +1531,33 @@ main {
 .class-item {
     position: relative; /* Required for the dropdown to position correctly */
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
     background-color: #e9ecef;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 3rem 0.75rem 1rem;
     margin-bottom: 0.5rem;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease;
     width: 70%; /* Match the width of program-item and course-item */
     margin: 0 auto; /* Center horizontally */
-    height: 3rem; /* Fixed height to match programs/courses and prevent resizing when inline editor appears */
+    min-height: 4rem;
+    gap: 0.2rem;
+}
+
+.class-item .class-name {
+    line-height: 1.2;
+}
+
+.assigned-prof-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4b5563;
+    line-height: 1.2;
 }
 
 .class-item:hover {
@@ -1451,13 +1565,14 @@ main {
 }
 
 .class-options {
-    display: flex;                /* Center the icon */
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;                  /* Increase width */
-    height: 20px;                 /* Increase height */
-    border-radius: 50%;           /* Optional: make it circular */
-    background: transparent;      /* No background unless hovered */
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     color: #6c757d;
     font-size: 1rem;
@@ -1466,8 +1581,6 @@ main {
     top: 50%;
     right: 1rem;
     transform: translateY(-50%);
-    /* Remove margin-left if present */
-    margin-left: 0;
 }
 
 /*.class-options {
@@ -1489,13 +1602,15 @@ main {
 }
 
 .class-options:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
     color: #343a40; /* Darker gray on hover */
 }
 
 .class-item .dropdown {
     position: absolute; /* Position relative to the .class-item */
-    top: 100%;
-    right: 0; /* Align to the right edge of the parent */
+    top: calc(100% - 0.25rem);
+    right: 0.5rem;
     background-color: white;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
@@ -1505,18 +1620,118 @@ main {
     display: flex; /* Use flexbox like other lists */
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 13.5rem;
     white-space: nowrap; /* Prevent buttons from wrapping */
+}
+
+.role-preview-toggle {
+    position: fixed;
+    top: 90px;
+    right: 12px;
+    z-index: 9999;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 0;
+    border-radius: 6px;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    width: 320px;
+    overflow: hidden;
+}
+
+.role-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+}
+
+.role-preview-title {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.role-preview-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.role-preview-toolbar-btn {
+    padding: 4px 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.role-preview-body {
+    padding: 8px;
+}
+
+.role-preview-actions-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.role-preview-btn {
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.role-preview-btn-professor {
+    background: #1d4ed8;
+    color: #fff;
+}
+
+.role-preview-btn-student {
+    background: #10b981;
+    color: #fff;
+}
+
+.role-preview-btn-clear {
+    background: #e5e7eb;
+}
+
+.role-preview-note {
+    font-size: 11px;
+    color: #666;
+    margin-top: 8px;
 }
 
 /*Start of Class handling styles:*/
 .classes-handling-content {
-    margin-top: 4rem; /* Space above the section */
+    margin-top: 5rem; /* Space above the section */
 }
 
 .breadcrumb-container {
     display: flex; /* Use Flexbox to align items horizontally */
     align-items: center; /* Vertically center the items */
     gap: 1rem; /* Add spacing between [Name of Class] and the navigation links */
+}
+
+.breadcrumb-container .class-back-link {
+    color: #111827;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.breadcrumb-container .class-back-link:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.breadcrumb-container .class-crumb-separator {
+    color: #6b7280;
+    font-weight: 700;
+    margin-left: -0.45rem;
+    margin-right: -0.45rem;
 }
 
 .breadcrumb-container .class-name {
@@ -1529,6 +1744,7 @@ main {
     list-style: none; /* Remove default list styling */
     margin: 0; /* Remove default margin */
     padding: 0; /* Remove default padding */
+    gap: 0.5rem;
 }
 
 /* Default style for the active link */
@@ -1646,13 +1862,43 @@ main {
 .required-outputs-list {
     margin-top: 0;
     width: 50%;
-    max-height: 500px; /* Set a maximum height for the container */
+    max-height: calc(100vh - 18.5rem);
     overflow-y: auto; /* Enable vertical scrolling if content overflows */
     border: 1px solid #ced4da; /* Optional: Add a border for better visibility */
     padding: 0.5rem; /* Optional: Add padding inside the container */
     background-color: #ffffff; /* Optional: Set a background color */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
     border-radius: 0.5rem; /* Optional: Add rounded corners */
+}
+
+.required-outputs-list h3 {
+    font-weight: 700;
+}
+
+.required-outputs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.output-sort-btn {
+    border: 1px solid #1f2937;
+    background: #ffffff;
+    color: #111827;
+    border-radius: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.3rem 0.65rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.output-sort-btn:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
 }
 
 .required-outputs-list ul {
@@ -1673,6 +1919,12 @@ main {
 }
 
 .required-outputs-list li .output-header {
+    font-weight: 600;
+}
+
+.required-outputs-list li .output-date-meta {
+    font-size: 0.77rem;
+    color: #4b5563;
     font-weight: 600;
 }
 
@@ -1915,38 +2167,1551 @@ main {
 
 /*End of Class Handling Styles*/
 
+/* Start of class member management styles */
+.members-layout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+    row-gap: 0.4rem;
+    align-content: start;
+    align-items: start;
+}
+
+.members-panel-card {
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    min-height: 220px;
+}
+
+.members-panel-card.full-row {
+    grid-column: 1 / -1;
+    margin-top: 0;
+}
+
+.members-panel-title {
+    color: #1d4ed8;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.member-search-wrap {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.member-search-wrap i {
+    position: absolute;
+    right: 0.8rem;
+    top: 0.75rem;
+    color: #6b7280;
+}
+
+.member-search-input {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.4rem;
+    padding: 0.55rem 2.2rem 0.55rem 0.75rem;
+}
+
+.student-search-results,
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#pendingMembersList,
+#approvedMembersList {
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.members-page .classes-handling-content {
+    margin-top: 4rem;
+}
+
+/* Reapply class-handling viewport behavior for the Members page so
+   the page does not create extra outer scrollbars. */
+.members-page main {
+    height: calc(100vh - 190px);
+    overflow-y: hidden;
+}
+
+.members-page .main-content {
+    margin-bottom: 0;
+}
+
+.members-page #classes {
+    margin-top: 6rem;
+    overflow: hidden;
+}
+
+.members-page .classes-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.members-page .classes-handling-content {
+    flex: 1;
+    min-height: 0;
+}
+
+.members-page .posts-container {
+    height: 100%;
+    overflow: hidden;
+}
+
+.members-page .members-layout-grid {
+    height: 100%;
+    align-content: start;
+}
+
+.members-page .members-panel-card.full-row {
+    min-height: 310px;
+}
+
+.student-search-row,
+.member-card {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+    padding: 0.75rem;
+}
+
+.student-search-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.student-search-name,
+.member-name {
+    margin: 0;
+    font-weight: 700;
+    color: #111827;
+}
+
+.student-search-meta,
+.member-meta {
+    margin: 0.1rem 0 0;
+    color: #6b7280;
+    font-size: 0.88rem;
+}
+
+.invite-student-btn,
+.member-action-btn {
+    border: 1px solid #111827;
+    border-radius: 0.35rem;
+    background: #ffffff;
+    color: #111827;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+}
+
+.invite-student-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.invite-student-btn.is-loading,
+.member-action-btn.is-loading {
+    opacity: 0.85;
+    cursor: wait;
+}
+
+.invite-student-btn.is-done,
+.member-action-btn.is-done {
+    border-color: #16a34a;
+    color: #166534;
+    background: #dcfce7;
+}
+
+.member-card {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.member-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #111827;
+    background: #fff;
+}
+
+.member-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.member-actions-btns {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.member-action-btn.approve {
+    border-color: #16a34a;
+    color: #16a34a;
+}
+
+.member-action-btn.remove {
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+.member-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 92px;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.member-status-badge.is-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.member-status-badge.is-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.members-empty {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.members-action-toast {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 2500;
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.45rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.2);
+}
+
+.members-action-toast.success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.members-action-toast.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+@media (max-width: 1100px) {
+    .members-layout-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* End of class member management styles */
+
+/* Start of class reports styles */
+.reports-page .classes-handling-content {
+    margin-top: 4rem;
+    height: 100%;
+    min-height: 0;
+}
+
+.reports-page main {
+    height: calc(100vh - 190px);
+    overflow-y: hidden;
+}
+
+.reports-page .main-content {
+    margin-bottom: 0;
+}
+
+.reports-page #classes {
+    margin-top: 6rem;
+    overflow: hidden;
+}
+
+.reports-page .classes-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.reports-page .posts-container,
+.reports-page .reports-content-wrap {
+    height: 100%;
+    overflow: hidden;
+}
+
+.reports-scroll-shell {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.reports-overall-layout {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 0.2rem 0.2rem 0.85rem 0;
+}
+
+.reports-page footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.reports-page .reports-panel-card {
+    height: auto;
+    min-height: 0;
+}
+
+.reports-primary-card {
+    display: flex;
+    flex-direction: column;
+    max-height: min(48vh, 420px);
+    overflow: hidden;
+}
+
+.reports-primary-card.is-portfolio-view {
+    max-height: none;
+    overflow: visible;
+}
+
+.reports-primary-card #reportsListView,
+.reports-primary-card #reportsPortfolioView {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.reports-primary-card .reports-students-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.reports-charts-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.95rem;
+}
+
+.reports-chart-block {
+    border: 1px solid #dbeafe;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+}
+
+.reports-chart-title {
+    margin: 0 0 0.65rem;
+    color: #1f2937;
+    font-size: 1.02rem;
+    font-weight: 800;
+}
+
+.reports-horizontal-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.52rem;
+}
+
+.reports-chart-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) 1fr;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.reports-chart-label {
+    color: #374151;
+    font-size: 0.88rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reports-chart-track {
+    position: relative;
+    border-radius: 999px;
+    height: 1.7rem;
+    border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    overflow: hidden;
+}
+
+.reports-chart-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.reports-chart-value {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #111827;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.reports-chart-empty {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.reports-difficulty-stack {
+    height: 1.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    overflow: hidden;
+    display: flex;
+    background: #f3f4f6;
+}
+
+.reports-difficulty-segment {
+    height: 100%;
+    display: block;
+}
+
+.reports-difficulty-segment.easy {
+    background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
+}
+
+.reports-difficulty-segment.normal {
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.reports-difficulty-segment.hard {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.reports-difficulty-breakdown {
+    margin-top: 0.7rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+}
+
+.reports-difficulty-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+}
+
+.reports-difficulty-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px;
+}
+
+.reports-difficulty-dot.easy {
+    background: #22c55e;
+}
+
+.reports-difficulty-dot.normal {
+    background: #f59e0b;
+}
+
+.reports-difficulty-dot.hard {
+    background: #ef4444;
+}
+
+.reports-difficulty-label {
+    color: #374151;
+    font-weight: 700;
+}
+
+.reports-difficulty-value {
+    color: #111827;
+    font-weight: 800;
+}
+
+.reports-difficulty-total {
+    margin: 0.6rem 0 0;
+    color: #4b5563;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.reports-panel-card {
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.reports-panel-header {
+    margin-bottom: 0.75rem;
+}
+
+.reports-panel-title {
+    color: #1d4ed8;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.reports-panel-subtitle {
+    margin: 0.25rem 0 0;
+    color: #6b7280;
+    font-size: 0.88rem;
+}
+
+.reports-students-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.report-student-card {
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    padding: 0.8rem;
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 0.85rem;
+    align-items: center;
+}
+
+.report-student-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #111827;
+    background: #fff;
+    font-size: 1.35rem;
+}
+
+.report-student-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.report-student-meta {
+    margin: 0.15rem 0 0;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.report-student-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.report-status-pill {
+    border-radius: 0.45rem;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 1px solid #9ca3af;
+    background: #e5e7eb;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.report-status-pill.is-submitted {
+    border-color: #15803d;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.report-status-pill.is-approved {
+    border-color: #1d4ed8;
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.report-status-pill.is-revised {
+    border-color: #b45309;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.report-status-pill.is-pending {
+    border-color: #9ca3af;
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.report-portfolio-btn {
+    border: 1px solid #1f2937;
+    border-radius: 0.45rem;
+    background: #ffffff;
+    color: #92400e;
+    font-weight: 700;
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+}
+
+.report-portfolio-btn:hover {
+    background: #fef3c7;
+}
+
+.reports-portfolio-crumb {
+    margin-left: -0.3rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.reports-portfolio-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.reports-portfolio-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.reports-portfolio-heading {
+    margin: 0;
+    color: #111827;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.portfolio-review-layout {
+    display: grid;
+    grid-template-columns: minmax(230px, 280px) 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.portfolio-student-summary,
+.portfolio-review-panel {
+    border: 1px solid #dbeafe;
+    border-radius: 0.85rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 6px 14px rgba(30, 64, 175, 0.08);
+}
+
+.portfolio-student-summary {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.3rem;
+}
+
+.portfolio-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #1f2937;
+    background: #ffffff;
+    margin-bottom: 0.3rem;
+}
+
+.portfolio-student-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.portfolio-student-course,
+.portfolio-student-id,
+.portfolio-student-meta {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.portfolio-review-panel {
+    padding: 1rem;
+    max-height: min(62vh, 560px);
+    overflow-y: auto;
+}
+
+.portfolio-review-title {
+    margin: 0 0 0.8rem;
+    color: #111827;
+    font-size: 1.02rem;
+    font-weight: 800;
+}
+
+.portfolio-outputs-list {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    max-height: none;
+    overflow: visible;
+}
+
+.portfolio-output-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.portfolio-output-row:last-child {
+    border-bottom: none;
+}
+
+.portfolio-output-index,
+.portfolio-output-name,
+.portfolio-output-score,
+.portfolio-output-file {
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.portfolio-output-index {
+    font-weight: 700;
+}
+
+.portfolio-output-name {
+    font-weight: 600;
+}
+
+.portfolio-output-score {
+    font-weight: 800;
+}
+
+.portfolio-file-link {
+    color: #1d4ed8;
+    text-decoration: underline;
+    font-weight: 700;
+}
+
+.portfolio-file-link:hover {
+    color: #1e3a8a;
+}
+
+.portfolio-file-muted,
+.portfolio-outputs-empty {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.portfolio-outputs-empty {
+    margin: 0;
+    padding: 0.9rem 0.75rem;
+}
+
+.portfolio-review-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: 0.9rem;
+}
+
+.portfolio-review-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.portfolio-review-row-grade {
+    justify-content: space-between;
+}
+
+.portfolio-review-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.portfolio-review-controls label {
+    margin: 0;
+    color: #1f2937;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.portfolio-review-controls input {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.55rem;
+    background: #ffffff;
+    padding: 0.3rem 0.6rem;
+    color: #111827;
+    font-size: 0.9rem;
+    width: min(100%, 380px);
+    height: 34px;
+    min-height: 34px;
+    box-sizing: border-box;
+}
+
+.portfolio-reject-reason-group {
+    width: 100%;
+    max-width: 100%;
+}
+
+.portfolio-reject-reason-group textarea {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.55rem;
+    background: #ffffff;
+    padding: 0.52rem 0.65rem;
+    color: #111827;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    resize: none;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.portfolio-reject-reason-group textarea:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.portfolio-review-controls input:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.portfolio-review-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+.portfolio-approve-btn,
+.portfolio-reject-btn {
+    border: none;
+    border-radius: 0.55rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 0.48rem 0.95rem;
+}
+
+.portfolio-approve-btn {
+    background: #166534;
+}
+
+.portfolio-approve-btn:hover {
+    background: #14532d;
+}
+
+.portfolio-reject-btn {
+    background: #b91c1c;
+}
+
+.portfolio-reject-btn:hover {
+    background: #991b1b;
+}
+
+.portfolio-approve-btn:disabled,
+.portfolio-reject-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.portfolio-review-summary {
+    margin: 0.25rem 0 0;
+    padding: 0.62rem 0.7rem;
+    border-radius: 0.55rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.portfolio-review-summary.is-approved {
+    background: #dcfce7;
+    border: 1px solid #22c55e;
+    color: #166534;
+}
+
+.portfolio-review-summary.is-rejected {
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #991b1b;
+}
+
+.portfolio-review-result-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(17, 24, 39, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.portfolio-review-result-card {
+    width: min(420px, 100%);
+    background: #ffffff;
+    border-radius: 0.8rem;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 16px 30px rgba(17, 24, 39, 0.18);
+    padding: 1rem 1rem 0.95rem;
+}
+
+.portfolio-review-result-title {
+    margin: 0;
+    color: #111827;
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+.portfolio-review-result-message {
+    margin: 0.45rem 0 0.85rem;
+    color: #374151;
+    font-size: 0.94rem;
+    line-height: 1.45;
+}
+
+.portfolio-review-result-ok-btn {
+    border: 1px solid #1f2937;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    color: #111827;
+    font-weight: 700;
+    padding: 0.43rem 0.95rem;
+    cursor: pointer;
+}
+
+.portfolio-review-result-ok-btn:hover {
+    background: #e5e7eb;
+}
+
+.reports-empty {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 980px) {
+    .reports-chart-row {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .report-student-card {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+
+    .report-student-avatar {
+        width: 44px;
+        height: 44px;
+    }
+
+    .report-student-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .portfolio-review-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .portfolio-output-row {
+        grid-template-columns: 1fr;
+        gap: 0.3rem;
+    }
+
+    .reports-portfolio-topbar {
+        align-items: flex-start;
+    }
+
+    .portfolio-review-row,
+    .portfolio-review-row-grade {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .portfolio-review-controls input {
+        width: 100%;
+    }
+
+    .portfolio-reject-reason-group {
+        width: 100%;
+    }
+
+    .portfolio-review-actions {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+}
+
+/* End of class reports styles */
+
 /*Start of Lists of Students Styles*/
-#listsStudents {
+#lists {
     flex: 1;
     transition: all 0.3s;
     margin-left: 0;
     margin-top: 6rem;
-    
 }
 
-#listsStudents.shifted {
+#lists.shifted {
     margin-left: 16rem;
 }
 
-/* Lists of Student Section */
-.listsStudents-section {
+/* Lists of Students Section */
+.lists_students-section {
     flex: 1;
-    transition: all 0.3s ease-in-out; /* Equivalent to transition-all duration-300 */
+    transition: all 0.3s ease-in-out;
 }
 
-.listsStudents-title {
-    margin-top: 1rem; /* Space above the title */
-    font-size: 1.125rem; /* Equivalent to text-lg */
+/* Keep list header burger aligned with other pages */
+.lists_students-header .sidebar-toggle,
+.header-actions .sidebar-toggle {
+    margin-left: 0.75rem;
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .lists_students-header .sidebar-toggle,
+    .header-actions .sidebar-toggle {
+        margin-left: 0.5rem;
+    }
+}
+
+.lists_students-title {
+    margin-top: 1rem;
+    font-size: 1.125rem;
     font-weight: bold;
 }
 
 /* Lists of Students Content */
-.listsStudents-content {
-    background-color: #ffffff; /* Equivalent to bg-white */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-md */
-    border-radius: 0.5rem; /* Equivalent to rounded-lg */
-    padding: 2rem; /* Equivalent to p-8 */
+.lists_students-content {
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 4rem;
+    margin-bottom: 2rem;
+    min-height: 320px;
+}
+
+#listInputContainer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+}
+
+#listInputContainer h3 {
+    width: 100%;
+    margin: 0.3rem 0 0;
+    font-weight: 700;
+}
+
+#listProgramSelect,
+#listBatchInput,
+#listYearInput {
+    border: 1px solid #ced4da;
+    border-radius: 0.35rem;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.95rem;
+    background: #ffffff;
+}
+
+#listProgramSelect {
+    width: 240px;
+}
+
+#listBatchInput {
+    width: 320px;
+    flex: 0 0 auto;
+}
+
+#listYearInput {
+    width: 170px;
+}
+
+.lists-empty {
+    margin: 1rem 0 0;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.lists-grid {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+.list-program-column {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    padding: 0.8rem;
+}
+
+.list-program-title {
+    color: #1f2937;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0 0 0.65rem;
+}
+
+.list-program-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.student-list-card {
     position: relative;
+    border: 1px solid #ced4da;
+    border-radius: 0.45rem;
+    background: #eceff3;
+    padding: 0.65rem 0.75rem;
+    min-height: 4.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.student-list-card.is-editing {
+    cursor: default;
+}
+
+.student-list-card:hover {
+    background: #e2e8f0;
+}
+
+.student-list-card.is-selected {
+    border-color: #2563eb;
+    background: #dbeafe;
+}
+
+.student-list-main {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.student-list-icon {
+    color: #111827;
+    font-size: 1.35rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.student-list-texts {
+    min-width: 0;
+}
+
+.student-list-name {
+    margin: 0;
+    color: #111827;
+    font-weight: 800;
+    font-size: 1.05rem;
+    line-height: 1.15;
+}
+
+.student-list-meta {
+    margin: 0.12rem 0 0;
+    color: #4b5563;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.student-list-actions {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.list-inline-edit {
+    margin-top: 0.55rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.list-inline-input {
+    width: 230px;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.9rem;
+    background: #ffffff;
+}
+
+.list-inline-confirm.confirm-btn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.82rem;
+}
+
+.list-inline-cancel {
+    border: 1px solid #94a3b8;
+    background: #f8fafc;
+    color: #1f2937;
+    border-radius: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.list-inline-cancel:hover {
+    background: #e2e8f0;
+}
+
+.student-list-options {
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    color: #374151;
+    cursor: pointer;
+}
+
+.student-list-options:hover {
+    border-color: #d1d5db;
+    background: #f3f4f6;
+}
+
+.list-item-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.2rem);
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 0.35rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0.45rem;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 7rem;
+}
+
+.list-students-view {
+    margin-top: 1rem;
+}
+
+.list-students-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.list-students-header-row .members-panel-title {
+    margin-bottom: 0;
+}
+
+.list-refresh-btn {
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid #1d4ed8;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #1d4ed8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.list-refresh-btn:hover {
+    background: #dbeafe;
+}
+
+.list-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.list-refresh-btn.is-refreshing i {
+    animation: listRefreshSpin 0.8s linear infinite;
+}
+
+@keyframes listRefreshSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.list-student-card {
+    grid-template-columns: 48px 1fr auto;
+}
+
+.list-student-reports-btn {
+    min-width: 6.2rem;
+    text-align: center;
+}
+
+.list-student-reports-view {
+    margin-top: 1rem;
+}
+
+.list-reports-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.85rem;
+}
+
+.list-reports-filter-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.list-reports-tab-btn {
+    border: 2px solid #f59e0b;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 1.05rem;
+    font-weight: 800;
+    border-radius: 0.35rem;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.list-reports-tab-btn.is-active {
+    background: #fde68a;
+}
+
+.list-reports-heading-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-left: auto;
+}
+
+.list-reports-heading-wrap .reports-portfolio-heading {
+    margin: 0;
+}
+
+.list-reports-back-btn {
+    border: 1px solid #1f2937;
+    border-radius: 0.45rem;
+    background: #ffffff;
+    color: #111827;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+}
+
+.list-reports-back-btn:hover {
+    background: #fef3c7;
+}
+
+.list-reports-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.list-student-portfolios-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.list-academic-portfolio-card {
+    max-height: none;
+    overflow: visible;
+}
+
+.list-extracurricular-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.list-extra-quick-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.list-extra-quick-card-shell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.list-extra-quick-card {
+    border: 1px solid #10b981;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    text-align: center;
+    background: #ffffff;
+    display: flex;
+    width: min(100%, 320px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.list-extra-quick-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+}
+
+.list-extra-created-meta {
+    margin: 0;
+    color: #111827;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-style: italic;
+}
+
+.list-extra-file-link {
+    display: block;
+    margin-bottom: 0.45rem;
+}
+
+.list-extra-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 2600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.list-extra-modal-card {
+    width: min(560px, 100%);
+    max-height: 78vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    box-shadow: 0 14px 26px rgba(2, 6, 23, 0.24);
+    padding: 1rem 1rem 0.85rem;
+    position: relative;
+}
+
+.list-extra-modal-close {
+    position: absolute;
+    right: 0.6rem;
+    top: 0.45rem;
+    border: none;
+    background: transparent;
+    color: #334155;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.list-extra-modal-title {
+    margin: 0 0 0.75rem;
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.list-extra-modal-body {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.75rem;
+}
+
+@media (max-width: 920px) {
+    #listProgramSelect,
+    #listBatchInput,
+    #listYearInput,
+    #confirmListBtn {
+        width: 100%;
+        max-width: none;
+    }
 }
 
 /*End of Lists of Students Styles*/

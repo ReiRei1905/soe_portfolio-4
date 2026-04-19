@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="../style_faculty.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../faculty_scripts.js" defer></script>
+    <script src="class_reports-scripts.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body class="page-layout reports-page">
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="../../images/soe apc logo.png"/>
+        </div>
+    </div>
+    <div class="header-actions">
+        <div class="header-home">
+            <i class="fas fa-home" data-faculty-action="go-home"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="header-profile">
+            <div class="header-actions-icons">
+                <div class="header-notifications">
+                    <i class="fas fa-bell text-lg cursor-pointer" data-faculty-action="toggle-header-menu" data-menu-target="notificationDropdown" aria-haspopup="true" aria-expanded="false"></i>
+                    <div id="notificationDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                    </div>
+                </div>
+
+                <div class="header-profile-menu">
+                    <div class="profile-avatar-btn" data-faculty-action="toggle-header-menu" data-menu-target="profileDropdown" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div id="profileDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <a href="#" class="menu-item"><i class="fas fa-edit"></i> Edit Profile</a>
+                        <a href="#" class="menu-item"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="menu-item"><i class="fas fa-question-circle"></i> Help</a>
+                        <div class="menu-logout-wrap">
+                            <a href="#" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="classes-header">
+        <div class="header-left">
+            <i class="fas fa-bars sidebar-toggle" data-faculty-action="toggle-sidebar"></i>
+            <h2 class="classes-title">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                    <li class="breadcrumb-item" aria-current="page">
+                        <div class="breadcrumb-container">
+                            <a class="class-back-link" href="./classes.html">Classes</a>
+                            <span class="class-crumb-separator">/</span>
+                            <span class="class-name" id="reportsClassName">[Name of Class]</span>
+                            <ul class="nav">
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tabPosts" href="#">Posts</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="tabMembers" href="#">Members</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link active" aria-current="page" id="tabReports" href="#">Reports</a>
+                                </li>
+                            </ul>
+                            <span id="reportsPortfolioCrumb" class="reports-portfolio-crumb hidden"></span>
+                        </div>
+                    </li>
+                    </ol>
+                </nav>
+            </h2>
+        </div>
+    </div>
+</header>
+
+<main class="main-content">
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="../program_management/programs.html">Programs</a>
+            <a class="text-lg" href="./classes.html">Classes</a>
+            <a class="text-lg" href="../list_management/list_students.html">Lists of Students</a>
+            <a class="text-lg" href="../faculty_about_us.html">About us</a>
+        </nav>
+    </div>
+
+    <div id="classes" class="classes-section">
+        <div class="classes-handling-content">
+            <div class="posts-container reports-content-wrap">
+                <div class="reports-scroll-shell">
+                    <div class="reports-overall-layout">
+                    <section class="reports-panel-card reports-primary-card">
+                        <div id="reportsListView">
+                            <div class="reports-panel-header">
+                                <h3 class="reports-panel-title">Portfolio Submission Reports</h3>
+                                <p class="reports-panel-subtitle">Real-time status for approved class members.</p>
+                            </div>
+                            <div id="reportsStudentsList" class="reports-students-list"></div>
+                        </div>
+
+                        <div id="reportsPortfolioView" class="reports-portfolio-view hidden">
+                            <div class="reports-portfolio-topbar">
+                                <h3 id="reportsPortfolioHeading" class="reports-portfolio-heading">Student Portfolio</h3>
+                            </div>
+
+                            <div class="portfolio-review-layout">
+                                <section class="portfolio-student-summary">
+                                    <div class="portfolio-avatar"><i class="fas fa-user"></i></div>
+                                    <p id="portfolioStudentName" class="portfolio-student-name">Student Name</p>
+                                    <p id="portfolioStudentCourse" class="portfolio-student-course">BS-CPE</p>
+                                    <p id="portfolioStudentIdNumber" class="portfolio-student-id">ID Number</p>
+                                    <p id="portfolioStudentJoinedAt" class="portfolio-student-meta">Joined at: N/A</p>
+                                </section>
+
+                                <section class="portfolio-review-panel">
+                                    <h4 class="portfolio-review-title">Portfolio Table of Contents</h4>
+                                    <div id="portfolioOutputsList" class="portfolio-outputs-list"></div>
+
+                                    <div class="portfolio-review-controls">
+                                        <div class="portfolio-review-row">
+                                            <div class="portfolio-review-input-group">
+                                                <label for="portfolioFinalPercentInput">Final Percentage</label>
+                                                <input type="text" id="portfolioFinalPercentInput" placeholder="e.g. 90.1%" />
+                                            </div>
+                                        </div>
+
+                                        <div class="portfolio-review-row portfolio-review-row-grade">
+                                            <div class="portfolio-review-input-group">
+                                                <label for="portfolioFinalGradeInput">Final Grade</label>
+                                                <input type="text" id="portfolioFinalGradeInput" placeholder="Allowed: 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, R" />
+                                            </div>
+
+                                            <div class="portfolio-review-actions">
+                                                <button type="button" id="approvePortfolioBtn" class="portfolio-approve-btn">Approve</button>
+                                                <button type="button" id="rejectPortfolioBtn" class="portfolio-reject-btn">Reject</button>
+                                            </div>
+                                        </div>
+
+                                        <div id="portfolioRejectReasonRow" class="portfolio-review-row hidden">
+                                            <div class="portfolio-review-input-group portfolio-reject-reason-group">
+                                                <label for="portfolioRejectReasonInput">Reason For Rejection (required when rejecting)</label>
+                                                <textarea id="portfolioRejectReasonInput" rows="3" placeholder="State what needs revision before resubmission."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <p id="portfolioReviewSummary" class="portfolio-review-summary hidden"></p>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="reportsChartsCard" class="reports-panel-card reports-charts-card">
+                        <div class="reports-chart-block">
+                            <h3 id="highestPercentageChartTitle" class="reports-chart-title">Academic Percentage per Student in This Class</h3>
+                            <div id="highestPercentageChart" class="reports-horizontal-chart"></div>
+                        </div>
+                        <div class="reports-chart-block">
+                            <h3 id="highestGradeChartTitle" class="reports-chart-title">Academic Grade per Student in This Class</h3>
+                            <div id="highestGradeChart" class="reports-horizontal-chart"></div>
+                        </div>
+                        <div class="reports-chart-block">
+                            <h3 id="difficultyRatingChartTitle" class="reports-chart-title">Class Difficulty Rating Distribution</h3>
+                            <div id="difficultyRatingChart" class="reports-horizontal-chart"></div>
+                        </div>
+                    </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="portfolioReviewResultModal" class="portfolio-review-result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="portfolioReviewResultTitle">
+    <div class="portfolio-review-result-card">
+        <h4 id="portfolioReviewResultTitle" class="portfolio-review-result-title">Portfolio Review Saved</h4>
+        <p id="portfolioReviewResultMessage" class="portfolio-review-result-message"></p>
+        <button type="button" id="portfolioReviewResultOkBtn" class="portfolio-review-result-ok-btn">OK</button>
+    </div>
+</div>
+
+<footer class="footer-content">
+    <div class="footer-container">
+        <p class="footer-text">
+            Copyright © 2024 |
+            <a class="footer-link" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer>
+</body>
+</html>

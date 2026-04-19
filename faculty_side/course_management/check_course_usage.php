@@ -1,35 +1,58 @@
 <?php
-header('Content-Type: application/json');
 
-$connection = new mysqli("localhost", "root", "", "soe_portfolio");
+declare(strict_types=1);
 
-if ($connection->connect_error) {
-    echo json_encode(["success" => false, "message" => "Database connection failed"]);
-    exit;
-}
+require_once __DIR__ . '/../faculty_access_common.php';
 
-$courseId = isset($_GET['courseId']) ? intval($_GET['courseId']) : 0;
+$sessionUser = faculty_require_verified_faculty($conn);
+$courseId = isset($_GET['courseId']) ? (int) $_GET['courseId'] : 0;
+$programId = isset($_GET['programId']) ? (int) $_GET['programId'] : 0;
 
 if ($courseId <= 0) {
-    echo json_encode(["success" => false, "message" => "Invalid course ID"]);
-    $connection->close();
-    exit;
+    faculty_send_json(['success' => false, 'message' => 'Invalid course ID.'], 400);
 }
 
-$stmt = $connection->prepare("SELECT COUNT(*) AS cnt FROM classes WHERE course_id = ?");
-if (!$stmt) {
-    echo json_encode(["success" => false, "message" => "Failed to prepare statement"]);
-    $connection->close();
-    exit;
+if (!faculty_can_manage_course($conn, $sessionUser, $courseId)) {
+    faculty_send_json(['success' => false, 'message' => 'You are not allowed to manage this course.'], 403);
 }
-$stmt->bind_param("i", $courseId);
+
+$mappingEnabled = faculty_table_exists($conn, 'program_course_links');
+$linkedProgramCount = 0;
+$hasSharedLinks = false;
+
+if ($mappingEnabled) {
+    if ($programId > 0 && !faculty_can_manage_program($conn, $sessionUser, $programId)) {
+        faculty_send_json(['success' => false, 'message' => 'You are not allowed to manage this course for the selected program.'], 403);
+    }
+
+    $linkStmt = $conn->prepare('SELECT COUNT(*) AS cnt FROM program_course_links WHERE course_id = ?');
+    if (!$linkStmt) {
+        faculty_send_json(['success' => false, 'message' => 'Failed to prepare shared link check.'], 500);
+    }
+    $linkStmt->bind_param('i', $courseId);
+    $linkStmt->execute();
+    $linkRes = $linkStmt->get_result();
+    $linkRow = $linkRes ? $linkRes->fetch_assoc() : null;
+    $linkedProgramCount = (int) ($linkRow['cnt'] ?? 0);
+    $hasSharedLinks = $linkedProgramCount > 1;
+    $linkStmt->close();
+}
+
+$stmt = $conn->prepare('SELECT COUNT(*) AS cnt FROM classes WHERE course_id = ?');
+if (!$stmt) {
+    faculty_send_json(['success' => false, 'message' => 'Failed to prepare statement.'], 500);
+}
+
+$stmt->bind_param('i', $courseId);
 $stmt->execute();
 $res = $stmt->get_result();
-$row = $res->fetch_assoc();
-$count = intval($row['cnt'] ?? 0);
+$row = $res ? $res->fetch_assoc() : null;
+$count = (int) ($row['cnt'] ?? 0);
 $stmt->close();
-$connection->close();
 
-echo json_encode(["success" => true, "count" => $count]);
-
-?>
+faculty_send_json([
+    'success' => true,
+    'count' => $count,
+    'linkedProgramCount' => $linkedProgramCount,
+    'hasSharedLinks' => $hasSharedLinks
+]);

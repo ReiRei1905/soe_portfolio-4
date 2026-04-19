@@ -1,5 +1,120 @@
 console.log("faculty_scripts.js loaded");
 
+function getFacultyRelativePrefix() {
+    const pathname = window.location.pathname || '';
+    const marker = '/faculty_side/';
+    const markerIndex = pathname.indexOf(marker);
+
+    if (markerIndex < 0) {
+        return '../';
+    }
+
+    const tail = pathname.slice(markerIndex + marker.length);
+    const slashIndex = tail.lastIndexOf('/');
+    if (slashIndex < 0) {
+        return '../';
+    }
+
+    const dirPart = tail.slice(0, slashIndex).trim();
+    const depth = dirPart === '' ? 0 : dirPart.split('/').filter(Boolean).length;
+    return '../'.repeat(depth + 1);
+}
+
+function buildUserInfoPath(fileName) {
+    const prefix = getFacultyRelativePrefix();
+    return `${prefix}user_info_V3/${fileName}`;
+}
+
+function redirectToFacultyLogin() {
+    window.location.href = buildUserInfoPath('index.php');
+}
+
+function goToOverviewPage() {
+    const pathname = window.location.pathname || '';
+    const marker = '/faculty_side/';
+    const markerIndex = pathname.indexOf(marker);
+
+    if (markerIndex < 0) {
+        window.location.href = 'faculty_homepage.html';
+        return;
+    }
+
+    const facultyRoot = pathname.slice(0, markerIndex + marker.length);
+    window.location.href = `${window.location.origin}${facultyRoot}faculty_homepage.html`;
+}
+
+function ensureFacultyProfileSummaryPlaceholders() {
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (!profileDropdown) return;
+
+    let nameEl = document.getElementById('facultyProfileFullName');
+    let emailEl = document.getElementById('facultyProfileEmail');
+
+    if (nameEl && emailEl) return;
+
+    const summary = document.createElement('div');
+    summary.className = 'profile-summary';
+
+    nameEl = document.createElement('p');
+    nameEl.id = 'facultyProfileFullName';
+    nameEl.className = 'profile-summary-name';
+    nameEl.textContent = 'Full Name';
+
+    emailEl = document.createElement('p');
+    emailEl.id = 'facultyProfileEmail';
+    emailEl.className = 'profile-summary-email';
+    emailEl.textContent = 'fullname@email.com';
+
+    summary.appendChild(nameEl);
+    summary.appendChild(emailEl);
+    profileDropdown.insertBefore(summary, profileDropdown.firstChild);
+}
+
+function ensureFacultyNotificationPlaceholders() {
+    const notificationsWrap = document.querySelector('.header-notifications');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    if (!notificationsWrap || !notificationDropdown) return;
+
+    let badge = document.getElementById('facultyNotificationBadge');
+    if (!badge) {
+        const bellIcon = notificationsWrap.querySelector('i');
+        badge = document.createElement('span');
+        badge.id = 'facultyNotificationBadge';
+        badge.className = 'notification-count-badge hidden';
+        badge.textContent = '0';
+
+        if (bellIcon && bellIcon.nextSibling) {
+            notificationsWrap.insertBefore(badge, bellIcon.nextSibling);
+        } else {
+            notificationsWrap.appendChild(badge);
+        }
+    }
+
+    let list = document.getElementById('facultyNotificationList');
+    if (!list) {
+        const existingPlaceholder = notificationDropdown.querySelector('p.text-gray-500');
+        list = document.createElement('div');
+        list.id = 'facultyNotificationList';
+        list.className = 'notification-list';
+
+        if (existingPlaceholder) {
+            list.appendChild(existingPlaceholder.cloneNode(true));
+        } else {
+            list.innerHTML = '<p class="text-gray-500 text-center">No new notifications at the moment.</p>';
+        }
+
+        notificationDropdown.innerHTML = '';
+        notificationDropdown.appendChild(list);
+    }
+}
+
+function normalizeFacultyHeaderLinks() {
+    const logoutPath = buildUserInfoPath('logout.php');
+    document.querySelectorAll('.logout-link').forEach((linkEl) => {
+        linkEl.setAttribute('href', logoutPath);
+    });
+}
+
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -24,7 +139,7 @@ function updateNotificationBadge(badgeId, unreadCount) {
 }
 
 function renderNotificationList(containerId, notifications) {
-    const listContainer = document.getElementById(containerId);
+    const listContainer = document.getElementById(containerId) || document.getElementById('notificationDropdown');
     if (!listContainer) return;
 
     if (!Array.isArray(notifications) || notifications.length === 0) {
@@ -42,9 +157,15 @@ function renderNotificationList(containerId, notifications) {
 
 async function loadFacultySessionUser() {
     try {
-        const response = await fetch('../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
+        const response = await fetch(buildUserInfoPath('get_session_user.php'), {
+            credentials: 'same-origin',
+            cache: 'no-store'
+        });
         const payload = await response.json();
-        if (!response.ok || !payload.success) return;
+        if (response.status === 401 || response.status === 403 || !response.ok || !payload.success) {
+            redirectToFacultyLogin();
+            return false;
+        }
 
         const fullName = payload.user?.fullName || 'Professor Name';
         const email = payload.user?.email || 'fullname@email.com';
@@ -58,8 +179,10 @@ async function loadFacultySessionUser() {
         if (greeting) greeting.textContent = `Hello ${fullName}`;
 
         updateNotificationBadge('facultyNotificationBadge', Number(payload.user?.unreadNotifications || 0));
+        return true;
     } catch (error) {
         console.warn('Failed to load faculty session user:', error);
+        return false;
     }
 }
 
@@ -76,7 +199,7 @@ async function loadFacultyNotifications(options = {}) {
             }
             : { method: 'GET', credentials: 'same-origin' };
 
-        const response = await fetch('../user_info_V3/notifications_api.php', requestOptions);
+        const response = await fetch(buildUserInfoPath('notifications_api.php'), requestOptions);
         const payload = await response.json();
         if (!response.ok || !payload.success) return;
 
@@ -165,6 +288,7 @@ function toggleSidebar() {
         || document.getElementById('programs')
         || document.getElementById('courses')
         || document.getElementById('classes')
+        || document.getElementById('lists')
         || document.getElementById('listsStudents');
 
     if (!sidebar || !mainContent) return;
@@ -172,7 +296,41 @@ function toggleSidebar() {
     mainContent.classList.toggle('shifted');
 }
 
+function bindFacultyHeaderActions() {
+    document.querySelectorAll('[data-faculty-action="go-home"]').forEach((el) => {
+        el.addEventListener('click', goToOverviewPage);
+    });
+
+    document.querySelectorAll('[data-faculty-action="toggle-sidebar"]').forEach((el) => {
+        el.addEventListener('click', toggleSidebar);
+    });
+
+    document.querySelectorAll('[data-faculty-action="toggle-header-menu"]').forEach((el) => {
+        el.addEventListener('click', (event) => {
+            const menuTarget = el.getAttribute('data-menu-target');
+            if (!menuTarget) return;
+            event.stopPropagation();
+            toggleHeaderMenu(menuTarget, el);
+        });
+
+        // Keep keyboard access for profile menu button wrappers.
+        if (el.classList.contains('profile-avatar-btn')) {
+            el.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    el.click();
+                }
+            });
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    ensureFacultyNotificationPlaceholders();
+    ensureFacultyProfileSummaryPlaceholders();
+    normalizeFacultyHeaderLinks();
+    bindFacultyHeaderActions();
+
     // Position sidebar below header when present
     const header = document.querySelector('header');
     const sidebar = document.getElementById('sidebar');
@@ -208,12 +366,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    loadFacultySessionUser();
-    loadFacultyNotifications();
-    setInterval(() => {
-        loadFacultySessionUser();
+    loadFacultySessionUser().then((isAuthenticated) => {
+        if (!isAuthenticated) return;
+
         loadFacultyNotifications();
-    }, 15000);
+        setInterval(() => {
+            loadFacultySessionUser();
+            loadFacultyNotifications();
+        }, 15000);
+    });
 });
 
 // Canonical dropdown toggle (shared)

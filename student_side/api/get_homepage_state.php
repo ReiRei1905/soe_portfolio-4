@@ -16,7 +16,8 @@ function ensure_default_extracurricular_portfolios(mysqli $conn, int $studentId)
     $defaults = [
         ['projects', 'Top projects', 1],
         ['certificates', 'Top certificates/awards', 2],
-        ['assessments', 'Top assessments', 3]
+        ['assessments', 'Top assessments', 3],
+        ['other_files', 'Top external files', 4]
     ];
 
     $insertStmt = $conn->prepare('INSERT INTO extracurricular_portfolios (student_id, portfolio_key, title, sort_order, is_default) VALUES (?, ?, ?, ?, 1)');

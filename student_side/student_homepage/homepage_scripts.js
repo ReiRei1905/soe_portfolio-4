@@ -40,6 +40,40 @@ function renderStudentNotificationList(notifications) {
     `).join('');
 }
 
+function ensureStudentProfileSummaryPlaceholders() {
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (!profileDropdown) return;
+
+    let nameEl = document.getElementById('studentProfileFullName');
+    let emailEl = document.getElementById('studentProfileEmail');
+
+    if (nameEl && emailEl) return;
+
+    const summary = document.createElement('div');
+    summary.className = 'profile-summary';
+
+    nameEl = document.createElement('p');
+    nameEl.id = 'studentProfileFullName';
+    nameEl.className = 'profile-summary-name';
+    nameEl.textContent = 'Student Name';
+
+    emailEl = document.createElement('p');
+    emailEl.id = 'studentProfileEmail';
+    emailEl.className = 'profile-summary-email';
+    emailEl.textContent = 'student@email.com';
+
+    summary.appendChild(nameEl);
+    summary.appendChild(emailEl);
+    profileDropdown.insertBefore(summary, profileDropdown.firstChild);
+}
+
+function normalizeStudentHeaderLinks() {
+    const logoutPath = '../../user_info_V3/logout.php';
+    document.querySelectorAll('.logout-link').forEach((linkEl) => {
+        linkEl.setAttribute('href', logoutPath);
+    });
+}
+
 async function loadStudentSessionContext() {
     try {
         const response = await fetch('../../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
@@ -129,6 +163,7 @@ function toggleSidebar() {
         || document.getElementById('aboutUs')
         || document.getElementById('assessments')
         || document.getElementById('projects')
+        || document.getElementById('otherFiles')
         || document.getElementById('certificationsAwards')
         || document.getElementById('classes')
         || document.getElementById('homepage')
@@ -142,6 +177,9 @@ function toggleSidebar() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    ensureStudentProfileSummaryPlaceholders();
+    normalizeStudentHeaderLinks();
+
     // Position sidebar below header when present
     const header = document.querySelector('header');
     const sidebar = document.getElementById('sidebar');
@@ -422,6 +460,7 @@ function mapPortfolioKeyToCategory(key) {
     if (normalized === 'assessments' || normalized === 'assessment') return 'assessment';
     if (normalized === 'projects' || normalized === 'project') return 'projects';
     if (normalized === 'certificates' || normalized === 'certificate') return 'certificates';
+    if (normalized === 'other_files' || normalized === 'other-files' || normalized === 'external_files' || normalized === 'external-files' || normalized === 'others' || normalized === 'other') return 'other_files';
     return 'all';
 }
 
@@ -614,7 +653,7 @@ function getSelectedUploadCategory() {
 function getUploadContextCategory() {
     const contextFromBody = document.body ? (document.body.dataset.uploadContext || '').trim() : '';
 
-    if (contextFromBody === 'assessment' || contextFromBody === 'projects' || contextFromBody === 'certificates') {
+    if (contextFromBody === 'assessment' || contextFromBody === 'projects' || contextFromBody === 'certificates' || contextFromBody === 'other_files') {
         return contextFromBody;
     }
 
@@ -626,6 +665,7 @@ function getUploadContextCategory() {
     if (path.includes('/assessment/')) return 'assessment';
     if (path.includes('/projects/')) return 'projects';
     if (path.includes('/certificates/')) return 'certificates';
+    if (path.includes('/other_files/')) return 'other_files';
     return null;
 }
 
@@ -680,10 +720,16 @@ function getCurrentOpenFolderFromSectionView() {
         if (activeFolder) return activeFolder;
     }
 
+    if (context === 'other_files' && typeof window.getCurrentOtherFilesFolderName === 'function') {
+        const activeFolder = String(window.getCurrentOtherFilesFolderName() || '').trim();
+        if (activeFolder) return activeFolder;
+    }
+
     const folderCrumbIdByContext = {
         assessment: 'assessmentBreadcrumbFolder',
         projects: 'projectsBreadcrumbFolder',
-        certificates: 'certificatesBreadcrumbFolder'
+        certificates: 'certificatesBreadcrumbFolder',
+        other_files: 'otherFilesBreadcrumbFolder'
     };
 
     const crumbId = folderCrumbIdByContext[context];
@@ -760,7 +806,7 @@ async function createCustomFolder() {
     const selectedCategoryEl = getSelectedUploadCategory();
 
     if (!selectedCategoryEl) {
-        alert('Please choose a category first (Assessments, Projects, or Certificates/Awards).');
+        alert('Please choose a category first (Assessments, Projects, Certificates/Awards, or External Files).');
         updateCreateFolderButtonState();
         return;
     }

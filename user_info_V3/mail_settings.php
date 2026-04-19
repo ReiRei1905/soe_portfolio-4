@@ -28,6 +28,9 @@ function configureSmtpMailer(PHPMailer $mail, string $fromName = 'SOE Portfolio'
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Username = $smtpUser;
     $mail->Password = $smtpPass;
+    // Prevent long hangs when SMTP is slow/unreachable.
+    $mail->Timeout = 12;
+    $mail->SMTPTimeout = 12;
     $mail->setFrom($fromEmail, $displayFromName);
 }
 

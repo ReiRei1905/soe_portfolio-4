@@ -104,6 +104,10 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
                                 <input type="radio" name="category" value="certificates" id="cat-certificates">
                                 <label for="cat-certificates" class="category-label-box">Certificate/Awards</label>
                             </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="other_files" id="cat-other-files">
+                                <label for="cat-other-files" class="category-label-box">External Files</label>
+                            </div>
                         </div>
 
                         <div class="upload-footer-actions">
@@ -153,8 +157,8 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
             <a class="text-lg" href="../assessment/assessments.html">Assessments</a>
             <a class="text-lg" href="../projects/projects.html">Projects</a>
             <a class="text-lg" href="../certificates/certificates.html">Certificates/Awards</a>
+            <a class="text-lg" href="../other_files/other_files.html">External Files</a>
             <a class="text-lg" href="../student_class/student_classes.html">Classes</a>
-            <a class="text-lg" href="../faculty_about_us.html">About us</a>
         </nav>
     </div>
 
@@ -279,6 +283,7 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
                 <button type="button" class="picker-tab" data-category="assessment" onclick="setQuickCardPickerCategory('assessment')">Assessments</button>
                 <button type="button" class="picker-tab" data-category="projects" onclick="setQuickCardPickerCategory('projects')">Projects</button>
                 <button type="button" class="picker-tab" data-category="certificates" onclick="setQuickCardPickerCategory('certificates')">Certificates</button>
+                <button type="button" class="picker-tab" data-category="other_files" onclick="setQuickCardPickerCategory('other_files')">External Files</button>
             </div>
 
             <div id="quickCardPickerList" class="picker-file-list" aria-live="polite"></div>

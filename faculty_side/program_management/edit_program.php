@@ -1,32 +1,32 @@
 <?php
-header('Content-Type: application/json');
 
-// Database connection
-$connection = new mysqli("localhost", "root", "", "soe_portfolio");
+declare(strict_types=1);
 
-if ($connection->connect_error) {
-    echo json_encode(["success" => false, "message" => "Database connection failed."]);
-    exit;
+require_once __DIR__ . '/program_access_common.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    send_program_json(['success' => false, 'message' => 'Method not allowed.'], 405);
 }
 
-// Get program ID and new program name from POST request
-$programId = isset($_POST['programId']) ? intval($_POST['programId']) : 0;
-$newProgramName = isset($_POST['newProgramName']) ? trim($_POST['newProgramName']) : "";
+require_executive_director($conn);
 
-if ($programId > 0 && !empty($newProgramName)) {
-    $stmt = $connection->prepare("UPDATE programs SET program_name = ? WHERE program_id = ?");
-    $stmt->bind_param("si", $newProgramName, $programId);
+$programId = isset($_POST['programId']) ? (int) $_POST['programId'] : 0;
+$newProgramName = trim((string) ($_POST['newProgramName'] ?? ''));
 
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "Program updated successfully."]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Failed to update program."]);
-    }
-
-    $stmt->close();
-} else {
-    echo json_encode(["success" => false, "message" => "Invalid input."]);
+if ($programId <= 0 || $newProgramName === '') {
+    send_program_json(['success' => false, 'message' => 'Invalid input.'], 400);
 }
 
-$connection->close();
-?>
+$stmt = $conn->prepare('UPDATE programs SET program_name = ? WHERE program_id = ?');
+if (!$stmt) {
+    send_program_json(['success' => false, 'message' => 'Failed to update program.'], 500);
+}
+$stmt->bind_param('si', $newProgramName, $programId);
+$ok = $stmt->execute();
+$stmt->close();
+
+if (!$ok) {
+    send_program_json(['success' => false, 'message' => 'Failed to update program.'], 500);
+}
+
+send_program_json(['success' => true, 'message' => 'Program updated successfully.']);

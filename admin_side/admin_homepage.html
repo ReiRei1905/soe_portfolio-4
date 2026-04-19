@@ -192,8 +192,25 @@
                         <div class="action-buttons">
                             <button id = "approveButton" class="approve-button">Approve</button>
                             <button id= "rejectButton" class ="reject-button">Reject</button>
+                            <button id="revokeAccessButton" class="revoke-button hidden">Revoke Access</button>
                         </div>
+                        <p id="emailDeliveryStatus" class="email-delivery-status hidden" aria-live="polite"></p>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div id="actionConfirmModal" class="modal confirmation-modal">
+            <div class="confirmation-modal-content" role="dialog" aria-modal="true" aria-labelledby="actionConfirmTitle">
+                <div class="confirmation-modal-header">
+                    <h3 id="actionConfirmTitle">Confirm Action</h3>
+                    <button type="button" onclick="closeActionConfirmModal()">&times;</button>
+                </div>
+                <div class="confirmation-modal-body">
+                    <p id="actionConfirmText">Are you sure you want to continue?</p>
+                </div>
+                <div class="confirmation-modal-actions">
+                    <button id="confirmCancelButton" type="button" class="confirm-cancel-button" onclick="closeActionConfirmModal()">Cancel</button>
+                    <button id="confirmProceedButton" type="button" class="confirm-proceed-button" onclick="confirmPendingVerificationAction()">Continue</button>
                 </div>
             </div>
         </div>

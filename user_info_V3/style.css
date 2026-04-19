@@ -139,6 +139,44 @@ body {
     background-color: #0056b3; /* Darker blue on hover */
 }
 
+.btn:disabled {
+    opacity: 0.85;
+    cursor: not-allowed;
+}
+
+.signup-submit-wrap {
+    position: relative;
+}
+
+.signup-submit-wrap .btn {
+    padding-right: 2.25rem;
+}
+
+.signup-loading-spinner {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    width: 0.95rem;
+    height: 0.95rem;
+    border-radius: 9999px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #ffffff;
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.signup-submit-wrap.is-loading .signup-loading-spinner {
+    opacity: 1;
+    animation: signup-spin 0.75s linear infinite;
+}
+
+@keyframes signup-spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}
+
 /* Links styling */
 .links {
     margin-top: 20px;
@@ -161,6 +199,15 @@ body {
 }
 
 /* Recover password link */
+.sign-in-error-message {
+    margin: -0.35rem 0 0.4rem;
+    color: #dc2626;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: left;
+    line-height: 1.3;
+}
+
 .recover a {
     font-size: 14px;
     color: #007bff;
@@ -194,10 +241,32 @@ button:hover {
     position: relative;
 }
 
+.password-group > .fa-lock,
+.password-group .toggle-password {
+    top: 19px;
+    transform: translateY(-50%);
+}
+
+.password-strength {
+    font-size: 12px;
+    margin-top: 5px;
+    line-height: 1.25;
+    min-height: 30px;
+    color: #888;
+}
+
+.password-strength.is-valid {
+    color: #15803d;
+}
+
+.password-strength.is-invalid {
+    color: #dc2626;
+}
+
 .password-group .toggle-password {
     position: absolute;
     right: 15px;
-    top: 50%;
+    top: 19px;
     left: auto;
     transform: translateY(-50%);
     color: #666;

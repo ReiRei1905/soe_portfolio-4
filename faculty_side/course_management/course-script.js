@@ -18,6 +18,65 @@ document.addEventListener("DOMContentLoaded", function() {
     const courseCodeInput = document.getElementById("courseCodeInput");
     const courseSearchInput = document.getElementById("courseSearchInput");
     const courseList = document.getElementById("courseList");
+    let canManageCurrentProgram = false;
+    let isProgramDirector = false;
+    let hasAssignedProgram = false;
+    let currentUserId = 0;
+
+    function normalizeRoleLabel(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ');
+    }
+
+    function updateProgramDirectorNotice() {
+        const notice = document.getElementById('pdAssignmentNoticeCourses');
+        if (!notice) return;
+
+        const shouldShow = isProgramDirector && !hasAssignedProgram;
+        notice.classList.toggle('hidden', !shouldShow);
+    }
+
+    async function loadAccessContext() {
+        try {
+            const response = await fetch('../../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                return { canManageAnyProgram: false, isProgramDirector: false, userId: 0 };
+            }
+
+            const roleType = normalizeRoleLabel(payload.user?.roleType || '');
+            const facultyRole = normalizeRoleLabel(payload.user?.facultyRole || '');
+            const status = Number(payload.user?.status || 0);
+            const isVerified = Number(payload.user?.isVerified || 0);
+            const isExecDirectorRole = facultyRole.includes('executive director');
+            const isProgramDirectorRole = facultyRole.includes('program director') || facultyRole.includes('program directors');
+            const isFacultyVerified = roleType === 'faculty' && status === 1 && isVerified === 1;
+
+            currentUserId = Number(payload.user?.userId || 0);
+            isProgramDirector = isFacultyVerified && isProgramDirectorRole;
+            return {
+                userId: currentUserId,
+                canManageAnyProgram: isFacultyVerified && isExecDirectorRole,
+                isProgramDirector
+            };
+        } catch (error) {
+            console.warn('Unable to load course access context:', error);
+            isProgramDirector = false;
+            return { canManageAnyProgram: false, isProgramDirector: false, userId: 0 };
+        }
+    }
+
+    function applyCourseControlsVisibility() {
+        if (createCourseBtn) {
+            createCourseBtn.style.display = canManageCurrentProgram ? '' : 'none';
+        }
+        if (!canManageCurrentProgram && courseInputContainer) {
+            courseInputContainer.classList.add('hidden');
+        }
+    }
 
     courseSearchInput.addEventListener("input", function () {
         const searchTerm = courseSearchInput.value.toLowerCase().trim();
@@ -28,37 +87,61 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // fetch programs from program_management (one level up)
-    fetch("../program_management/fetch_programs.php")
-        .then((response) => response.json())
-        .then((programs) => {
+    Promise.all([
+        loadAccessContext(),
+        fetch("../program_management/fetch_programs.php").then((response) => response.json())
+    ])
+        .then(([access, programs]) => {
+            hasAssignedProgram = Boolean(access.isProgramDirector)
+                && Array.isArray(programs)
+                && programs.some((p) => Number(p.assignedProgramDirectorUserId || 0) === Number(access.userId || 0));
+
             const decodedProgramName = programName ? decodeURIComponent(programName) : null;
             let program = null;
             if (decodedProgramName) {
-                // strict match first (case-insensitive)
                 program = programs.find((p) => p.name && p.name.trim().toLowerCase() === decodedProgramName.trim().toLowerCase());
-                // fallback: substring match
                 if (!program) {
                     program = programs.find((p) => p.name && p.name.trim().toLowerCase().includes(decodedProgramName.trim().toLowerCase()));
                 }
             }
 
-            if (program) {
-                programId = program.id;
-                fetchCourses();
-            } else {
+            if (!program) {
                 console.error("Program not found for parameter:", programName, "decoded:", decodedProgramName, "available programs:", programs);
-                // if no program param provided or not found, do not crash — optionally show all courses or a helpful message
+                applyCourseControlsVisibility();
+                updateProgramDirectorNotice();
+                return;
             }
+
+            programId = program.id;
+            window.__currentProgramId = programId;
+            canManageCurrentProgram = Boolean(access.canManageAnyProgram)
+                || (Boolean(access.isProgramDirector) && Number(program.assignedProgramDirectorUserId || 0) === Number(access.userId || 0));
+
+            applyCourseControlsVisibility();
+            updateProgramDirectorNotice();
+            fetchCourses();
         })
-        .catch((error) => console.error("Error fetching programs:", error));
+        .catch((error) => {
+            console.error("Error loading course page access/programs:", error);
+            hasAssignedProgram = false;
+            applyCourseControlsVisibility();
+            updateProgramDirectorNotice();
+        });
 
     createCourseBtn.addEventListener("click", () => {
+        if (!canManageCurrentProgram) {
+            alert('You only have view access for this program.');
+            return;
+        }
         courseInputContainer.classList.remove("hidden");
         courseInput.focus();
     });
 
     confirmBtn.addEventListener("click", () => {
+        if (!canManageCurrentProgram) {
+            alert('You are not allowed to create courses in this program.');
+            return;
+        }
         const courseName = courseInput.value.trim();
         const courseCode = (courseCodeInput.value || "").trim().toUpperCase();
         if (!courseName) {
@@ -128,6 +211,13 @@ document.addEventListener("DOMContentLoaded", function() {
                             });
                         }
 
+                        const optionsToggle = courseItem.querySelector('.course-options');
+                        const dropdownMenu = courseItem.querySelector('.dropdown');
+                        if (!canManageCurrentProgram) {
+                            if (optionsToggle) optionsToggle.style.display = 'none';
+                            if (dropdownMenu) dropdownMenu.classList.add('hidden');
+                        }
+
                         // stop propagation for clicks inside the inline editor
                         inlineEdit.addEventListener('click', (e) => e.stopPropagation());
                         editInput.addEventListener('click', (e) => e.stopPropagation());
@@ -142,8 +232,13 @@ document.addEventListener("DOMContentLoaded", function() {
                             const newName = rawInput.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
                             const newCode = editCodeInput ? (editCodeInput.value || '').trim().toUpperCase() : code;
                             if (!newName) { alert('Course name cannot be empty.'); return; }
-                            if (newName === rawName) { inlineEdit.classList.add('hidden'); return; }
-                            fetch('edit_course.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `courseId=${encodeURIComponent(course.id)}&newCourseName=${encodeURIComponent(newName)}&newCourseCode=${encodeURIComponent(newCode)}` })
+                            const currentName = (course.name || '').trim();
+                            const currentCode = (course.course_code || '').trim().toUpperCase();
+                            if (newName === currentName && newCode === currentCode) {
+                                inlineEdit.classList.add('hidden');
+                                return;
+                            }
+                            fetch('edit_course.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `courseId=${encodeURIComponent(course.id)}&programId=${encodeURIComponent(window.__currentProgramId || '')}&newCourseName=${encodeURIComponent(newName)}&newCourseCode=${encodeURIComponent(newCode)}` })
                                 .then(async (r) => {
                                     const text = await r.text();
                                     try {
@@ -189,8 +284,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function removeCourse(button, courseId) {
     const courseItem = button.closest('.course-item');
+
     // First check whether any classes reference this course so we can warn the user
-    fetch(`check_course_usage.php?courseId=${encodeURIComponent(courseId)}`)
+    fetch(`check_course_usage.php?courseId=${encodeURIComponent(courseId)}&programId=${encodeURIComponent(window.__currentProgramId || '')}`)
         .then((r) => r.json())
         .then((info) => {
             if (!info.success) {
@@ -199,16 +295,22 @@ function removeCourse(button, courseId) {
             }
 
             const count = parseInt(info.count || 0, 10);
-            if (count > 0) {
+            const hasSharedLinks = Boolean(info.hasSharedLinks);
+            if (count > 0 && !hasSharedLinks) {
                 // If there are dependent classes, warn the user and do not proceed with delete.
                 alert(`This course is used by ${count} class(es). You must remove or reassign those classes before deleting the course.`);
                 return;
             }
 
-            // No dependent classes — safe to confirm deletion
-            if (!confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
+            let confirmMessage = "Are you sure you want to delete this course? This action cannot be undone.";
+            if (hasSharedLinks) {
+                const linkedProgramCount = parseInt(info.linkedProgramCount || 0, 10);
+                confirmMessage = `This is a shared course linked to ${linkedProgramCount} program(s). Remove it from this program only?`;
+            }
 
-            fetch("delete_course.php", { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `courseId=${encodeURIComponent(courseId)}` })
+            if (!confirm(confirmMessage)) return;
+
+            fetch("delete_course.php", { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `courseId=${encodeURIComponent(courseId)}&programId=${encodeURIComponent(window.__currentProgramId || '')}` })
                 .then((r) => r.json())
                 .then((data) => {
                     if (data.success) {
