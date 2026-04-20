@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
     <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
@@ -28,6 +31,22 @@ hr.message-inner-separator
     position: absolute;
     left: 30%;
 }
+.otp-panel {
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+}
+.otp-panel h4 {
+    margin-top: 0;
+}
+.otp-panel .btn + .btn {
+    margin-left: 8px;
+}
+#statusMessage {
+    margin-top: 10px;
+}
 </style>
 <body>
     <div class="container">
@@ -40,7 +59,52 @@ hr.message-inner-separator
                     <hr class="message-inner-separator">
                     <p>
                         Email send out !  Kindly check your email inbox.  <i class="fas fa-envelope" style="color: black;"></i></p>
+
+                    <div class="otp-panel">
+                        <h3 style="margin-top:0;color:#1f2937;">Verify with Code</h3>
+                        <h4>Use verification code (optional)</h4>
+                        <p>If the reset link cannot be opened on your device, ask the email owner for the 6-digit code and enter it here.</p>
+
+                        <form action="verify_reset_code.php" method="POST">
+                            <div class="form-group">
+                                <label for="verificationCode">6-digit code</label>
+                                <input id="verificationCode" class="form-control" type="text" name="verification_code" maxlength="6" pattern="[0-9]{6}" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Verify code and continue</button>
+                            <a href="recover_psw.php" class="btn btn-default">Back</a>
+                        </form>
+
+                        <form action="resend_reset_code.php" method="POST" style="margin-top:10px;">
+                            <button type="submit" class="btn btn-primary">Send code again</button>
+                        </form>
+
+                        <p id="statusMessage"></p>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var status = new URLSearchParams(window.location.search).get('status') || '';
+            var statusEl = document.getElementById('statusMessage');
+            if (!statusEl || !status) {
+                return;
+            }
+
+            var map = {
+                'code-sent': 'A new code was sent to the same email.',
+                'code-verified': 'Code verified. Redirecting to reset page...',
+                'invalid-code': 'Invalid code. Please try again.',
+                'expired-code': 'Code expired. Click Send code again.',
+                'session-missing': 'Session expired. Start again from Recover Password.',
+                'send-failed': 'Unable to send code right now. Please try again.'
+            };
+
+            statusEl.className = status === 'code-verified' ? 'text-success' : 'text-danger';
+            statusEl.textContent = map[status] || 'Request status updated.';
+        })();
+    </script>
 </body>
 </html>

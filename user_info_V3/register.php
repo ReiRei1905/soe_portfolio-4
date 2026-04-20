@@ -146,8 +146,12 @@ if (!isPasswordStrong($password)) {
 
         $mail->send();
         redirect_with_alert("Registration successful! OTP sent to {$email}", 'verification.php');
-    } catch (Exception $e) {
-        error_log("OTP mail send failed for {$email}: " . $mail->ErrorInfo);
+    } catch (\Throwable $e) {
+        $mailError = trim((string) $mail->ErrorInfo);
+        if ($mailError === '') {
+            $mailError = $e->getMessage();
+        }
+        error_log("OTP mail send failed for {$email}: " . $mailError);
 
         if (isLocalMailFallbackEnabled()) {
             redirect_with_alert("Registration successful. SMTP failed, so local fallback is active. Your OTP is: {$otp}", 'verification.php');

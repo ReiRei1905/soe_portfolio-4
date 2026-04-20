@@ -50,8 +50,12 @@ function send_user_email_notification(string $toEmail, string $fullName, string 
         );
 
         return $mail->send();
-    } catch (Exception $error) {
-        error_log('User notification email failed for ' . $toEmail . ': ' . $mail->ErrorInfo);
+    } catch (\Throwable $error) {
+        $mailError = trim((string) $mail->ErrorInfo);
+        if ($mailError === '') {
+            $mailError = $error->getMessage();
+        }
+        error_log('User notification email failed for ' . $toEmail . ': ' . $mailError);
         return false;
     }
 }

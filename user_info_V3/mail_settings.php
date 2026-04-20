@@ -12,11 +12,23 @@ function configureSmtpMailer(PHPMailer $mail, string $fromName = 'SOE Portfolio'
 {
     $smtpHost = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
     $smtpPort = (int) (getenv('SMTP_PORT') ?: 587);
-    $smtpUser = getenv('SMTP_USER') ?: 'neloangelo4123@gmail.com';
+    $smtpUser = trim((string) (getenv('SMTP_USER') ?: ''));
 
     // Google shows app passwords grouped in 4s; strip spaces if pasted that way.
-    $smtpPassRaw = getenv('SMTP_PASS') ?: 'cdwa snhj qxnz oadf';
+    $smtpPassRaw = (string) (getenv('SMTP_PASS') ?: '');
+    
+    // Backward-compatible localhost behavior: if env vars are not set,
+    // use legacy development credentials so existing flows keep working.
+    if (($smtpUser === '' || trim($smtpPassRaw) === '') && isLocalDevelopmentRequest()) {
+        $smtpUser = 'neloangelo4123@gmail.com';
+        $smtpPassRaw = 'cdwa snhj qxnz oadf';
+    }
+
     $smtpPass = preg_replace('/\s+/', '', $smtpPassRaw);
+
+    if ($smtpUser === '' || $smtpPass === '') {
+        throw new RuntimeException('SMTP credentials are not configured. Set SMTP_USER and SMTP_PASS in your environment.');
+    }
 
     $fromEmail = getenv('SMTP_FROM_EMAIL') ?: $smtpUser;
     $displayFromName = getenv('SMTP_FROM_NAME') ?: $fromName;
