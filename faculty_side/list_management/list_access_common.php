@@ -16,7 +16,8 @@ function list_can_access_module(array $sessionUser): bool
     }
 
     $role = list_normalize_role((string) ($sessionUser['faculty_role'] ?? ''));
-    return str_contains($role, 'program director') || str_contains($role, 'executive director');
+    // Ensure we check the core EXD function so it doesn't fail if the text just says "Program Director"
+    return str_contains($role, 'program director') || str_contains($role, 'executive director') || faculty_is_executive_director($sessionUser);
 }
 
 function list_require_access(mysqli $conn): array
@@ -33,18 +34,9 @@ function list_require_access(mysqli $conn): array
     return $sessionUser;
 }
 
-function list_get_manageable_program_ids(mysqli $conn, array $sessionUser): array
+function list_get_assigned_program_ids(mysqli $conn, array $sessionUser): array
 {
-    if (faculty_is_executive_director($sessionUser)) {
-        $ids = [];
-        $result = $conn->query('SELECT program_id FROM programs ORDER BY program_name ASC');
-        while ($result && ($row = $result->fetch_assoc())) {
-            $ids[] = (int) ($row['program_id'] ?? 0);
-        }
-        return array_values(array_filter(array_unique($ids), static fn($id) => $id > 0));
-    }
-
-    if (!faculty_is_program_director($sessionUser) || !faculty_table_exists($conn, 'program_director_assignments')) {
+    if (!faculty_table_exists($conn, 'program_director_assignments')) {
         return [];
     }
 
@@ -69,17 +61,64 @@ function list_get_manageable_program_ids(mysqli $conn, array $sessionUser): arra
     return $programIds;
 }
 
-function list_get_manageable_programs(mysqli $conn, array $sessionUser): array
+function list_get_visible_programs(mysqli $conn, array $sessionUser): array
 {
     if (!list_can_access_module($sessionUser)) {
         return [];
     }
 
+    // Rely on the core system function to properly detect EXD
+    $isExd = faculty_is_executive_director($sessionUser);
+    
+    $assignedIds = list_get_assigned_program_ids($conn, $sessionUser);
+
+    $programs = [];
     $result = $conn->query('SELECT program_id, program_name FROM programs ORDER BY program_name ASC');
     if (!$result) {
         return [];
     }
 
+    while ($result && ($row = $result->fetch_assoc())) {
+        $pid = (int) ($row['program_id'] ?? 0);
+        // EXD sees all. PD sees only assigned.
+        if ($isExd || in_array($pid, $assignedIds, true)) {
+            $programs[] = [
+                'id' => $pid,
+                'name' => trim((string) ($row['program_name'] ?? ''))
+            ];
+        }
+    }
+
+    return $programs;
+}
+
+function list_get_creatable_programs(mysqli $conn, array $sessionUser): array
+{
+    if (!list_can_access_module($sessionUser)) {
+        return [];
+    }
+
+    // Both EXD and PD can ONLY create for programs they are officially assigned to
+    $assignedIds = list_get_assigned_program_ids($conn, $sessionUser);
+    if (empty($assignedIds)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($assignedIds), '?'));
+    $stmt = $conn->prepare("SELECT program_id, program_name FROM programs WHERE program_id IN ($placeholders) ORDER BY program_name ASC");
+    if (!$stmt) {
+        return [];
+    }
+
+    $types = str_repeat('i', count($assignedIds));
+    $bindArgs = [$types];
+    foreach ($assignedIds as $idx => $value) {
+        $bindArgs[] = &$assignedIds[$idx];
+    }
+    call_user_func_array([$stmt, 'bind_param'], $bindArgs);
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
     $programs = [];
     while ($result && ($row = $result->fetch_assoc())) {
         $programs[] = [
@@ -87,17 +126,20 @@ function list_get_manageable_programs(mysqli $conn, array $sessionUser): array
             'name' => trim((string) ($row['program_name'] ?? ''))
         ];
     }
+    $stmt->close();
 
     return $programs;
 }
 
 function list_can_manage_program(mysqli $conn, array $sessionUser, int $programId): bool
 {
-    if ($programId <= 0) {
+    if ($programId <= 0 || !list_can_access_module($sessionUser)) {
         return false;
     }
 
-    return list_can_access_module($sessionUser);
+    // To CREATE/MANAGE, they must be explicitly assigned to this specific program ID
+    $assignedIds = list_get_assigned_program_ids($conn, $sessionUser);
+    return in_array($programId, $assignedIds, true);
 }
 
 function list_find_student_lists_column(mysqli $conn, array $candidates): ?string

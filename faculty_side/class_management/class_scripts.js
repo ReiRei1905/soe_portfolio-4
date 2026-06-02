@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const confirmed = confirm('Revoke the current Professor assignment for this class?');
+        const confirmed = confirm('Clear the current Professor assignment so you can reassign this class?');
         if (!confirmed) return;
 
         const body = new URLSearchParams({
@@ -250,10 +250,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const payload = await response.json();
         if (!response.ok || !payload.success) {
-            throw new Error(payload.message || 'Failed to revoke professor assignment.');
+            throw new Error(payload.message || 'Failed to clear professor assignment.');
         }
 
-        alert(payload.message || 'Professor assignment revoked.');
+        alert(payload.message || 'Professor assignment cleared.');
     }
 
     async function reviewClassRequest(requestId, action, rejectionReason = '') {
@@ -468,7 +468,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const approveRequestBtn = item.querySelector('.approve-request-btn');
             const rejectRequestBtn = item.querySelector('.reject-request-btn');
             const assignProfBtn = item.querySelector('.assign-Prof-btn');
-            const revokeProfBtn = item.querySelector('.revoke-Prof-btn');
             const editBtn = item.querySelector('.edit-btn');
             const removeBtn = item.querySelector('.remove-btn');
             const isPendingRequest = Number(classItem.is_pending_request || 0) === 1;
@@ -505,9 +504,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     : 'Professor: Not assigned';
             }
 
-            if (revokeProfBtn) {
-                revokeProfBtn.disabled = !hasAssignedProfessor;
-                revokeProfBtn.classList.toggle('is-disabled', !hasAssignedProfessor);
+            if (assignProfBtn) {
+                assignProfBtn.textContent = hasAssignedProfessor ? 'Reassign Professor' : 'Assign Professor';
             }
 
             if (!isPendingRequest) {
@@ -533,7 +531,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (isPendingRequest) {
                 assignProfBtn.classList.add('hidden');
-                revokeProfBtn.classList.add('hidden');
                 editBtn.classList.add('hidden');
                 removeBtn.classList.add('hidden');
 
@@ -558,18 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            if (revokeProfBtn) {
-                revokeProfBtn.addEventListener('click', async () => {
-                    if (!canManageClasses || !hasAssignedProfessor) return;
-                    try {
-                        await revokeProfessorForClass(classItem.class_id);
-                        dropdown.classList.add('hidden');
-                        await fetchClasses();
-                    } catch (error) {
-                        alert(error.message || 'Failed to revoke professor assignment.');
-                    }
-                });
-            }
 
             if (approveRequestBtn) {
                 approveRequestBtn.addEventListener('click', async () => {

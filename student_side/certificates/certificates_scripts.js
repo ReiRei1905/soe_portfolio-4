@@ -1,6 +1,7 @@
 console.log("certificates_scripts.js loaded");
 
 let currentCertificatesFolder = null;
+let currentCertificatesSort = 'recent';
 
 function getCurrentCertificatesFolderName() {
     return currentCertificatesFolder || '';
@@ -16,6 +17,36 @@ function closeCertificateActionDropdowns() {
 
 function isCertificatesFolderEntry(file) {
     return file && (file.entryType === 'folder' || (!file.name && !!file.folder));
+}
+
+function getCertificatesEntryName(file) {
+    return String(file.folder || file.name || '').trim().toLowerCase();
+}
+
+function getCertificatesSortTimestamp(file) {
+    const raw = file.timestamp || file.created_at || file.createdAt || file.updated_at || file.updatedAt || '';
+    const time = Date.parse(String(raw));
+    return Number.isFinite(time) ? time : 0;
+}
+
+function sortCertificatesEntries(entries) {
+    const mode = currentCertificatesSort;
+    return [...entries].sort((a, b) => {
+        const aIsFolder = isCertificatesFolderEntry(a);
+        const bIsFolder = isCertificatesFolderEntry(b);
+        if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+
+        if (mode === 'name-asc') {
+            return getCertificatesEntryName(a).localeCompare(getCertificatesEntryName(b), undefined, { numeric: true });
+        }
+        if (mode === 'name-desc') {
+            return getCertificatesEntryName(b).localeCompare(getCertificatesEntryName(a), undefined, { numeric: true });
+        }
+
+        const left = getCertificatesSortTimestamp(a);
+        const right = getCertificatesSortTimestamp(b);
+        return mode === 'oldest' ? left - right : right - left;
+    });
 }
 
 function ensureCertificateEntryId(file, index) {
@@ -309,6 +340,7 @@ function renderCurrentSection() {
     const visibleFiles = currentCertificatesFolder
         ? certFiles.filter((file) => !isCertificatesFolderEntry(file) && (file.folder || '') === currentCertificatesFolder)
         : certFiles.filter((file) => isCertificatesFolderEntry(file) || !file.folder);
+    const sortedFiles = sortCertificatesEntries(visibleFiles);
 
     updateCertificatesBreadcrumb();
 
@@ -347,7 +379,7 @@ function renderCurrentSection() {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6';
     
-    visibleFiles.forEach((file, index) => {
+    sortedFiles.forEach((file, index) => {
         const itemNode = buildCertificateGridItem(file, index, itemTemplate);
         grid.appendChild(itemNode);
     });
@@ -393,6 +425,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentCertificatesFolder = null;
                 renderCurrentSection();
             }
+        });
+    }
+
+    const sortSelect = document.getElementById('certificatesSortSelect');
+    if (sortSelect) {
+        sortSelect.value = currentCertificatesSort;
+        sortSelect.addEventListener('change', () => {
+            currentCertificatesSort = sortSelect.value || 'recent';
+            renderCurrentSection();
         });
     }
 

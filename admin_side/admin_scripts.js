@@ -1,5 +1,42 @@
+function getAdminRelativePrefix() {
+    const pathname = window.location.pathname || '';
+    const marker = '/admin_side/';
+    const markerIndex = pathname.indexOf(marker);
+
+    if (markerIndex < 0) {
+        return '../';
+    }
+
+    const tail = pathname.slice(markerIndex + marker.length);
+    const slashIndex = tail.lastIndexOf('/');
+    if (slashIndex < 0) {
+        return '../';
+    }
+
+    const dirPart = tail.slice(0, slashIndex).trim();
+    const depth = dirPart === '' ? 0 : dirPart.split('/').filter(Boolean).length;
+    return '../'.repeat(depth + 1);
+}
+
+function buildAdminPath(fileName) {
+    const prefix = getAdminRelativePrefix();
+    return `${prefix}admin_side/${fileName}`;
+}
+
+function buildUserInfoPath(fileName) {
+    const prefix = getAdminRelativePrefix();
+    return `${prefix}user_info_V3/${fileName}`;
+}
+
+function normalizeAdminHeaderLinks() {
+    const logoutPath = buildUserInfoPath('logout.php');
+    document.querySelectorAll('.logout-link').forEach((linkEl) => {
+        linkEl.setAttribute('href', logoutPath);
+    });
+}
+
 function goToOverviewPage() {
-    window.location.href = 'admin_homepage.html';
+    window.location.href = buildAdminPath('admin_homepage.html');
 }
 
 function handleProfileClick() {
@@ -64,21 +101,50 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+window.switchNotifTab = function(tabName, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.querySelectorAll('.notif-tab-btn').forEach(btn => btn.classList.remove('active'));
+    container.querySelectorAll('.notif-tab-content').forEach(content => content.classList.remove('active'));
+    
+    const activeBtn = container.querySelector(`.notif-tab-btn[data-target="${tabName}"]`);
+    const activeContent = container.querySelector(`.notif-tab-content[data-tab="${tabName}"]`);
+    
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activeContent) activeContent.classList.add('active');
+};
+
 function renderNotificationList(containerId, notifications) {
     const listContainer = document.getElementById(containerId);
     if (!listContainer) return;
 
-    if (!Array.isArray(notifications) || notifications.length === 0) {
-        listContainer.innerHTML = '<p class="text-gray-500 text-center">No new notifications at the moment.</p>';
-        return;
-    }
+    // Admin array might not filter by isRead in old code, but assuming API provides it:
+    const newItems = Array.isArray(notifications) ? notifications.filter((item) => !item.isRead) : [];
+    const reviewedItems = Array.isArray(notifications) ? notifications.filter((item) => item.isRead) : [];
 
-    listContainer.innerHTML = notifications.map((item) => `
-        <div class="notification-item">
-            <p class="notification-message">${escapeHtml(item.message || '')}</p>
-            <p class="notification-time">${escapeHtml(item.createdAt || '')}</p>
+    const buildItems = (items, emptyMsg) => {
+        if (!items.length) return `<p class="notification-empty text-center" style="padding: 1rem 0;">${emptyMsg}</p>`;
+        return items.map((item) => `
+            <div class="notification-item">
+                <p class="notification-message">${escapeHtml(item.message || '')}</p>
+                <p class="notification-time">${escapeHtml(item.createdAt || '')}</p>
+            </div>
+        `).join('');
+    };
+
+    listContainer.innerHTML = `
+        <div class="notif-tabs-header">
+            <button class="notif-tab-btn active" data-target="new" onclick="switchNotifTab('new', '${containerId}')">NEW</button>
+            <button class="notif-tab-btn" data-target="reviewed" onclick="switchNotifTab('reviewed', '${containerId}')">REVIEWED</button>
         </div>
-    `).join('');
+        <div class="notif-tab-content active" data-tab="new">
+            ${buildItems(newItems, 'No new notifications.')}
+        </div>
+        <div class="notif-tab-content" data-tab="reviewed">
+            ${buildItems(reviewedItems, 'No reviewed notifications yet.')}
+        </div>
+    `;
 }
 
 function updateNotificationBadge(badgeId, unreadCount) {
@@ -97,7 +163,7 @@ function updateNotificationBadge(badgeId, unreadCount) {
 
 async function loadCurrentUserContext() {
     try {
-        const response = await fetch('../user_info_V3/get_session_user.php', { credentials: 'same-origin' });
+        const response = await fetch(buildUserInfoPath('get_session_user.php'), { credentials: 'same-origin' });
         const payload = await response.json();
         if (!response.ok || !payload.success) {
             isAdminSessionContext = false;
@@ -132,6 +198,11 @@ async function loadCurrentUserContext() {
     }
 }
 
+async function refreshAdminNotifications() {
+    await loadCurrentUserContext();
+    await loadNotifications();
+}
+
 async function loadNotifications(options = {}) {
     if (!isAdminSessionContext) {
         updateNotificationBadge('adminNotificationBadge', 0);
@@ -151,7 +222,7 @@ async function loadNotifications(options = {}) {
             }
             : { method: 'GET', credentials: 'same-origin' };
 
-        const response = await fetch('../user_info_V3/notifications_api.php', requestOptions);
+        const response = await fetch(buildUserInfoPath('notifications_api.php'), requestOptions);
         const payload = await response.json();
         if (!response.ok || !payload.success) return;
 
@@ -183,6 +254,9 @@ function toggleHeaderMenu(menuId, trigger) {
     }
 
     if (willOpen && menuId === 'notificationDropdown') {
+        // Do nothing yet, let the user read them
+    } else if (!willOpen && menuId === 'notificationDropdown') {
+        // Mark as read ONLY when closing the dropdown
         loadNotifications({ markRead: true });
     }
 }
@@ -192,7 +266,8 @@ function toggleSidebar() {
     const listsUsers = document.getElementById('listsUsers')
         || document.getElementById('aboutUs')
         || document.getElementById('programs')
-        || document.getElementById('classes');
+        || document.getElementById('classes')
+        || document.getElementById('feedbacks');
 
     if (sidebar) {
         sidebar.classList.toggle('active');
@@ -795,8 +870,13 @@ window.addEventListener('click', (event) => {
 
     if (!event.target.closest('.header-notifications') && !event.target.closest('.header-profile-menu')) {
         document.querySelectorAll('.header-menu-dropdown').forEach((menu) => {
+            const wasOpen = !menu.classList.contains('hidden');
             menu.classList.add('hidden');
             menu.setAttribute('aria-hidden', 'true');
+            // Mark read if we are closing an open notification dropdown
+            if (wasOpen && menu.id === 'notificationDropdown') {
+                loadNotifications({ markRead: true });
+            }
         });
     }
 
@@ -812,6 +892,7 @@ window.addEventListener('click', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    normalizeAdminHeaderLinks();
     const header = document.querySelector('header');
     const sidebar = document.getElementById('sidebar');
     if (header && sidebar) {
@@ -848,14 +929,108 @@ document.addEventListener('DOMContentLoaded', () => {
         revokeButton.addEventListener('click', revokeUserAccess);
     }
 
-    wireSearch();
-    setFilterLabel(currentFilter);
-    setSelectedAccessRole('student');
-    loadCurrentUserContext();
-    loadNotifications();
+    refreshAdminNotifications();
     setInterval(() => {
-        loadCurrentUserContext();
-        loadNotifications();
+        refreshAdminNotifications();
     }, 15000);
-    loadUsers();
+
+    const userTableBody = document.getElementById('userTableBody');
+    if (userTableBody) {
+        wireSearch();
+        setFilterLabel(currentFilter);
+        setSelectedAccessRole('student');
+        loadUsers();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInputs = document.querySelectorAll('.header-search .search-input');
+    
+    searchInputs.forEach(input => {
+        // Create the dropdown container just once
+        const dropdown = document.createElement('div');
+        dropdown.className = 'search-results-dropdown hidden';
+        input.parentElement.style.position = 'relative'; // Ensure dropdown anchors here
+        input.parentElement.appendChild(dropdown);
+
+        let debounceTimer;
+
+        input.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            dropdown.innerHTML = ''; // Clear old results
+
+            if (query.length < 2) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                // Use your existing helper to dynamically get the path back to the root
+                const rootPrefix = getAdminRelativePrefix(); 
+                
+                fetch(`${rootPrefix}student_side/api/global_search.php?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        dropdown.innerHTML = '';
+                        if (data.ok && data.results.length > 0) {
+                            data.results.forEach(student => {
+                                const item = document.createElement('div');
+                                item.className = 'search-result-item';
+                                item.innerHTML = `<strong>${student.name}</strong><br><small>${student.email}</small>`;
+                                
+                                // Redirect to view mode on click
+                                item.addEventListener('click', () => {
+                                    window.location.href = `${rootPrefix}admin_side/admin_homepage.html?view_student=${student.student_id}`;
+                                });
+                                
+                                dropdown.appendChild(item);
+                            });
+                            dropdown.classList.remove('hidden');
+                        } else {
+                            dropdown.innerHTML = '<div class="search-result-item text-gray-500">No students found.</div>';
+                            dropdown.classList.remove('hidden');
+                        }
+                    })
+                    .catch(err => console.error("Search failed:", err));
+            }, 300); // 300ms debounce
+        });
+
+        // Hide dropdown if clicked outside
+        document.addEventListener('click', (e) => {
+            if (!input.parentElement.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewStudentId = urlParams.get('view_student');
+    if (viewStudentId) {
+        const mainSection = document.querySelector('.main-content');
+        if (mainSection) {
+            const sidebar = document.getElementById('sidebar');
+            mainSection.innerHTML = '';
+            if (sidebar) mainSection.appendChild(sidebar);
+
+            const iframe = document.createElement('iframe');
+            const rootPrefix = getAdminRelativePrefix();
+            iframe.src = `${rootPrefix}student_side/student_homepage/student_homepage.php?view_student=${viewStudentId}&embed=1`;
+            iframe.style.width = '100%';
+            iframe.style.height = 'calc(100vh - 80px)';
+            iframe.style.border = 'none';
+            iframe.style.flexGrow = '1';
+            
+            mainSection.appendChild(iframe);
+            mainSection.style.display = 'flex';
+            
+            // Update breadcrumb if it exists
+            const breadcrumb = document.querySelector('.breadcrumb-item');
+            if (breadcrumb) {
+                breadcrumb.innerHTML = 'View Student Profile';
+            }
+        }
+    }
 });

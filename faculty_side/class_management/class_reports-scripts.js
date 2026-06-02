@@ -12,11 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportsPortfolioView = document.getElementById('reportsPortfolioView');
     const reportsStudentsList = document.getElementById('reportsStudentsList');
     const reportsChartsCard = document.getElementById('reportsChartsCard');
-    const highestPercentageChart = document.getElementById('highestPercentageChart');
-    const highestGradeChart = document.getElementById('highestGradeChart');
+    const gradeDistributionChart = document.getElementById('gradeDistributionChart');
     const difficultyRatingChart = document.getElementById('difficultyRatingChart');
-    const highestPercentageChartTitle = document.getElementById('highestPercentageChartTitle');
-    const highestGradeChartTitle = document.getElementById('highestGradeChartTitle');
+    const gradeDistributionChartTitle = document.getElementById('gradeDistributionChartTitle');
     const difficultyRatingChartTitle = document.getElementById('difficultyRatingChartTitle');
 
     const reportsPortfolioHeading = document.getElementById('reportsPortfolioHeading');
@@ -118,11 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateChartTitles() {
         const classTitle = classLabel || 'This Class';
-        if (highestPercentageChartTitle) {
-            highestPercentageChartTitle.textContent = `Academic Percentage per Student in ${classTitle}`;
-        }
-        if (highestGradeChartTitle) {
-            highestGradeChartTitle.textContent = `Academic Grade per Student in ${classTitle}`;
+        if (gradeDistributionChartTitle) {
+            gradeDistributionChartTitle.textContent = `Academic Grade Distribution in ${classTitle}`;
         }
         if (difficultyRatingChartTitle) {
             difficultyRatingChartTitle.textContent = `Class Difficulty Ratings in ${classTitle}`;
@@ -179,89 +174,81 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function parsePercentageValue(rawValue) {
-        const normalized = String(rawValue === null || rawValue === undefined ? '' : rawValue).replace('%', '').trim();
-        const parsed = Number(normalized);
-        return Number.isFinite(parsed) ? parsed : Number.NaN;
-    }
-
-    function getGradeScore(rawGrade) {
+    function normalizeGradeLabel(rawGrade) {
         const grade = String(rawGrade || '').toUpperCase().trim();
-        if (!grade) return Number.NaN;
-        if (grade === 'R') return 0;
+        if (!grade) return '';
+        if (grade === 'R') return 'R';
         const numeric = Number(grade);
-        if (!Number.isFinite(numeric)) return Number.NaN;
-        // Lower academic grade number is stronger: 1.0 best, 4.0 weakest.
-        return Math.max(0, 5 - numeric);
+        if (!Number.isFinite(numeric)) return '';
+        return numeric.toFixed(1);
     }
 
-    function buildHorizontalChartHtml(rows, maxValue, formatValue) {
-        if (!Array.isArray(rows) || rows.length === 0 || !Number.isFinite(maxValue) || maxValue <= 0) {
-            return '<p class="reports-chart-empty">No approved review data yet.</p>';
-        }
-
-        return rows.map((entry) => {
-            const widthPercent = Math.max(0, Math.min(100, (entry.metricValue / maxValue) * 100));
-            return `
-                <div class="reports-chart-row">
-                    <div class="reports-chart-label">${escapeHtml(entry.studentName)}</div>
-                    <div class="reports-chart-track">
-                        <div class="reports-chart-fill" style="width: ${widthPercent.toFixed(2)}%"></div>
-                        <span class="reports-chart-value">${escapeHtml(formatValue(entry))}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function renderAcademicCharts(items) {
-        if (!highestPercentageChart || !highestGradeChart) return;
+    function renderGradeDistributionChart(items) {
+        if (!gradeDistributionChart) return;
 
         const rows = Array.isArray(items) ? items : [];
+        const gradeOrder = ['R', '1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0'];
+        const counts = gradeOrder.reduce((acc, grade) => {
+            acc[grade] = 0;
+            return acc;
+        }, {});
 
-        const percentageRows = rows
+        rows
             .filter((entry) => String(entry.reviewDecision || '').toLowerCase() === 'approved')
-            .map((entry) => {
-                const studentName = `${entry.firstName || ''} ${entry.lastName || ''}`.trim() || 'Student';
-                const metricValue = parsePercentageValue(entry.reviewFinalPercentage);
-                return {
-                    studentName,
-                    metricValue,
-                    rawPercentage: entry.reviewFinalPercentage
-                };
-            })
-            .filter((entry) => Number.isFinite(entry.metricValue))
-            .sort((a, b) => b.metricValue - a.metricValue);
+            .forEach((entry) => {
+                const gradeLabel = normalizeGradeLabel(entry.reviewFinalGrade);
+                if (gradeLabel && counts.hasOwnProperty(gradeLabel)) {
+                    counts[gradeLabel] += 1;
+                }
+            });
 
-        const gradeRows = rows
-            .filter((entry) => String(entry.reviewDecision || '').toLowerCase() === 'approved')
-            .map((entry) => {
-                const studentName = `${entry.firstName || ''} ${entry.lastName || ''}`.trim() || 'Student';
-                const gradeText = String(entry.reviewFinalGrade || '').toUpperCase().trim();
-                const metricValue = getGradeScore(gradeText);
-                return {
-                    studentName,
-                    metricValue,
-                    gradeText
-                };
-            })
-            .filter((entry) => Number.isFinite(entry.metricValue))
-            .sort((a, b) => b.metricValue - a.metricValue);
+        const total = gradeOrder.reduce((sum, grade) => sum + counts[grade], 0);
+        if (total <= 0) {
+            gradeDistributionChart.innerHTML = '<p class="reports-chart-empty">No approved grades yet.</p>';
+            return;
+        }
 
-        const maxPercentage = 100;
-        const maxGradeScore = 4;
+        const palette = {
+            R: '#ef4444',
+            '1.0': '#22c55e',
+            '1.5': '#84cc16',
+            '2.0': '#f59e0b',
+            '2.5': '#f97316',
+            '3.0': '#3b82f6',
+            '3.5': '#6366f1',
+            '4.0': '#6b7280'
+        };
 
-        highestPercentageChart.innerHTML = buildHorizontalChartHtml(
-            percentageRows,
-            maxPercentage,
-            (entry) => `${Number(entry.metricValue).toFixed(1)}%`
-        );
+        let cursor = 0;
+        const slices = gradeOrder.map((grade) => {
+            const value = counts[grade];
+            const percent = (value / total) * 100;
+            const start = cursor;
+            const end = cursor + percent;
+            cursor = end;
+            return { grade, value, percent, start, end };
+        }).filter((slice) => slice.value > 0);
 
-        highestGradeChart.innerHTML = buildHorizontalChartHtml(
-            gradeRows,
-            maxGradeScore,
-            (entry) => entry.gradeText || 'N/A'
-        );
+        const gradient = slices.length
+            ? `conic-gradient(${slices.map((slice) => `${palette[slice.grade]} ${slice.start.toFixed(2)}% ${slice.end.toFixed(2)}%`).join(', ')})`
+            : '#e5e7eb';
+
+        gradeDistributionChart.innerHTML = `
+            <div class="reports-pie" style="background: ${gradient};"></div>
+            <div class="reports-pie-legend">
+                ${gradeOrder.map((grade) => {
+                    const count = counts[grade];
+                    const percent = total > 0 ? (count / total) * 100 : 0;
+                    return `
+                        <div class="reports-pie-legend-item">
+                            <span class="reports-pie-legend-swatch" style="background: ${palette[grade]}"></span>
+                            <span class="reports-pie-legend-label">${grade}</span>
+                            <span class="reports-pie-legend-value">${count} (${percent.toFixed(1)}%)</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
     }
 
     function clearPortfolioView() {
@@ -630,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const students = Array.isArray(data.students) ? data.students : [];
         renderReportsList(students);
-        renderAcademicCharts(students);
+        renderGradeDistributionChart(students);
         renderDifficultyRatingChart(students);
         updateChartTitles();
     }

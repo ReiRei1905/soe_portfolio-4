@@ -80,12 +80,8 @@
         <button id="createListBtn" class="create-class-btn">+ Create a new List of Students</button>
 
         <div id="listInputContainer" class="hidden">
-            <h3>Programs Available:</h3>
-            <select id="listProgramSelect" aria-label="Select program">
-                <option value="" disabled selected>Select Program</option>
-            </select>
             <input id="listBatchInput" type="text" placeholder="Enter Batch Name e.g. CpE" />
-            <input id="listYearInput" type="number" min="1900" max="2100" step="1" placeholder="Enter Year of Enrollment e.g. 2024" />
+            <input id="listYearInput" type="number" min="1900" max="2100" step="1" placeholder="Enter Year of Admission e.g. 2024" />
             <button id="confirmListBtn" class="confirm-btn">Confirm</button>
         </div>
 
@@ -96,9 +92,28 @@
             <section class="members-panel-card full-row">
                 <div class="list-students-header-row">
                     <h3 class="members-panel-title" id="listStudentsTitle">Students</h3>
-                    <button type="button" id="refreshListStudentsBtn" class="list-refresh-btn" aria-label="Refresh students list" title="Refresh students list">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+                    <div class="list-students-header-actions">
+                        <div class="list-students-filter-wrap">
+                            <button
+                                type="button"
+                                id="listStudentsFilterBtn"
+                                class="list-students-filter-btn"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                title="Filter students"
+                            >
+                                <i class="fas fa-filter" aria-hidden="true"></i>
+                                <span>Filter</span>
+                            </button>
+                            <div id="listStudentsFilterMenu" class="list-students-filter-menu hidden" role="menu" aria-label="Filter students">
+                                <button type="button" class="list-students-filter-option is-active" data-student-sort="alphabetical" role="menuitem">Alphabetically A-Z</button>
+                                <button type="button" class="list-students-filter-option" data-student-sort="datetime" role="menuitem">By Date/Time</button>
+                            </div>
+                        </div>
+                        <button type="button" id="refreshListStudentsBtn" class="list-refresh-btn" aria-label="Refresh students list" title="Refresh students list">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="listStudentsMembers" class="members-list"></div>
             </section>

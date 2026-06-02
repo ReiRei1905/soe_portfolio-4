@@ -1,6 +1,7 @@
 console.log("assessments_scripts.js loaded");
 
 let currentAssessmentFolder = null;
+let currentAssessmentSort = 'recent';
 
 function closeFileActionDropdowns() {
     document.querySelectorAll('.files-window .file-actions-dropdown').forEach((menu) => {
@@ -10,6 +11,36 @@ function closeFileActionDropdowns() {
 
 function isAssessmentFolderEntry(file) {
     return file && (file.entryType === 'folder' || (!file.name && !!file.folder));
+}
+
+function getAssessmentEntryName(file) {
+    return String(file.folder || file.name || '').trim().toLowerCase();
+}
+
+function getAssessmentSortTimestamp(file) {
+    const raw = file.timestamp || file.created_at || file.createdAt || file.updated_at || file.updatedAt || '';
+    const time = Date.parse(String(raw));
+    return Number.isFinite(time) ? time : 0;
+}
+
+function sortAssessmentEntries(entries) {
+    const mode = currentAssessmentSort;
+    return [...entries].sort((a, b) => {
+        const aIsFolder = isAssessmentFolderEntry(a);
+        const bIsFolder = isAssessmentFolderEntry(b);
+        if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+
+        if (mode === 'name-asc') {
+            return getAssessmentEntryName(a).localeCompare(getAssessmentEntryName(b), undefined, { numeric: true });
+        }
+        if (mode === 'name-desc') {
+            return getAssessmentEntryName(b).localeCompare(getAssessmentEntryName(a), undefined, { numeric: true });
+        }
+
+        const left = getAssessmentSortTimestamp(a);
+        const right = getAssessmentSortTimestamp(b);
+        return mode === 'oldest' ? left - right : right - left;
+    });
 }
 
 function ensureAssessmentEntryId(file, index) {
@@ -303,6 +334,7 @@ function renderCurrentSection() {
     const visibleFiles = currentAssessmentFolder
         ? assessmentFiles.filter((file) => !isAssessmentFolderEntry(file) && (file.folder || '') === currentAssessmentFolder)
         : assessmentFiles.filter((file) => isAssessmentFolderEntry(file) || !file.folder);
+    const sortedFiles = sortAssessmentEntries(visibleFiles);
 
     updateAssessmentBreadcrumb();
 
@@ -341,7 +373,7 @@ function renderCurrentSection() {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4';
     
-    visibleFiles.forEach((file, index) => {
+    sortedFiles.forEach((file, index) => {
         const itemNode = buildAssessmentGridItem(file, index, itemTemplate);
         grid.appendChild(itemNode);
     });
@@ -387,6 +419,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentAssessmentFolder = null;
                 renderCurrentSection();
             }
+        });
+    }
+
+    const sortSelect = document.getElementById('assessmentSortSelect');
+    if (sortSelect) {
+        sortSelect.value = currentAssessmentSort;
+        sortSelect.addEventListener('change', () => {
+            currentAssessmentSort = sortSelect.value || 'recent';
+            renderCurrentSection();
         });
     }
 

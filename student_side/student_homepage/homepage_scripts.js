@@ -9,35 +9,36 @@ function escapeHeaderHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-function updateHeaderNotificationBadge(unreadCount) {
-    const badge = document.getElementById('studentNotificationBadge');
-    if (!badge) return;
+// Function to update all profile picture elements on the screen
+function updateUIProfilePictures(imagePath) {
+    if (!imagePath || imagePath.trim() === "") return;
 
-    if (!unreadCount || unreadCount <= 0) {
-        badge.textContent = '0';
-        badge.classList.add('hidden');
-        return;
-    }
+    // 1. Clean the path: get only the filename (e.g., student_39_12345.jpg)
+    // This handles cases where it might still have old path bits
+    const filename = imagePath.split('/').pop().split('\\').pop();
+    
+    // 2. Build a consistent relative path from the root
+    const finalPath = '../../images/user_images/' + filename;
 
-    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
-    badge.classList.remove('hidden');
-}
+    const avatarPairs = [
+        ['mainDefaultIcon', 'mainProfileImage'],
+        ['headerDefaultIcon', 'headerProfileImage']
+    ];
 
-function renderStudentNotificationList(notifications) {
-    const listContainer = document.getElementById('studentNotificationList');
-    if (!listContainer) return;
+    avatarPairs.forEach(pair => {
+        const icon = document.getElementById(pair[0]);
+        const img = document.getElementById(pair[1]);
+        if (!img) return;
 
-    if (!Array.isArray(notifications) || notifications.length === 0) {
-        listContainer.innerHTML = '<p class="text-gray-500 text-center">No new notifications at the moment.</p>';
-        return;
-    }
+        img.onerror = function() {
+            img.classList.add('hidden');
+            if (icon) icon.classList.remove('hidden');
+        };
 
-    listContainer.innerHTML = notifications.map((item) => `
-        <div class="notification-item">
-            <p class="notification-message">${escapeHeaderHtml(item.message || '')}</p>
-            <p class="notification-time">${escapeHeaderHtml(item.createdAt || '')}</p>
-        </div>
-    `).join('');
+        img.src = finalPath;
+        img.classList.remove('hidden');
+        if (icon) icon.classList.add('hidden');
+    });
 }
 
 function ensureStudentProfileSummaryPlaceholders() {
@@ -82,12 +83,22 @@ async function loadStudentSessionContext() {
 
         const fullName = payload.user?.fullName || 'Student Name';
         const email = payload.user?.email || '';
+        
+        // Grab the profile picture path from the session payload
+        // Checking both camelCase and snake_case just to be safe depending on your PHP
+        const profilePicPath = payload.user?.profilePicture || payload.user?.profile_picture;
 
         const fullNameEl = document.getElementById('studentProfileFullName');
         const emailEl = document.getElementById('studentProfileEmail');
 
         if (fullNameEl) fullNameEl.textContent = fullName;
         if (emailEl) emailEl.textContent = email;
+
+        // ---- NEW: Update the Profile Pictures across the UI ----
+        if (typeof updateUIProfilePictures === 'function') {
+            updateUIProfilePictures(profilePicPath);
+        }
+        // --------------------------------------------------------
 
         updateHeaderNotificationBadge(Number(payload.user?.unreadNotifications || 0));
     } catch (error) {
@@ -119,9 +130,70 @@ async function loadStudentNotifications(options = {}) {
     }
 }
 
+// --- MISSING FUNCTIONS ADDED HERE ---
+function updateHeaderNotificationBadge(unreadCount) {
+    const badge = document.getElementById('studentNotificationBadge');
+    if (!badge) return;
+
+    if (!unreadCount || unreadCount <= 0) {
+        badge.textContent = '0';
+        badge.classList.add('hidden');
+        return;
+    }
+
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.classList.remove('hidden');
+}
+
+window.switchNotifTab = function(tabName, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.querySelectorAll('.notif-tab-btn').forEach(btn => btn.classList.remove('active'));
+    container.querySelectorAll('.notif-tab-content').forEach(content => content.classList.remove('active'));
+    
+    const activeBtn = container.querySelector(`.notif-tab-btn[data-target="${tabName}"]`);
+    const activeContent = container.querySelector(`.notif-tab-content[data-tab="${tabName}"]`);
+    
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activeContent) activeContent.classList.add('active');
+};
+
+function renderStudentNotificationList(notifications) {
+    const listContainer = document.getElementById('studentNotificationList');
+    if (!listContainer) return;
+
+    const newItems = Array.isArray(notifications) ? notifications.filter((item) => !item.isRead) : [];
+    const reviewedItems = Array.isArray(notifications) ? notifications.filter((item) => item.isRead) : [];
+
+    const buildItems = (items, emptyMsg) => {
+        if (!items.length) return `<p class="notification-empty text-center" style="padding: 1rem 0;">${emptyMsg}</p>`;
+        return items.map((item) => `
+            <div class="notification-item">
+                <p class="notification-message">${escapeHeaderHtml(item.message || '')}</p>
+                <p class="notification-time">${escapeHeaderHtml(item.createdAt || '')}</p>
+            </div>
+        `).join('');
+    };
+
+    listContainer.innerHTML = `
+        <div class="notif-tabs-header">
+            <button class="notif-tab-btn active" data-target="new" onclick="switchNotifTab('new', 'studentNotificationList')">NEW</button>
+            <button class="notif-tab-btn" data-target="reviewed" onclick="switchNotifTab('reviewed', 'studentNotificationList')">REVIEWED</button>
+        </div>
+        <div class="notif-tab-content active" data-tab="new">
+            ${buildItems(newItems, 'No new notifications.')}
+        </div>
+        <div class="notif-tab-content" data-tab="reviewed">
+            ${buildItems(reviewedItems, 'No reviewed notifications yet.')}
+        </div>
+    `;
+}
+
 function handleNotificationClick() {
     const notificationDropdown = document.getElementById("notificationDropdown");
-    const notificationBadge = document.getElementById("notificationBadge");
+    // FIXED: Now looking for the correct ID 'studentNotificationBadge'
+    const notificationBadge = document.getElementById("studentNotificationBadge"); 
 
     if (notificationDropdown) {
         notificationDropdown.classList.toggle("hidden");
@@ -191,7 +263,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const notificationIcon = document.querySelector(".header-notifications i");
 
         if (notificationDropdown && notificationIcon && !notificationDropdown.contains(event.target) && !notificationIcon.contains(event.target)) {
+            const wasOpen = !notificationDropdown.classList.contains("hidden");
             notificationDropdown.classList.add("hidden");
+            // Mark read if we are closing the dropdown by clicking away
+            if (wasOpen) loadStudentNotifications({ markRead: true });
         }
     });
 
@@ -421,6 +496,9 @@ function toggleDropdown(icon) {
     if (icon && icon.setAttribute) icon.setAttribute('aria-expanded', expanded ? 'true' : 'false');
 
     if (expanded && icon.closest('.header-notifications')) {
+        // Do nothing yet, let the user read them
+    } else if (!expanded && icon.closest('.header-notifications')) {
+        // Mark as read ONLY when closing the dropdown
         loadStudentNotifications({ markRead: true });
     }
 }
@@ -509,14 +587,29 @@ async function loadHomepageState() {
         const accountName = String(profile.accountName || '').trim();
         const effectiveName = displayName || accountName;
 
-        if (studentNameEl && effectiveName) {
-            studentNameEl.textContent = effectiveName;
-            try { localStorage.setItem('studentName', effectiveName); } catch (error) { }
+        const isViewOnly = document.body.classList.contains('view-only-mode');
+
+        if (!isViewOnly) {
+            if (studentNameEl && effectiveName) {
+                studentNameEl.textContent = effectiveName;
+                try { localStorage.setItem('studentName', effectiveName); } catch (error) { }
+            }
+
+            if (bioEl) {
+                const bio = String(profile.bio || '').trim();
+                bioEl.textContent = bio || 'About the user';
+            }
+        } else {
+             // In view-only mode, the PHP already set the name, but we might want to update the bio if it came from the API
+             if (bioEl) {
+                const bio = String(profile.bio || '').trim();
+                bioEl.textContent = bio || 'About the user';
+            }
         }
 
-        if (bioEl) {
-            const bio = String(profile.bio || '').trim();
-            bioEl.textContent = bio || 'About the user';
+        // ADDED THIS: Trigger the UI update with the picture we just added to the PHP backend
+        if (profile.profilePicture && typeof updateUIProfilePictures === 'function') {
+            updateUIProfilePictures(profile.profilePicture);
         }
 
         renderQuickAccessCards(Array.isArray(payload.quickCards) ? payload.quickCards : []);
@@ -581,7 +674,16 @@ function openPortfolioFileEntry(fileId, download) {
 window.openPortfolioFileEntry = openPortfolioFileEntry;
 
 async function callPortfolioApi(endpoint, options) {
-    const response = await fetch(`${PORTFOLIO_API_BASE}/${endpoint}`, {
+    const viewStudentId = document.body.dataset.viewStudentId;
+    let finalEndpoint = endpoint;
+    
+    // Append view_student to GET requests if present
+    if (viewStudentId && (!options || options.method === 'GET' || !options.method)) {
+        const separator = finalEndpoint.includes('?') ? '&' : '?';
+        finalEndpoint += `${separator}view_student=${viewStudentId}`;
+    }
+
+    const response = await fetch(`${PORTFOLIO_API_BASE}/${finalEndpoint}`, {
         credentials: 'same-origin',
         ...options
     });
@@ -1631,4 +1733,64 @@ function createFileTile(name) {
     tile.appendChild(a);
     return tile;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInputs = document.querySelectorAll('.header-search .search-input');
+    
+    searchInputs.forEach(input => {
+        // Create the dropdown container just once
+        const dropdown = document.createElement('div');
+        dropdown.className = 'search-results-dropdown hidden';
+        input.parentElement.style.position = 'relative'; // Ensure dropdown anchors here
+        input.parentElement.appendChild(dropdown);
+
+        let debounceTimer;
+
+        input.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            dropdown.innerHTML = ''; // Clear old results
+
+            if (query.length < 2) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                
+                fetch(`../api/global_search.php?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        dropdown.innerHTML = '';
+                        if (data.ok && data.results.length > 0) {
+                            data.results.forEach(student => {
+                                const item = document.createElement('div');
+                                item.className = 'search-result-item';
+                                item.innerHTML = `<strong>${student.name}</strong><br><small>${student.email}</small>`;
+                                
+                                // Redirect to view mode on click
+                                item.addEventListener('click', () => {
+                                    window.location.href = `student_homepage.php?view_student=${student.student_id}`;
+                                });
+                                
+                                dropdown.appendChild(item);
+                            });
+                            dropdown.classList.remove('hidden');
+                        } else {
+                            dropdown.innerHTML = '<div class="search-result-item text-gray-500">No students found.</div>';
+                            dropdown.classList.remove('hidden');
+                        }
+                    })
+                    .catch(err => console.error("Search failed:", err));
+            }, 300); // 300ms debounce
+        });
+
+        // Hide dropdown if clicked outside
+        document.addEventListener('click', (e) => {
+            if (!input.parentElement.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    });
+});
 

@@ -49,7 +49,7 @@ try {
 
     $deleteStmt = $conn->prepare('DELETE FROM program_director_assignments WHERE program_id = ?');
     if (!$deleteStmt) {
-        throw new RuntimeException('Failed to prepare revoke statement.');
+        throw new RuntimeException('Failed to prepare reassignment statement.');
     }
     $deleteStmt->bind_param('i', $programId);
     $deleteStmt->execute();
@@ -69,7 +69,7 @@ try {
         $newRole = 'professor';
         $roleStmt = $conn->prepare('UPDATE faculty SET faculty_role = ? WHERE user_id = ?');
         if (!$roleStmt) {
-            throw new RuntimeException('Failed to reset faculty role after revoking assignment.');
+            throw new RuntimeException('Failed to reset faculty role after clearing assignment.');
         }
         $roleStmt->bind_param('si', $newRole, $currentDirectorUserId);
         $roleStmt->execute();
@@ -81,13 +81,13 @@ try {
     $conn->rollback();
     send_program_json([
         'success' => false,
-        'message' => 'Failed to revoke Program Director assignment.',
+        'message' => 'Failed to clear Program Director assignment.',
         'error' => $error->getMessage()
     ], 500);
 }
 
 send_program_json([
     'success' => true,
-    'message' => 'Program Director assignment revoked successfully.',
+    'message' => 'Program Director assignment cleared successfully.',
     'program' => (string) ($programRow['program_name'] ?? '')
 ]);

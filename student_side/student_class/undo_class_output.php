@@ -21,7 +21,7 @@ if ($outputId <= 0) {
     json_response(400, ['success' => false, 'message' => 'Invalid output reference.']);
 }
 
-$membershipStmt = $conn->prepare('SELECT cs.status
+$membershipStmt = $conn->prepare('SELECT cs.status, o.class_id
                                   FROM class_outputs o
                                   INNER JOIN class_students cs ON cs.class_id = o.class_id AND cs.student_id = ?
                                   WHERE o.output_id = ?
@@ -37,6 +37,28 @@ $membershipStmt->close();
 
 if (!$membershipRow || (string) ($membershipRow['status'] ?? '') !== 'approved') {
     json_response(403, ['success' => false, 'message' => 'You are not enrolled in the class for this output.']);
+}
+
+$classId = (int) ($membershipRow['class_id'] ?? 0);
+$portfolioTableExists = (bool) $conn->query("SHOW TABLES LIKE 'class_portfolio_submissions'")->fetch_assoc();
+if ($portfolioTableExists && $classId > 0) {
+    $portfolioStmt = $conn->prepare('SELECT status
+                                     FROM class_portfolio_submissions
+                                     WHERE class_id = ? AND student_id = ?
+                                     LIMIT 1');
+    if ($portfolioStmt) {
+        $portfolioStmt->bind_param('ii', $classId, $studentId);
+        $portfolioStmt->execute();
+        $portfolioRow = $portfolioStmt->get_result()->fetch_assoc();
+        $portfolioStmt->close();
+
+        if (strtolower(trim((string) ($portfolioRow['status'] ?? ''))) === 'submitted') {
+            json_response(409, [
+                'success' => false,
+                'message' => 'Portfolio already submitted. Undo portfolio submission before undoing outputs.'
+            ]);
+        }
+    }
 }
 
 $stmt = $conn->prepare('UPDATE output_submissions

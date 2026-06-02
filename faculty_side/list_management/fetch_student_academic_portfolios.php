@@ -50,7 +50,10 @@ if (!$listRow) {
 $programId = (int) ($listRow['program_id'] ?? 0);
 $yearOfEnrollment = (int) ($listRow['year_of_enrollment'] ?? 0);
 
-if (!list_can_manage_program($conn, $sessionUser, $programId)) {
+$role = list_normalize_role((string) ($sessionUser['faculty_role'] ?? ''));
+$isExd = str_contains($role, 'executive director') || faculty_is_executive_director($sessionUser);
+
+if (!$isExd && !list_can_manage_program($conn, $sessionUser, $programId)) {
     faculty_send_json(['success' => false, 'message' => 'You are not allowed to access this list.'], 403);
 }
 
@@ -104,6 +107,7 @@ $classSql = 'SELECT
                 c.term_number,
                 c.start_year,
                 c.end_year,
+                crs.course_code,
                 COALESCE(crs.course_name, c.class_name) AS course_name,
                 cs.approved_at,
                 cps.status AS portfolio_status,
@@ -202,6 +206,7 @@ while ($classResult && ($classRow = $classResult->fetch_assoc())) {
     }
 
     $courseName = trim((string) ($classRow['course_name'] ?? ''));
+    $courseCode = trim((string) ($classRow['course_code'] ?? ''));
     $className = trim((string) ($classRow['class_name'] ?? ''));
     $termNumber = (int) ($classRow['term_number'] ?? 0);
     $startYear = (int) ($classRow['start_year'] ?? 0);
@@ -214,6 +219,7 @@ while ($classResult && ($classRow = $classResult->fetch_assoc())) {
 
     $portfolios[] = [
         'classId' => $classId,
+        'courseCode' => $courseCode,
         'courseName' => $courseName !== '' ? $courseName : $className,
         'classLabel' => $classLabel,
         'portfolioStatus' => $portfolioStatus,

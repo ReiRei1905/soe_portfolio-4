@@ -16,14 +16,21 @@ if (!isset($_SESSION['email']) || trim((string) $_SESSION['email']) === '') {
 
 $studentId = current_student_id($conn);
 $outputId = isset($_POST['output_id']) ? (int) $_POST['output_id'] : 0;
-$studentScore = isset($_POST['student_score']) ? (float) $_POST['student_score'] : null;
+$isNoOutput = isset($_POST['is_no_output']) && $_POST['is_no_output'] === '1';
 
-if ($outputId <= 0 || $studentScore === null) {
+if ($outputId <= 0) {
     json_response(400, ['success' => false, 'message' => 'Missing submission data.']);
 }
 
-if (!isset($_FILES['attached_output']) || !is_uploaded_file($_FILES['attached_output']['tmp_name'])) {
-    json_response(400, ['success' => false, 'message' => 'Please attach the required output file.']);
+// Check traditional requirements only if they didn't explicitly check "No Output"
+if (!$isNoOutput) {
+    $studentScore = isset($_POST['student_score']) ? (float) $_POST['student_score'] : null;
+    if ($studentScore === null) {
+        json_response(400, ['success' => false, 'message' => 'Missing submission data.']);
+    }
+    if (!isset($_FILES['attached_output']) || !is_uploaded_file($_FILES['attached_output']['tmp_name'])) {
+        json_response(400, ['success' => false, 'message' => 'Please attach the required output file.']);
+    }
 }
 
 $outputStmt = $conn->prepare('SELECT o.class_id, o.total_score, o.required_file_format, c.deadline_at
@@ -68,58 +75,70 @@ if ($deadlineAt !== '' && $deadlineAt !== '0000-00-00 00:00:00') {
     }
 }
 
-if ($studentScore < 0 || $studentScore > $totalScore) {
-    json_response(400, ['success' => false, 'message' => 'Score must be between 0 and total score.']);
-}
+// Branch data depending on "No Output" vs "Standard submission"
+if ($isNoOutput) {
+    $studentScore = 0;
+    $uploadedFileName = 'No Output Submitted';
+    $storedAbsolutePath = '';
+    $uploadedMime = '';
+    $uploadedSize = 0;
+    $submissionStatus = 'submitted';
+} else {
+    if ($studentScore < 0 || $studentScore > $totalScore) {
+        json_response(400, ['success' => false, 'message' => 'Score must be between 0 and total score.']);
+    }
 
-$uploadedFileName = $_FILES['attached_output']['name'] ?? '';
-$uploadedTmpPath = $_FILES['attached_output']['tmp_name'] ?? '';
-$uploadedMime = $_FILES['attached_output']['type'] ?? 'application/octet-stream';
-$uploadedSize = isset($_FILES['attached_output']['size']) ? (int) $_FILES['attached_output']['size'] : 0;
-$uploadedExtension = strtolower(pathinfo((string) $uploadedFileName, PATHINFO_EXTENSION));
+    $uploadedFileName = $_FILES['attached_output']['name'] ?? '';
+    $uploadedTmpPath = $_FILES['attached_output']['tmp_name'] ?? '';
+    $uploadedMime = $_FILES['attached_output']['type'] ?? 'application/octet-stream';
+    $uploadedSize = isset($_FILES['attached_output']['size']) ? (int) $_FILES['attached_output']['size'] : 0;
+    $uploadedExtension = strtolower(pathinfo((string) $uploadedFileName, PATHINFO_EXTENSION));
 
-$formatRules = [
-    '.docx' => ['docx'],
-    '.pdf' => ['pdf'],
-    '.xlsx' => ['xlsx'],
-    '.png/.jpg' => ['png', 'jpg', 'jpeg']
-];
+    $formatRules = [
+        '.docx' => ['docx'],
+        '.pdf' => ['pdf'],
+        '.xlsx' => ['xlsx'],
+        '.png/.jpg' => ['png', 'jpg', 'jpeg']
+    ];
 
-if (!isset($formatRules[$requiredFormat])) {
-    json_response(500, ['success' => false, 'message' => 'Invalid required format configuration.']);
-}
+    if (!isset($formatRules[$requiredFormat])) {
+        json_response(500, ['success' => false, 'message' => 'Invalid required format configuration.']);
+    }
 
-if (!in_array($uploadedExtension, $formatRules[$requiredFormat], true)) {
-    json_response(400, ['success' => false, 'message' => 'Uploaded file format does not match required format.']);
-}
+    if (!in_array($uploadedExtension, $formatRules[$requiredFormat], true)) {
+        json_response(400, ['success' => false, 'message' => 'Uploaded file format does not match required format.']);
+    }
 
-$storageRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'soe_portfolio_class_submissions';
-$studentFolder = $storageRoot . DIRECTORY_SEPARATOR . $studentId;
-if (!is_dir($studentFolder) && !mkdir($studentFolder, 0775, true) && !is_dir($studentFolder)) {
-    json_response(500, ['success' => false, 'message' => 'Failed to prepare submission storage.']);
-}
+    $storageRoot = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'soe_portfolio_class_submissions';
+    $studentFolder = $storageRoot . DIRECTORY_SEPARATOR . $studentId;
+    if (!is_dir($studentFolder) && !mkdir($studentFolder, 0775, true) && !is_dir($studentFolder)) {
+        json_response(500, ['success' => false, 'message' => 'Failed to prepare submission storage.']);
+    }
 
-try {
-    $randomToken = bin2hex(random_bytes(6));
-} catch (Throwable $e) {
-    $randomToken = substr(md5(uniqid((string) mt_rand(), true)), 0, 12);
-}
+    try {
+        $randomToken = bin2hex(random_bytes(6));
+    } catch (Throwable $e) {
+        $randomToken = substr(md5(uniqid((string) mt_rand(), true)), 0, 12);
+    }
 
-$storedFileName = sprintf('output_%d_%d_%s.%s', $outputId, $studentId, $randomToken, $uploadedExtension);
-$storedAbsolutePath = $studentFolder . DIRECTORY_SEPARATOR . $storedFileName;
+    $storedFileName = sprintf('output_%d_%d_%s.%s', $outputId, $studentId, $randomToken, $uploadedExtension);
+    $storedAbsolutePath = $studentFolder . DIRECTORY_SEPARATOR . $storedFileName;
 
-if (!move_uploaded_file($uploadedTmpPath, $storedAbsolutePath)) {
-    json_response(500, ['success' => false, 'message' => 'Failed to save attached file.']);
+    if (!move_uploaded_file($uploadedTmpPath, $storedAbsolutePath)) {
+        json_response(500, ['success' => false, 'message' => 'Failed to save attached file.']);
+    }
+    
+    $submissionStatus = 'submitted';
 }
 
 $upsertSql = 'INSERT INTO output_submissions (
                 output_id, student_id, student_score, status,
                 submitted_at, created_at, updated_at,
                 submitted_file_name, submitted_file_path, submitted_file_mime, submitted_file_size
-              ) VALUES (?, ?, ?, \'submitted\', NOW(), NOW(), NOW(), ?, ?, ?, ?)
+              ) VALUES (?, ?, ?, ?, NOW(), NOW(), NOW(), ?, ?, ?, ?)
               ON DUPLICATE KEY UPDATE
                 student_score = VALUES(student_score),
-                status = \'submitted\',
+                status = VALUES(status),
                 submitted_at = NOW(),
                 undone_at = NULL,
                 submitted_file_name = VALUES(submitted_file_name),
@@ -133,7 +152,8 @@ if (!$upsertStmt) {
     json_response(500, ['success' => false, 'message' => 'Failed to save submission.']);
 }
 
-$upsertStmt->bind_param('iidsssi', $outputId, $studentId, $studentScore, $uploadedFileName, $storedAbsolutePath, $uploadedMime, $uploadedSize);
+// Fixed typo: 'iidssssi' (8 parameters)
+$upsertStmt->bind_param('iidssssi', $outputId, $studentId, $studentScore, $submissionStatus, $uploadedFileName, $storedAbsolutePath, $uploadedMime, $uploadedSize);
 $ok = $upsertStmt->execute();
 $upsertStmt->close();
 

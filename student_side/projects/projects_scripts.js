@@ -1,6 +1,7 @@
 console.log("projects_scripts.js loaded");
 
 let currentProjectsFolder = null;
+let currentProjectsSort = 'recent';
 
 function getCurrentProjectsFolderName() {
     return currentProjectsFolder || '';
@@ -16,6 +17,36 @@ function closeProjectActionDropdowns() {
 
 function isProjectsFolderEntry(file) {
     return file && (file.entryType === 'folder' || (!file.name && !!file.folder));
+}
+
+function getProjectsEntryName(file) {
+    return String(file.folder || file.name || '').trim().toLowerCase();
+}
+
+function getProjectsSortTimestamp(file) {
+    const raw = file.timestamp || file.created_at || file.createdAt || file.updated_at || file.updatedAt || '';
+    const time = Date.parse(String(raw));
+    return Number.isFinite(time) ? time : 0;
+}
+
+function sortProjectsEntries(entries) {
+    const mode = currentProjectsSort;
+    return [...entries].sort((a, b) => {
+        const aIsFolder = isProjectsFolderEntry(a);
+        const bIsFolder = isProjectsFolderEntry(b);
+        if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+
+        if (mode === 'name-asc') {
+            return getProjectsEntryName(a).localeCompare(getProjectsEntryName(b), undefined, { numeric: true });
+        }
+        if (mode === 'name-desc') {
+            return getProjectsEntryName(b).localeCompare(getProjectsEntryName(a), undefined, { numeric: true });
+        }
+
+        const left = getProjectsSortTimestamp(a);
+        const right = getProjectsSortTimestamp(b);
+        return mode === 'oldest' ? left - right : right - left;
+    });
 }
 
 function ensureProjectEntryId(file, index) {
@@ -309,6 +340,7 @@ function renderCurrentSection() {
     const visibleFiles = currentProjectsFolder
         ? projectsFiles.filter((file) => !isProjectsFolderEntry(file) && (file.folder || '') === currentProjectsFolder)
         : projectsFiles.filter((file) => isProjectsFolderEntry(file) || !file.folder);
+    const sortedFiles = sortProjectsEntries(visibleFiles);
 
     updateProjectsBreadcrumb();
 
@@ -347,7 +379,7 @@ function renderCurrentSection() {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6';
     
-    visibleFiles.forEach((file, index) => {
+    sortedFiles.forEach((file, index) => {
         const itemNode = buildProjectGridItem(file, index, itemTemplate);
         grid.appendChild(itemNode);
     });
@@ -393,6 +425,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentProjectsFolder = null;
                 renderCurrentSection();
             }
+        });
+    }
+
+    const sortSelect = document.getElementById('projectsSortSelect');
+    if (sortSelect) {
+        sortSelect.value = currentProjectsSort;
+        sortSelect.addEventListener('change', () => {
+            currentProjectsSort = sortSelect.value || 'recent';
+            renderCurrentSection();
         });
     }
 

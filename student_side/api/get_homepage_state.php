@@ -31,27 +31,20 @@ function ensure_default_extracurricular_portfolios(mysqli $conn, int $studentId)
 
 function resolve_account_name(mysqli $conn, int $studentId): string
 {
-    $studentStmt = $conn->prepare('SELECT first_name, last_name FROM students WHERE student_id = ? OR user_id = ? ORDER BY CASE WHEN student_id = ? THEN 0 ELSE 1 END LIMIT 1');
-    $studentStmt->bind_param('iii', $studentId, $studentId, $studentId);
-    $studentStmt->execute();
-    $studentRow = $studentStmt->get_result()->fetch_assoc();
-    $studentStmt->close();
+    // Properly JOIN the students and users tables so we find the name using student_id
+    $stmt = $conn->prepare("
+        SELECT u.first_name, u.last_name 
+        FROM users u 
+        JOIN students s ON u.user_id = s.user_id 
+        WHERE s.student_id = ? LIMIT 1
+    ");
+    $stmt->bind_param('i', $studentId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 
-    if ($studentRow) {
-        $full = trim(((string) ($studentRow['first_name'] ?? '')) . ' ' . ((string) ($studentRow['last_name'] ?? '')));
-        if ($full !== '') {
-            return $full;
-        }
-    }
-
-    $userStmt = $conn->prepare('SELECT first_name, last_name FROM users WHERE user_id = ? LIMIT 1');
-    $userStmt->bind_param('i', $studentId);
-    $userStmt->execute();
-    $userRow = $userStmt->get_result()->fetch_assoc();
-    $userStmt->close();
-
-    if ($userRow) {
-        $full = trim(((string) ($userRow['first_name'] ?? '')) . ' ' . ((string) ($userRow['last_name'] ?? '')));
+    if ($row) {
+        $full = trim(((string) ($row['first_name'] ?? '')) . ' ' . ((string) ($row['last_name'] ?? '')));
         if ($full !== '') {
             return $full;
         }
@@ -62,19 +55,29 @@ function resolve_account_name(mysqli $conn, int $studentId): string
 
 try {
     $conn = db_connect();
-    $studentId = current_student_id($conn);
+    // Use the view_student if present, otherwise fallback to the logged-in user
+    $viewId = isset($_GET['view_student']) ? (int)$_GET['view_student'] : 0;
+    $studentId = ($viewId > 0) ? $viewId : current_student_id($conn);
 
     ensure_default_extracurricular_portfolios($conn, $studentId);
 
-    $profileStmt = $conn->prepare('SELECT display_name, bio FROM student_homepage_profiles WHERE student_id = ? LIMIT 1');
+    // --- FIRST UPDATE: We added profile_picture_path to this SELECT statement ---
+    $profileStmt = $conn->prepare('SELECT display_name, bio, profile_picture_path FROM student_homepage_profiles WHERE student_id = ? LIMIT 1');
     $profileStmt->bind_param('i', $studentId);
     $profileStmt->execute();
     $profileRow = $profileStmt->get_result()->fetch_assoc();
     $profileStmt->close();
 
+// Ensure the path is explicitly cast to a string
+$profilePic = isset($profileRow['profile_picture_path']) ? (string)$profileRow['profile_picture_path'] : '';
+
     $accountName = resolve_account_name($conn, $studentId);
     $displayName = sanitize_name((string) ($profileRow['display_name'] ?? ''), 120);
     $bio = sanitize_name((string) ($profileRow['bio'] ?? ''), 160);
+    
+    // Grab the picture path
+    $profilePic = (string) ($profileRow['profile_picture_path'] ?? '');
+    // -----------------------------------------------------------------------------
 
     $cardsStmt = $conn->prepare('SELECT portfolio_id, portfolio_key, title, sort_order, is_default FROM extracurricular_portfolios WHERE student_id = ? ORDER BY sort_order ASC, portfolio_id ASC');
     $cardsStmt->bind_param('i', $studentId);
@@ -93,15 +96,20 @@ try {
     }
     $cardsStmt->close();
 
+    // --- SECOND UPDATE: We added 'profilePicture' => $profilePic to the JSON response ---
     json_response(200, [
         'ok' => true,
         'profile' => [
             'accountName' => $accountName,
             'displayName' => $displayName,
-            'bio' => $bio
+            'bio' => $bio,
+            'profilePicture' => '/' . ltrim($profilePic, '/'),
         ],
         'quickCards' => $quickCards
     ]);
+    // ------------------------------------------------------------------------------------
+
 } catch (Throwable $error) {
     json_response(500, ['ok' => false, 'message' => $error->getMessage()]);
 }
+?>

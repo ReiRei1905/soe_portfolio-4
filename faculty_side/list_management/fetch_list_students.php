@@ -35,7 +35,11 @@ if (!$listRow) {
 }
 
 $programId = (int) ($listRow['program_id'] ?? 0);
-if (!list_can_manage_program($conn, $sessionUser, $programId)) {
+$role = list_normalize_role((string) ($sessionUser['faculty_role'] ?? ''));
+$isExd = str_contains($role, 'executive director') || faculty_is_executive_director($sessionUser);
+
+// EXD can view all. Standard Program Directors can only view what they manage.
+if (!$isExd && !list_can_manage_program($conn, $sessionUser, $programId)) {
     faculty_send_json(['success' => false, 'message' => 'You are not allowed to access this list.'], 403);
 }
 
@@ -46,7 +50,8 @@ $studentStmt = $conn->prepare(
             s.id_number,
             COALESCE(s.first_name, u.first_name) AS first_name,
             COALESCE(s.last_name, u.last_name) AS last_name,
-            COALESCE(s.email, u.email) AS email
+                        COALESCE(s.email, u.email) AS email,
+                        u.created_at AS joined_at
      FROM students s
      LEFT JOIN users u ON u.user_id = s.user_id
      WHERE s.program_id = ?
@@ -69,7 +74,8 @@ while ($studentResult && ($row = $studentResult->fetch_assoc())) {
         'idNumber' => trim((string) ($row['id_number'] ?? '')),
         'firstName' => trim((string) ($row['first_name'] ?? '')),
         'lastName' => trim((string) ($row['last_name'] ?? '')),
-        'email' => trim((string) ($row['email'] ?? ''))
+        'email' => trim((string) ($row['email'] ?? '')),
+        'joinedAt' => trim((string) ($row['joined_at'] ?? ''))
     ];
 }
 $studentStmt->close();

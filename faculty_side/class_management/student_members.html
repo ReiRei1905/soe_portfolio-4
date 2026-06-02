@@ -103,6 +103,13 @@
                             <input type="text" id="studentSearchInput" class="member-search-input" placeholder="Search by name, ID number, or email" />
                             <i class="fas fa-search"></i>
                         </div>
+                        <div class="invite-link-panel">
+                            <p class="invite-link-label">Invite link (APC email only)</p>
+                            <div class="invite-link-actions">
+                                <button type="button" id="copyInviteLinkBtn" class="invite-link-btn">Copy Invite Link</button>
+                                <span id="inviteLinkStatus" class="invite-link-status" aria-live="polite"></span>
+                            </div>
+                        </div>
                         <div id="studentSearchResults" class="student-search-results"></div>
                     </section>
 

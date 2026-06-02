@@ -1,6 +1,7 @@
 console.log("other_files_scripts.js loaded");
 
 let currentOtherFilesFolder = null;
+let currentOtherFilesSort = 'recent';
 
 function getCurrentOtherFilesFolderName() {
     return currentOtherFilesFolder || '';
@@ -16,6 +17,36 @@ function closeOtherFilesActionDropdowns() {
 
 function isOtherFilesFolderEntry(file) {
     return file && (file.entryType === 'folder' || (!file.name && !!file.folder));
+}
+
+function getOtherFilesEntryName(file) {
+    return String(file.folder || file.name || '').trim().toLowerCase();
+}
+
+function getOtherFilesSortTimestamp(file) {
+    const raw = file.timestamp || file.created_at || file.createdAt || file.updated_at || file.updatedAt || '';
+    const time = Date.parse(String(raw));
+    return Number.isFinite(time) ? time : 0;
+}
+
+function sortOtherFilesEntries(entries) {
+    const mode = currentOtherFilesSort;
+    return [...entries].sort((a, b) => {
+        const aIsFolder = isOtherFilesFolderEntry(a);
+        const bIsFolder = isOtherFilesFolderEntry(b);
+        if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+
+        if (mode === 'name-asc') {
+            return getOtherFilesEntryName(a).localeCompare(getOtherFilesEntryName(b), undefined, { numeric: true });
+        }
+        if (mode === 'name-desc') {
+            return getOtherFilesEntryName(b).localeCompare(getOtherFilesEntryName(a), undefined, { numeric: true });
+        }
+
+        const left = getOtherFilesSortTimestamp(a);
+        const right = getOtherFilesSortTimestamp(b);
+        return mode === 'oldest' ? left - right : right - left;
+    });
 }
 
 function ensureOtherFilesEntryId(file, index) {
@@ -307,6 +338,7 @@ function renderCurrentSection() {
     const visibleFiles = currentOtherFilesFolder
         ? categoryFiles.filter((file) => !isOtherFilesFolderEntry(file) && (file.folder || '') === currentOtherFilesFolder)
         : categoryFiles.filter((file) => isOtherFilesFolderEntry(file) || !file.folder);
+    const sortedFiles = sortOtherFilesEntries(visibleFiles);
 
     updateOtherFilesBreadcrumb();
 
@@ -343,7 +375,7 @@ function renderCurrentSection() {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4';
 
-    visibleFiles.forEach((file, index) => {
+    sortedFiles.forEach((file, index) => {
         const itemNode = buildOtherFilesGridItem(file, index, itemTemplate);
         grid.appendChild(itemNode);
     });
@@ -387,6 +419,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentOtherFilesFolder = null;
                 renderCurrentSection();
             }
+        });
+    }
+
+    const sortSelect = document.getElementById('otherFilesSortSelect');
+    if (sortSelect) {
+        sortSelect.value = currentOtherFilesSort;
+        sortSelect.addEventListener('change', () => {
+            currentOtherFilesSort = sortSelect.value || 'recent';
+            renderCurrentSection();
         });
     }
 

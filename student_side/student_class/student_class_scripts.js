@@ -463,31 +463,39 @@ function initStudentClassDetailsPage() {
 		li.dataset.requiredFormat = output.required_file_format || '';
 
 		const requiredFormatLabel = output.required_file_format || 'Not set';
-		const isSubmitted = String(output.status || '').toLowerCase() === 'submitted';
+		const isNoOutput = String(output.status || '').toLowerCase() === 'no_output' || output.submitted_file_name === 'No Output Submitted';
+		const isSubmitted = String(output.status || '').toLowerCase() === 'submitted' && !isNoOutput;
+		const isDone = isSubmitted || isNoOutput; // Determines if fields should be disabled
 		const scoreValue = output.student_score !== null && output.student_score !== undefined ? output.student_score : '';
 		const createdAtText = formatOutputDateTime(output.created_at);
 		const updatedAtText = formatOutputDateTime(output.updated_at);
 
 		li.innerHTML = `
 			<div class="output-header">
-				<span>${escapeStudentClassHtml(output.output_name)} (Total Score: ${escapeStudentClassHtml(output.total_score)})</span>
+				<span>
+					${escapeStudentClassHtml(output.output_name)} (Total Score: ${escapeStudentClassHtml(output.total_score)})
+					<label class="no-output-label" style="margin-left: 15px; font-size: 0.85em; cursor: pointer; color: #d9534f; user-select: none;">
+						<input type="checkbox" class="no-output-checkbox" ${isNoOutput ? 'checked' : ''} ${isDone ? 'disabled' : ''}>
+						No Output?
+					</label>
+				</span>
 				<div><span class="required-format-chip">Required format: ${escapeStudentClassHtml(requiredFormatLabel)}</span></div>
 			</div>
 			<div class="output-date-meta">Created: ${escapeStudentClassHtml(createdAtText)} | Modified: ${escapeStudentClassHtml(updatedAtText)}</div>
 			<div class="attach-output-row">
 				<label class="attach-output-label">Attach required output</label>
-				<input type="text" class="attach-output-name" placeholder="Attach required output" value="${escapeStudentClassHtml(output.submitted_file_name || '')}" readonly ${isSubmitted ? 'disabled' : ''} />
-				<button type="button" class="attach-output-btn" ${isSubmitted ? 'disabled' : ''}>Browse</button>
-				<input type="file" class="required-output-file-input" ${isSubmitted ? 'disabled' : ''} />
+				<input type="text" class="attach-output-name" placeholder="Attach required output" value="${escapeStudentClassHtml(output.submitted_file_name || '')}" readonly ${isDone ? 'disabled' : ''} />
+				<button type="button" class="attach-output-btn" ${isDone ? 'disabled' : ''}>Browse</button>
+				<input type="file" class="required-output-file-input" ${isDone ? 'disabled' : ''} />
 			</div>
 			<div class="input-and-buttons">
 				<div class="score-input-row">
 					<label class="score-input-label">Enter your score</label>
-					<input type="number" placeholder="Enter your score" class="user-score" value="${escapeStudentClassHtml(scoreValue)}" ${isSubmitted ? 'disabled' : ''} />
+					<input type="number" placeholder="Enter your score" class="user-score" value="${escapeStudentClassHtml(scoreValue)}" ${isDone ? 'disabled' : ''} />
 				</div>
 				<div class="button-group">
-					<button class="student-submit-btn" ${isSubmitted ? 'style="display:none"' : ''}>Submit</button>
-					<button class="student-undo-btn" ${isSubmitted ? '' : 'style="display:none"'}>Undo Turn in</button>
+					<button class="student-submit-btn" ${isDone ? 'style="display:none"' : ''}>Turn in</button>
+					<button class="student-undo-btn" ${isDone ? '' : 'style="display:none"'}>Undo Turn in</button>
 				</div>
 			</div>
 		`;
@@ -793,28 +801,36 @@ function initStudentClassDetailsPage() {
 			const scoreInput = listItem.querySelector('.user-score');
 			const fileInput = listItem.querySelector('.required-output-file-input');
 			const attachName = listItem.querySelector('.attach-output-name');
+			const noOutputCheckbox = listItem.querySelector('.no-output-checkbox');
 
-			const score = scoreInput ? scoreInput.value.trim() : '';
-			if (score === '') {
-				alert('Please enter a score before submitting.');
-				return;
-			}
-
-			if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-				alert('Please attach the required output before submitting.');
-				return;
-			}
-
-			const selectedFile = fileInput.files[0];
-			if (!isFormatAllowed(requiredFormat, selectedFile.name)) {
-				alert(`Invalid file format. Required format is ${requiredFormat}.`);
-				return;
-			}
-
+			const isNoOutput = noOutputCheckbox && noOutputCheckbox.checked;
 			const formData = new FormData();
 			formData.append('output_id', String(outputId));
-			formData.append('student_score', score);
-			formData.append('attached_output', selectedFile);
+
+			// If "No Output" is checked, we skip score and file requirements
+			if (isNoOutput) {
+				formData.append('is_no_output', '1');
+			} else {
+				const score = scoreInput ? scoreInput.value.trim() : '';
+				if (score === '') {
+					alert('Please enter a score before submitting.');
+					return;
+				}
+
+				if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+					alert('Please attach the required output before submitting.');
+					return;
+				}
+
+				const selectedFile = fileInput.files[0];
+				if (!isFormatAllowed(requiredFormat, selectedFile.name)) {
+					alert(`Invalid file format. Required format is ${requiredFormat}.`);
+					return;
+				}
+
+				formData.append('student_score', score);
+				formData.append('attached_output', selectedFile);
+			}
 
 			try {
 				const response = await fetch('submit_class_output.php', {
@@ -830,6 +846,7 @@ function initStudentClassDetailsPage() {
 				if (scoreInput) scoreInput.disabled = true;
 				if (fileInput) fileInput.disabled = true;
 				if (attachName) attachName.disabled = true;
+				if (noOutputCheckbox) noOutputCheckbox.disabled = true; // Disable the checkbox after submission
 				const attachBtn = listItem.querySelector('.attach-output-btn');
 				if (attachBtn) attachBtn.disabled = true;
 				target.style.display = 'none';
@@ -860,16 +877,18 @@ function initStudentClassDetailsPage() {
 				const fileInput = listItem.querySelector('.required-output-file-input');
 				const attachName = listItem.querySelector('.attach-output-name');
 				const attachBtn = listItem.querySelector('.attach-output-btn');
-				if (scoreInput) scoreInput.disabled = false;
-				if (fileInput) {
-					fileInput.disabled = false;
-					fileInput.value = '';
-				}
-				if (attachName) {
-					attachName.disabled = false;
-					attachName.value = '';
-				}
+				const noOutputCheckbox = listItem.querySelector('.no-output-checkbox');
+
+				if (scoreInput) { scoreInput.disabled = false; scoreInput.value = ''; }
+				if (fileInput) { fileInput.disabled = false; fileInput.value = ''; }
+				if (attachName) { attachName.disabled = false; attachName.value = ''; }
 				if (attachBtn) attachBtn.disabled = false;
+				
+				// Re-enable and uncheck the "No Output?" checkbox on Undo
+				if (noOutputCheckbox) { 
+					noOutputCheckbox.disabled = false; 
+					noOutputCheckbox.checked = false; 
+				}
 
 				target.style.display = 'none';
 				const submitBtn = listItem.querySelector('.student-submit-btn');
@@ -883,6 +902,41 @@ function initStudentClassDetailsPage() {
 
 	outputsList.addEventListener('change', (event) => {
 		const target = event.target;
+		// Logic to gray-out fields when "No Output?" is checked
+		if (target.classList.contains('no-output-checkbox')) {
+			const listItem = target.closest('li');
+			const scoreInput = listItem.querySelector('.user-score');
+			const fileInput = listItem.querySelector('.required-output-file-input');
+			const attachBtn = listItem.querySelector('.attach-output-btn');
+			const attachName = listItem.querySelector('.attach-output-name');
+			const isChecked = target.checked;
+
+			if (scoreInput) {
+				scoreInput.disabled = isChecked;
+				if (isChecked) scoreInput.value = '';
+			}
+			if (fileInput) {
+				fileInput.disabled = isChecked;
+				if (isChecked) fileInput.value = '';
+			}
+			if (attachBtn) attachBtn.disabled = isChecked;
+			if (attachName) {
+				attachName.disabled = isChecked;
+				if (isChecked) attachName.value = 'No Output Selected';
+				else attachName.value = '';
+			}
+
+			// AUTO-SUBMIT: Automatically click "Turn in" so the student doesn't have to!
+			if (isChecked) {
+				const submitBtn = listItem.querySelector('.student-submit-btn');
+				if (submitBtn && submitBtn.style.display !== 'none') {
+					submitBtn.click(); 
+				}
+			}
+            
+			return;
+		}
+
 		if (!target.classList.contains('required-output-file-input')) return;
 
 		const listItem = target.closest('li');

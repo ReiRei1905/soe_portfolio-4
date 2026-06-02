@@ -147,7 +147,7 @@ $studentContact = student_contact_from_student($conn, $studentId);
 $studentUserId = (int) ($studentContact['user_id'] ?? 0);
 if ($studentUserId > 0) {
     $classLabel = faculty_class_label($conn, $classId);
-    $message = sprintf('You were invited to join class %s.', $classLabel);
+    $message = sprintf('You are added to the %s class.', $classLabel);
     add_system_notification($conn, $studentUserId, $message);
 
     $studentEmail = (string) ($studentContact['email'] ?? '');

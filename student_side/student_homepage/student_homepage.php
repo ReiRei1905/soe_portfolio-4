@@ -1,12 +1,29 @@
 <?php
 session_start();
-// Require authenticated student; otherwise redirect to login page
+require_once '../../user_info_V3/connect.php'; // Ensure database connection is available
+
+// Require authenticated user; otherwise redirect to login page
 if (empty($_SESSION['email'])) {
     header('Location: ../../user_info_V3/index.php');
     exit();
 }
 
-$studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '')) ?: 'Student Name';
+$isViewOnly = !empty($_GET['view_id']);
+$studentName = 'Student Name';
+
+if ($isViewOnly) {
+    $viewId = intval($_GET['view_id']);
+    $stmt = $conn->prepare("SELECT first_name, last_name FROM users WHERE user_id = ?");
+    $stmt->bind_param("i", $viewId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $studentName = trim($row['first_name'] . ' ' . $row['last_name']);
+    }
+    $stmt->close();
+} else {
+    $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '')) ?: 'Student Name';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,7 +37,17 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
     <link href="../style_student.css" rel="stylesheet"/>
     <script src="../student_homepage/homepage_scripts.js" defer></script>
 </head>
-<body class="page-layout" data-student-name="<?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?>" data-upload-context="homepage" data-home-url="../student_homepage/student_homepage.php">
+<?php 
+// Check if we are viewing someone else's profile
+$isViewOnly = !empty($_GET['view_student']); 
+$isEmbed = !empty($_GET['embed']);
+$bodyClass = $isViewOnly ? "page-layout view-only-mode" : "page-layout";
+if ($isEmbed) {
+    $bodyClass .= " embed-mode";
+}
+$viewStudentParam = $isViewOnly ? htmlspecialchars($_GET['view_student'], ENT_QUOTES, 'UTF-8') : '';
+?>
+<body class="<?php echo $bodyClass; ?>" data-view-student-id="<?php echo $viewStudentParam; ?>" data-student-name="<?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?>" data-upload-context="homepage" data-home-url="../student_homepage/student_homepage.php">
 <header>
     <div class="header-container">
         <div class="header-display">
@@ -118,17 +145,18 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
                 </div>
 
                 <div class="relative header-profile-menu">
-                    <div class="w-10 h-10 profile-avatar-btn" onclick="toggleDropdown(this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-user text-xl"></i>
+                    <div class="w-10 h-10 profile-avatar-btn flex items-center justify-center overflow-hidden rounded-full" onclick="toggleDropdown(this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" style="background-color: #f3f4f6; padding: 0;">
+                        <i id="headerDefaultIcon" class="fas fa-user text-xl"></i>
+                        <img id="headerProfileImage" src="" alt="Profile" class="hidden w-full h-full object-cover m-0 p-0 border-0">
                     </div>
                     <div id="profileDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
                         <div class="profile-summary">
-                            <p id="studentProfileFullName" class="profile-summary-name"><?php echo htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p id="studentProfileFullName" class="profile-summary-name"><?php echo htmlspecialchars(trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '')) ?: 'Student Name', ENT_QUOTES, 'UTF-8'); ?></p>
                             <p id="studentProfileEmail" class="profile-summary-email"><?php echo htmlspecialchars((string) ($_SESSION['email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
                         </div>
                         <a href="#" class="block menu-item"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
                         <a href="#" onclick="toggleCustomize(); return false;" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
-                        <a href="#" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
+                        <a href="student_settings.html" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
                         <a href="#" class="block menu-item"><i class="fas fa-question-circle mr-2"></i> Help</a>
                         <div style="text-align:center;margin-top:0.5rem;">
                             <a href="../../user_info_V3/logout.php" class="logout-link"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
@@ -184,7 +212,8 @@ $studentName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_nam
             </div>
             <div class="profile-right">
                 <div class="profile-avatar" role="img" aria-label="student avatar">
-                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <i id="mainDefaultIcon" class="fas fa-user" aria-hidden="true"></i>
+                    <img id="mainProfileImage" src="" alt="Profile" class="hidden w-full h-full object-cover m-0 p-0 border-0" />
                     <span class="avatar-icon">👤</span>
                 </div>
             </div>

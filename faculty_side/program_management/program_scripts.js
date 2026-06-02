@@ -182,7 +182,7 @@ async function revokeProgramDirector(programId) {
         return;
     }
 
-    const confirmed = confirm('Revoke the current Program Director assignment for this program?');
+    const confirmed = confirm('Clear the current Program Director assignment so you can reassign this program?');
     if (!confirmed) return;
 
     const body = new URLSearchParams({
@@ -200,10 +200,10 @@ async function revokeProgramDirector(programId) {
 
     const payload = await response.json();
     if (!response.ok || !payload.success) {
-        throw new Error(payload.message || 'Failed to revoke Program Director.');
+        throw new Error(payload.message || 'Failed to clear Program Director assignment.');
     }
 
-    alert(payload.message || 'Program Director assignment revoked.');
+    alert(payload.message || 'Program Director assignment cleared.');
 }
 
 function goToCoursesForProgram(programName) {
@@ -319,7 +319,6 @@ async function fetchPrograms() {
         const optionsIcon = clone.querySelector('.program-options');
         const dropdown = clone.querySelector('.dropdown');
         const assignBtn = clone.querySelector('.assign-PD-btn');
-        const revokeBtn = clone.querySelector('.revoke-PD-btn');
         const editBtn = clone.querySelector('.edit-btn');
         const removeBtn = clone.querySelector('.remove-btn');
         const inlineEdit = clone.querySelector('.inline-edit');
@@ -348,15 +347,14 @@ async function fetchPrograms() {
             goToCoursesForProgram(program.name);
         });
 
-        [inlineEdit, editInput, saveBtn, cancelBtn, assignBtn, revokeBtn, editBtn, removeBtn, dropdown].forEach((el) => {
+        [inlineEdit, editInput, saveBtn, cancelBtn, assignBtn, editBtn, removeBtn, dropdown].forEach((el) => {
             if (el) {
                 el.addEventListener('click', (event) => event.stopPropagation());
             }
         });
 
-        if (revokeBtn) {
-            revokeBtn.disabled = !hasAssignedDirector;
-            revokeBtn.classList.toggle('is-disabled', !hasAssignedDirector);
+        if (assignBtn) {
+            assignBtn.textContent = hasAssignedDirector ? 'Reassign Program Director' : 'Assign Program Director';
         }
 
         assignBtn.addEventListener('click', async () => {
@@ -366,18 +364,6 @@ async function fetchPrograms() {
             dropdown.classList.add('hidden');
         });
 
-        if (revokeBtn) {
-            revokeBtn.addEventListener('click', async () => {
-                if (!canManagePrograms || !hasAssignedDirector) return;
-                try {
-                    await revokeProgramDirector(program.id);
-                    dropdown.classList.add('hidden');
-                    await fetchPrograms();
-                } catch (error) {
-                    alert(error.message || 'Failed to revoke Program Director.');
-                }
-            });
-        }
 
         editBtn.addEventListener('click', () => {
             if (!canManagePrograms) return;

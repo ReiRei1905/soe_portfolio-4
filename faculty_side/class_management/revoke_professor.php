@@ -16,7 +16,7 @@ if ($classId <= 0) {
 }
 
 if (!faculty_can_manage_class($conn, $sessionUser, $classId)) {
-    faculty_send_json(['success' => false, 'message' => 'You are not allowed to revoke professor assignments for this class.'], 403);
+    faculty_send_json(['success' => false, 'message' => 'You are not allowed to reassign professor assignments for this class.'], 403);
 }
 
 if (!faculty_table_exists($conn, 'class_professor_assignments')) {
@@ -53,7 +53,7 @@ if ($currentProfessorUserId <= 0) {
 
 $deleteStmt = $conn->prepare('DELETE FROM class_professor_assignments WHERE class_id = ?');
 if (!$deleteStmt) {
-    faculty_send_json(['success' => false, 'message' => 'Failed to prepare revoke statement.'], 500);
+    faculty_send_json(['success' => false, 'message' => 'Failed to prepare reassignment statement.'], 500);
 }
 
 $deleteStmt->bind_param('i', $classId);
@@ -61,11 +61,11 @@ $ok = $deleteStmt->execute();
 $deleteStmt->close();
 
 if (!$ok) {
-    faculty_send_json(['success' => false, 'message' => 'Failed to revoke class professor assignment.'], 500);
+    faculty_send_json(['success' => false, 'message' => 'Failed to clear class professor assignment.'], 500);
 }
 
 faculty_send_json([
     'success' => true,
-    'message' => 'Professor assignment revoked successfully.',
+    'message' => 'Professor assignment cleared successfully.',
     'previousProfessorName' => (string) ($currentRow['full_name'] ?? '')
 ]);

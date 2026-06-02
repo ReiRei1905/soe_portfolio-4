@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const createListBtn = document.getElementById('createListBtn');
     const listInputContainer = document.getElementById('listInputContainer');
-    const listProgramSelect = document.getElementById('listProgramSelect');
+    
     const listBatchInput = document.getElementById('listBatchInput');
     const listYearInput = document.getElementById('listYearInput');
     const confirmListBtn = document.getElementById('confirmListBtn');
@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const listStudentsView = document.getElementById('listStudentsView');
     const listStudentsTitle = document.getElementById('listStudentsTitle');
     const listStudentsMembers = document.getElementById('listStudentsMembers');
+    const listStudentsFilterBtn = document.getElementById('listStudentsFilterBtn');
+    const listStudentsFilterMenu = document.getElementById('listStudentsFilterMenu');
     const refreshListStudentsBtn = document.getElementById('refreshListStudentsBtn');
     const listStudentReportsView = document.getElementById('listStudentReportsView');
     const academicPortfoliosTabBtn = document.getElementById('academicPortfoliosTabBtn');
@@ -34,7 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedStudentForReports: null,
         currentList: null,
         currentReportMode: 'academic',
-        cachedExtracurricularByStudent: new Map()
+        cachedExtracurricularByStudent: new Map(),
+        currentStudents: [],
+        listStudentsSortMode: 'alphabetical'
     };
 
     function redirectToLogin() {
@@ -114,7 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function listLabel(item) {
         const batchName = String(item.batchName || '').trim();
         const year = Number(item.yearOfEnrollment || 0);
-        return year > 0 ? `${batchName}-${year}` : batchName;
+        // Changed from hyphen to space and brackets
+        return year > 0 ? `${batchName} [${year}]` : batchName; 
     }
 
     function closeAllListDropdowns() {
@@ -188,6 +193,82 @@ document.addEventListener('DOMContentLoaded', () => {
         hours = hours % 12 || 12;
 
         return `${month}. ${day}, ${year} ${hours}:${minutes} ${period}`;
+    }
+
+    function parseDateTimeForSort(value) {
+        const raw = String(value || '').trim();
+        if (!raw || raw === '0000-00-00 00:00:00') {
+            return 0;
+        }
+
+        const parsed = Date.parse(raw.replace(' ', 'T'));
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function getComparableStudentName(student) {
+        const fullName = `${student.firstName || ''} ${student.lastName || ''}`.trim();
+        if (fullName !== '') {
+            return fullName.toLowerCase();
+        }
+        return String(student.email || '').trim().toLowerCase();
+    }
+
+    function sortStudents(students) {
+        const list = Array.isArray(students) ? [...students] : [];
+
+        if (state.listStudentsSortMode === 'datetime') {
+            list.sort((a, b) => {
+                const bTime = parseDateTimeForSort(b.joinedAt || '');
+                const aTime = parseDateTimeForSort(a.joinedAt || '');
+                if (bTime !== aTime) {
+                    return bTime - aTime;
+                }
+                return getComparableStudentName(a).localeCompare(getComparableStudentName(b));
+            });
+            return list;
+        }
+
+        list.sort((a, b) => getComparableStudentName(a).localeCompare(getComparableStudentName(b)));
+        return list;
+    }
+
+    function closeListStudentsFilterMenu() {
+        if (!listStudentsFilterMenu) {
+            return;
+        }
+
+        listStudentsFilterMenu.classList.add('hidden');
+        if (listStudentsFilterBtn) {
+            listStudentsFilterBtn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function openListStudentsFilterMenu() {
+        if (!listStudentsFilterMenu) {
+            return;
+        }
+
+        listStudentsFilterMenu.classList.remove('hidden');
+        if (listStudentsFilterBtn) {
+            listStudentsFilterBtn.setAttribute('aria-expanded', 'true');
+        }
+    }
+
+    function renderCurrentListStudents() {
+        if (!listStudentsMembers) {
+            return;
+        }
+
+        listStudentsMembers.innerHTML = '';
+        const sortedStudents = sortStudents(state.currentStudents);
+        if (sortedStudents.length === 0) {
+            listStudentsMembers.innerHTML = '<p class="members-empty">No students found for this list.</p>';
+            return;
+        }
+
+        sortedStudents.forEach((student) => {
+            listStudentsMembers.appendChild(createStudentRow(student));
+        });
     }
 
     function setReportsMode(mode) {
@@ -282,36 +363,80 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentEmail = String(student.email || '').trim();
         const joinedAt = formatDateTime(student.joinedAt || null);
 
-        let html = '<div class="list-student-portfolios-stack">';
-
         if (portfolios.length === 0) {
-            html += '<p class="members-empty">No academic portfolios found for this student yet.</p>';
-        } else {
-            portfolios.forEach((portfolio) => {
-                const courseName = String(portfolio.courseName || '').trim() || 'Course';
-                const outputsMarkup = renderPortfolioOutputs(Array.isArray(portfolio.outputs) ? portfolio.outputs : []);
-                const reviewMarkup = renderPortfolioReviewSummary(portfolio.review || null);
-
-                html += `
-                    <section class="reports-panel-card reports-primary-card is-portfolio-view list-academic-portfolio-card">
-                        <div class="reports-portfolio-view">
-                            <div class="portfolio-review-layout">
-                                ${renderStudentSummaryCard(fullName, studentEmail, student.idNumber || 'No ID Number', joinedAt)}
-
-                                <section class="portfolio-review-panel">
-                                    <h4 class="portfolio-review-title">${escapeHtml(courseName)} Portfolio Table of Contents</h4>
-                                    <div class="portfolio-outputs-list">${outputsMarkup}</div>
-                                    <div class="portfolio-review-controls">${reviewMarkup}</div>
-                                </section>
-                            </div>
-                        </div>
-                    </section>
-                `;
-            });
+            academicPortfoliosContainer.innerHTML = '<p class="members-empty">No academic portfolios found for this student yet.</p>';
+            return;
         }
 
-        html += '</div>';
-        academicPortfoliosContainer.innerHTML = html;
+        const courseButtons = portfolios.map((portfolio, index) => {
+            const courseName = String(portfolio.courseName || '').trim() || 'Course';
+            const courseCode = String(portfolio.courseCode || '').trim();
+            const label = courseCode ? `[${courseCode}] ${courseName}` : courseName;
+            const isActive = index === 0 ? 'is-active' : '';
+            return `
+                <button type="button" class="list-academic-course-btn ${isActive}" data-academic-class-id="${Number(portfolio.classId || 0)}">
+                    ${escapeHtml(label)}
+                </button>
+            `;
+        }).join('');
+
+        academicPortfoliosContainer.innerHTML = `
+            <div class="list-academic-layout">
+                <div class="list-academic-course-list">
+                    ${courseButtons}
+                </div>
+                <div id="academicPortfolioDetail" class="list-academic-detail"></div>
+            </div>
+        `;
+
+        const detailContainer = document.getElementById('academicPortfolioDetail');
+        if (!detailContainer) return;
+
+        const portfolioByClassId = new Map();
+        portfolios.forEach((portfolio) => {
+            portfolioByClassId.set(Number(portfolio.classId || 0), portfolio);
+        });
+
+        function renderAcademicDetail(portfolio) {
+            if (!portfolio) return;
+            const courseName = String(portfolio.courseName || '').trim() || 'Course';
+            const courseCode = String(portfolio.courseCode || '').trim();
+            const label = courseCode ? `[${courseCode}] ${courseName}` : courseName;
+            const outputsMarkup = renderPortfolioOutputs(Array.isArray(portfolio.outputs) ? portfolio.outputs : []);
+            const reviewMarkup = renderPortfolioReviewSummary(portfolio.review || null);
+
+            detailContainer.innerHTML = `
+                <section class="reports-panel-card reports-primary-card is-portfolio-view list-academic-portfolio-card">
+                    <div class="reports-portfolio-view">
+                        <div class="portfolio-review-layout">
+                            ${renderStudentSummaryCard(fullName, studentEmail, student.idNumber || 'No ID Number', joinedAt)}
+
+                            <section class="portfolio-review-panel">
+                                <h4 class="portfolio-review-title">${escapeHtml(label)} Portfolio Table of Contents</h4>
+                                <div class="portfolio-outputs-list">${outputsMarkup}</div>
+                                <div class="portfolio-review-controls">${reviewMarkup}</div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        const firstPortfolio = portfolios[0];
+        renderAcademicDetail(firstPortfolio);
+
+        academicPortfoliosContainer.querySelectorAll('[data-academic-class-id]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const classId = Number(button.getAttribute('data-academic-class-id') || 0);
+                const selected = portfolioByClassId.get(classId) || null;
+                if (!selected) return;
+
+                academicPortfoliosContainer.querySelectorAll('.list-academic-course-btn').forEach((btn) => {
+                    btn.classList.toggle('is-active', btn === button);
+                });
+                renderAcademicDetail(selected);
+            });
+        });
     }
 
     function renderExtracurricularPortfolios(data) {
@@ -326,12 +451,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentEmail = String(student.email || '').trim();
         const joinedAt = formatDateTime(student.joinedAt || null);
 
+        let latestTimestamp = 0;
+        let latestRaw = '';
+        portfolios.forEach((portfolio) => {
+            const raw = portfolio.updatedAt || portfolio.createdAt || '';
+            const candidate = parseDateTimeForSort(raw);
+            if (candidate > latestTimestamp) {
+                latestTimestamp = candidate;
+                latestRaw = raw;
+            }
+        });
+        const latestLabel = latestRaw ? formatDateTime(latestRaw) : 'N/A';
+
         let html = `
             <section class="reports-panel-card reports-primary-card is-portfolio-view list-academic-portfolio-card">
                 <div class="reports-portfolio-view">
                     <div class="portfolio-review-layout">
                         ${renderStudentSummaryCard(fullName, studentEmail, student.idNumber || 'No ID Number', joinedAt)}
                         <section class="portfolio-review-panel list-extracurricular-panel">
+                            <p class="list-extra-updated-meta">Recent update: ${escapeHtml(latestLabel)}</p>
                             <div class="list-extra-quick-grid">
         `;
 
@@ -340,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             portfolios.forEach((portfolio) => {
                 const title = String(portfolio.title || '').trim() || 'Untitled portfolio';
-                const createdAt = formatDateTime(portfolio.createdAt || null);
                 const portfolioId = Number(portfolio.portfolioId || 0);
 
                 html += `
@@ -349,7 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fas fa-folder folder-fa" aria-hidden="true"></i>
                             <h3 class="quick-title">${escapeHtml(title)}</h3>
                         </button>
-                        <p class="list-extra-created-meta">Date Published: ${escapeHtml(createdAt)}</p>
                     </div>
                 `;
             });
@@ -546,18 +682,11 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedListId = Number(item.listId || 0);
         state.currentList = item;
         state.selectedStudentForReports = null;
+        state.currentStudents = Array.isArray(data.students) ? data.students : [];
         updateBreadcrumb(listLabel(item));
 
         listStudentsTitle.textContent = `${item.batchName || 'Batch'} Students`;
-        listStudentsMembers.innerHTML = '';
-
-        if (!Array.isArray(data.students) || data.students.length === 0) {
-            listStudentsMembers.innerHTML = '<p class="members-empty">No students found for this list.</p>';
-        } else {
-            data.students.forEach((student) => {
-                listStudentsMembers.appendChild(createStudentRow(student));
-            });
-        }
+        renderCurrentListStudents();
 
         showDetailMode();
 
@@ -709,6 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         state.selectedListId = 0;
                         state.currentList = null;
                         state.selectedStudentForReports = null;
+                        state.currentStudents = [];
                         listStudentsView.classList.add('hidden');
                         listStudentReportsView.classList.add('hidden');
                         listStudentsMembers.innerHTML = '';
@@ -803,6 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.selectedListId = 0;
             state.currentList = null;
             state.selectedStudentForReports = null;
+            state.currentStudents = [];
             updateBreadcrumb('');
             showOverviewMode();
             return;
@@ -838,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.programs = Array.isArray(data.programs) ? data.programs : [];
         state.canCreate = Boolean(data.canCreate);
 
-        renderProgramOptions(state.programs);
+        
 
         if (!state.canCreate) {
             createListBtn.style.display = 'none';
@@ -865,12 +996,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const programId = Number(listProgramSelect.value || 0);
+        // Automatically use the first program they are assigned to (since the UI is hidden)
+        const programId = state.programs.length > 0 ? Number(state.programs[0].id) : 0;
         const batchName = String(listBatchInput.value || '').trim();
         const yearOfEnrollment = Number(listYearInput.value || 0);
 
-        if (programId <= 0 || batchName === '' || yearOfEnrollment <= 0) {
-            alert('Please complete Program, Batch Name, and Year of Enrollment.');
+        if (programId <= 0) {
+            alert('You are not assigned to any program to create a list.');
+            return;
+        }
+
+        if (batchName === '' || yearOfEnrollment <= 0) {
+            alert('Please complete Batch Name, and Year of Admission.');
             return;
         }
 
@@ -885,7 +1022,6 @@ document.addEventListener('DOMContentLoaded', () => {
             listYearInput.value = '';
             listInputContainer.classList.add('hidden');
 
-            // Stay in overview after creating a list; do not auto-open detail panel.
             state.selectedListId = 0;
             updateBreadcrumb('');
             await loadLists();
@@ -897,11 +1033,51 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (event) => {
         const isOptionButton = event.target.closest('.student-list-options');
         const isDropdown = event.target.closest('.list-item-dropdown');
+        const isFilterButton = event.target.closest('#listStudentsFilterBtn');
+        const isFilterMenu = event.target.closest('#listStudentsFilterMenu');
 
         if (!isOptionButton && !isDropdown) {
             closeAllListDropdowns();
         }
+
+        if (!isFilterButton && !isFilterMenu) {
+            closeListStudentsFilterMenu();
+        }
     });
+
+    if (listStudentsFilterBtn && listStudentsFilterMenu) {
+        listStudentsFilterBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const isHidden = listStudentsFilterMenu.classList.contains('hidden');
+            if (isHidden) {
+                openListStudentsFilterMenu();
+            } else {
+                closeListStudentsFilterMenu();
+            }
+        });
+
+        listStudentsFilterMenu.addEventListener('click', (event) => {
+            const option = event.target.closest('[data-student-sort]');
+            if (!option) {
+                return;
+            }
+
+            const nextSort = String(option.getAttribute('data-student-sort') || 'alphabetical');
+            if (nextSort !== 'alphabetical' && nextSort !== 'datetime') {
+                return;
+            }
+
+            state.listStudentsSortMode = nextSort;
+            listStudentsFilterMenu.querySelectorAll('[data-student-sort]').forEach((button) => {
+                const isActive = button === option;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+
+            renderCurrentListStudents();
+            closeListStudentsFilterMenu();
+        });
+    }
 
     if (refreshListStudentsBtn) {
         refreshListStudentsBtn.addEventListener('click', async () => {

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - E-Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="../style_student.css" rel="stylesheet"/>
+    <script src="homepage_scripts.js" defer></script>
+    <script src="student_settings_scripts.js" defer></script>
+</head>
+<body class="page-layout">
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="../../images/soe apc logo.png"/>
+        </div>
+    </div>
+
+    <div class="header-actions">
+        <div class="header-home">
+            <i class="fas fa-home" onclick="goToStudentOverviewPage()"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        
+        <div class="header-profile">
+            <!-- Notifications / Upload / Profile (dropdowns) -->
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="relative header-notifications">
+                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <div id="notificationDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                    </div>
+                </div>
+
+                <div class="relative header-upload">
+                    <i class="fas fa-cloud-upload-alt text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <div id="uploadDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <div class="upload-header">
+                            <i class="fas fa-cloud-upload-alt upload-icon-top cursor-pointer" onclick="triggerFileExplorer()" title="Upload from computer"></i>
+                            <input type="file" id="hiddenFileInput" class="hidden" onchange="handleFileSelection(this)">
+                            <input type="text" class="file-name-input" placeholder="Enter file name" id="uploadFileName">
+                        </div>
+
+                        <div class="upload-button-group">
+                            <div class="relative">
+                                <button class="btn-upload-outline" type="button" onclick="handleCustomFolder()">Add Custom Folder</button>
+                                <!-- Custom Folder Popup (Image 3) -->
+                                <div id="customFolderPopup" class="custom-folder-popup hidden">
+                                    <div class="folder-input-wrapper">
+                                        <i class="fas fa-folder folder-icon-small"></i>
+                                        <input type="text" id="customFolderName" class="folder-name-input" placeholder="Enter folder name">
+                                    </div>
+                                    <div class="folder-popup-actions">
+                                        <button id="btnCreateFolder" class="btn-folder-create is-disabled" type="button" onclick="createCustomFolder()" disabled aria-disabled="true">Create</button>
+                                        <button class="btn-folder-cancel" type="button" onclick="hideCustomFolderPopup()">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <button class="btn-upload-outline" type="button" onclick="handleExistingFolder()">Use Existing Folder</button>
+                                <!-- Existing Folder Popup (Image 4) -->
+                                <div id="existingFolderPopup" class="existing-folder-popup hidden">
+                                    <div class="existing-folder-header">
+                                        <span>Folders</span>
+                                    </div>
+                                    <div id="folderListContainer" class="folder-list-container">
+                                        <p class="text-gray-400 text-xs text-center py-4">No folders created yet.</p>
+                                    </div>
+                                    <div class="folder-popup-actions">
+                                        <button class="btn-folder-add" type="button" onclick="selectFolder()">Add</button>
+                                        <button class="btn-folder-back" type="button" onclick="hideExistingFolderPopup()">Back</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="category-selection-area">
+                            <div class="category-option">
+                                <input type="radio" name="category" value="assessment" id="cat-assessment">
+                                <label for="cat-assessment" class="category-label-box">Assessments</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="projects" id="cat-projects">
+                                <label for="cat-projects" class="category-label-box">Projects</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="certificates" id="cat-certificates">
+                                <label for="cat-certificates" class="category-label-box">Certificate/Awards</label>
+                            </div>
+                            <div class="category-option">
+                                <input type="radio" name="category" value="other_files" id="cat-other-files">
+                                <label for="cat-other-files" class="category-label-box">External Files</label>
+                            </div>
+                        </div>
+
+                        <div class="upload-footer-actions">
+                            <button class="btn-upload-done" type="button" onclick="addFile()">Done</button>
+                            <button class="btn-upload-cancel" type="button" onclick="closeUploadModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative header-profile-menu">
+                    <div class="w-10 h-10 profile-avatar-btn flex items-center justify-center overflow-hidden rounded-full" onclick="toggleDropdown(this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" style="background-color: #f3f4f6; padding: 0;">
+                        <i id="headerDefaultIcon" class="fas fa-user text-xl"></i>
+                        <img id="headerProfileImage" src="" alt="Profile" class="hidden w-full h-full object-cover m-0 p-0 border-0">
+                    </div>
+                    <div id="profileDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
+                        <div class="profile-summary">
+                            <p id="studentProfileFullName" class="profile-summary-name">Student Name</p>
+                            <p id="studentProfileEmail" class="profile-summary-email">student@email.com</p>
+                        </div>
+                        <a href="student_homepage.html" class="block menu-item"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
+                        <a href="#" onclick="toggleCustomize(); return false;" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
+                        <a href="student_settings.html" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
+                        <a href="#" class="block menu-item"><i class="fas fa-question-circle mr-2"></i> Help</a>
+                        <div style="text-align:center;margin-top:0.5rem;">
+                            <a href="../../user_info_V3/logout.php" class="logout-link"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="homepage-header">
+        <div class="header-left">
+            <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+            <h2 class="homepage-title">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="student_homepage.html">Homepage</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Settings</li>
+                </ol>
+            </nav>
+            </h2>
+        </div>
+    </div>
+</header>
+
+<main class="main-content">
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="../assessment/assessments.html">Assessments</a>
+            <a class="text-lg" href="../projects/projects.html">Projects</a>
+            <a class="text-lg" href="../certificates/certificates.html">Certificates/Awards</a>
+            <a class="text-lg" href="../other_files/other_files.html">External Files</a>
+            <a class="text-lg" href="../student_class/student_classes.html">Classes</a>
+        </nav>
+    </div>
+
+    <div id="homepage" class="homepage-section">
+        <!-- Settings Tabs/Buttons -->
+        <div class="settings-tabs-container">
+            <button class="settings-tab-btn active" data-tab="account-settings" onclick="switchSettingsTab('account-settings')">
+                <i class="fas fa-user-circle"></i> Account Settings
+            </button>
+            <button class="settings-tab-btn" data-tab="accessibility" onclick="switchSettingsTab('accessibility')">
+                <i class="fas fa-universal-access"></i> Accessibility
+            </button>
+            <button class="settings-tab-btn" data-tab="feedbacks" onclick="switchSettingsTab('feedbacks')">
+                <i class="fas fa-comments"></i> Feedbacks
+            </button>
+        </div>
+
+        <!-- Account Settings Tab Content -->
+        <div id="account-settings-content" class="settings-content active">
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h2 class="settings-section-title">Account Information</h2>
+                    
+                    <div class="settings-form-group">
+                        <label>Email:</label>
+                        <input class="settings-input" id="email" readonly type="email"/>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label>ID Number:</label>
+                        <input class="settings-input" id="idNumber" readonly type="text"/>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label>Program:</label>
+                        <input class="settings-input" id="program" readonly type="text"/>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label>Password:</label>
+                        <div class="password-input-group">
+                            <input class="settings-input" id="password" readonly type="password"/>
+                            <i class="fas fa-eye password-toggle-icon" onclick="togglePasswordVisibility()" id="passwordToggleIcon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Picture Section -->
+                <div class="settings-section">
+                    <h2 class="settings-section-title">Change Profile Picture</h2>
+                    
+                    <div class="profile-picture-section">
+                        <div class="profile-picture-preview" id="profilePicturePreview">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        
+                        <div class="profile-upload-controls">
+                            <input accept="image/png, image/jpeg" class="file-input" id="profilePictureInput" type="file" onchange="previewProfilePicture(event)"/>
+                            <button class="btn-upload-picture" onclick="document.getElementById('profilePictureInput').click()">
+                                <i class="fas fa-cloud-upload-alt"></i> Upload Picture
+                            </button>
+                            <p class="text-muted">Accepted formats: PNG, JPG (Max 5MB)</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-actions">
+                        <button class="btn-save" onclick="saveProfilePicture()">Save Profile Picture</button>
+                        <button class="btn-change-password" onclick="redirectToPasswordChange()">Change Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accessibility Tab Content -->
+        <div id="accessibility-content" class="settings-content">
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h2 class="settings-section-title">Accessibility Options</h2>
+                    
+                    <div class="settings-form-group">
+                        <label>
+                            <input type="checkbox" id="darkMode"/> Dark Mode
+                        </label>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label>
+                            <input type="checkbox" id="highContrast"/> High Contrast
+                        </label>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label>Font Size:</label>
+                        <select class="settings-input" id="fontSize">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-actions">
+                        <button class="btn-save" onclick="saveAccessibilitySettings()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedbacks Tab Content -->
+        <div id="feedbacks-content" class="settings-content">
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h2 class="settings-section-title">Send Us Your Feedback</h2>
+                    
+                    <div class="settings-form-group">
+                        <label>Subject:</label>
+                        <input class="settings-input" id="feedbackSubject" type="text" placeholder="Enter feedback subject"/>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label>Message:</label>
+                        <textarea class="settings-textarea" id="feedbackMessage" placeholder="Enter your feedback here..." rows="6"></textarea>
+                    </div>
+
+<div class="settings-form-group">
+    <label>Screenshot (optional): You can also Ctrl+V paste an image into the message box.</label>
+    
+    <div class="file-upload-wrapper" style="border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; position: relative; background-color: #f9f9f9; transition: background-color 0.2s;">
+        
+        <input accept="image/png, image/jpeg" id="feedbackScreenshot" type="file" style="opacity: 0; position: absolute; top:0; left:0; width: 100%; height: 100%; cursor: pointer;" />
+        
+        <div id="uploadPrompt">
+            <i class="fas fa-image" style="font-size: 28px; color: #888; margin-bottom: 8px;"></i>
+            <p style="margin: 0; color: #666; font-size: 14px;">Click to browse, or <b>paste (Ctrl+V)</b> an image.</p>
+        </div>
+        
+        <div id="screenshotPreviewContainer" class="hidden" style="margin-top: 10px; position: relative; display: inline-block; z-index: 10;">
+            <img id="screenshotPreviewImage" src="" alt="Preview" style="max-height: 120px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" />
+            <button type="button" id="removeScreenshotBtn" style="position: absolute; top: -10px; right: -10px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;">✖</button>
+        </div>
+    </div>
+</div>
+
+                    <div class="settings-actions">
+                        <button class="btn-save" onclick="submitFeedback()">Submit Feedback</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-container">
+        <p class="footer-text">Copyright © 2024 <a class="footer-link" href="#">JRC.inc</a>. All rights reserved</p>
+    </div>
+</footer>
+
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('homepage').classList.toggle('shifted');
+}
+
+function switchSettingsTab(tabName) {
+    // Hide all content
+    document.querySelectorAll('.settings-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected content
+    document.getElementById(tabName + '-content').classList.add('active');
+    
+    // Mark button as active
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+}
+
+function saveAccessibilitySettings() {
+    alert('Accessibility settings saved!');
+}
+
+function submitFeedback() {
+    const subject = document.getElementById('feedbackSubject').value.trim();
+    const message = document.getElementById('feedbackMessage').value.trim();
+    const screenshotInput = document.getElementById('feedbackScreenshot');
+    const screenshotFile = screenshotInput ? screenshotInput.files[0] : null;
+
+    if (!subject || !message) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    if (screenshotFile) {
+        const allowedTypes = ['image/png', 'image/jpeg'];
+        if (!allowedTypes.includes(screenshotFile.type)) {
+            alert('Screenshot must be PNG or JPG');
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024;
+        if (screenshotFile.size > maxSize) {
+            alert('Screenshot must be 5MB or less');
+            return;
+        }
+    }
+
+    const formData = new FormData();
+    formData.append('subject', subject);
+    formData.append('message', message);
+    if (screenshotFile) {
+        formData.append('screenshot', screenshotFile);
+    }
+
+    fetch('../../admin_side/feedback_management/submit_feedback.php', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        if (!data.success) {
+            alert(data.message || 'Unable to submit feedback.');
+            return;
+        }
+
+        alert('Thank you for your feedback!');
+        document.getElementById('feedbackSubject').value = '';
+        document.getElementById('feedbackMessage').value = '';
+        if (screenshotInput) screenshotInput.value = '';
+    })
+    .catch(() => {
+        alert('An error occurred while submitting feedback.');
+    });
+}
+
+function toggleDropdown(element) {
+    const dropdown = element.nextElementSibling;
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+        element.setAttribute('aria-expanded', dropdown.classList.contains('hidden') ? 'false' : 'true');
+    }
+}
+
+// Load student session context and settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    ensureStudentProfileSummaryPlaceholders();
+    loadStudentSessionContext();
+    loadStudentSettings();
+});
+</script>
+</body>
+</html>

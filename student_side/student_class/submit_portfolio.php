@@ -26,7 +26,7 @@ require_approved_student_in_class($conn, $classId, $studentId);
 
 $completionSql = 'SELECT
                     COUNT(*) AS total_outputs,
-                    SUM(CASE WHEN os.status = "submitted" THEN 1 ELSE 0 END) AS submitted_outputs
+                    SUM(CASE WHEN os.status IN ("submitted", "no_output") THEN 1 ELSE 0 END) AS submitted_outputs
                   FROM class_outputs o
                   LEFT JOIN output_submissions os
                     ON os.output_id = o.output_id

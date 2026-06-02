@@ -103,12 +103,16 @@ try {
     $upsert->execute();
     $upsert->close();
 
-    $newFacultyRole = 'program director';
-    $roleStmt = $conn->prepare('UPDATE faculty SET faculty_role = ? WHERE user_id = ?');
+    // Safely determine the new role: Don't demote an Executive Director if they assign themselves!
+    $currentRole = strtolower(trim((string)($facultyRow['faculty_role'] ?? '')));
+    $newFacultyRole = str_contains($currentRole, 'executive director') ? $currentRole : 'program director';
+    
+    // Update the faculty table to set the role AND migrate their program_id
+    $roleStmt = $conn->prepare('UPDATE faculty SET faculty_role = ?, program_id = ? WHERE user_id = ?');
     if (!$roleStmt) {
-        throw new RuntimeException('Failed to update faculty role.');
+        throw new RuntimeException('Failed to update faculty role and program.');
     }
-    $roleStmt->bind_param('si', $newFacultyRole, $programDirectorUserId);
+    $roleStmt->bind_param('sii', $newFacultyRole, $programId, $programDirectorUserId);
     $roleStmt->execute();
     $roleStmt->close();
 

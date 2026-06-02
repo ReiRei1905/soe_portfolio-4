@@ -33,8 +33,11 @@
             <div style="display:flex;align-items:center;gap:0.75rem;">
                 <div class="relative header-notifications">
                     <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleDropdown(this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <span id="studentNotificationBadge" class="notification-count-badge hidden">0</span>
                     <div id="notificationDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
-                        <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        <div id="studentNotificationList" class="notification-list">
+                            <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -105,13 +108,14 @@
                 </div>
 
                 <div class="relative header-profile-menu">
-                    <div class="w-10 h-10 profile-avatar-btn" onclick="toggleDropdown(this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-user text-xl"></i>
+                    <div class="w-10 h-10 profile-avatar-btn flex items-center justify-center overflow-hidden rounded-full" onclick="toggleDropdown(this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" style="background-color: #f3f4f6; padding: 0;">
+                        <i id="headerDefaultIcon" class="fas fa-user text-xl"></i>
+                        <img id="headerProfileImage" src="" alt="Profile" class="hidden w-full h-full object-cover m-0 p-0 border-0">
                     </div>
                     <div id="profileDropdown" class="dropdown hidden" role="menu" aria-hidden="true">
                         <a href="#" class="block menu-item"><i class="fas fa-edit mr-2"></i> Edit Profile</a>
                         <a href="#" onclick="toggleCustomize(); return false;" class="block menu-item"><i class="fas fa-paint-brush mr-2"></i> Customize E-Portfolio</a>
-                        <a href="#" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
+                        <a href="../student_homepage/student_settings.html" class="block menu-item"><i class="fas fa-cog mr-2"></i> Settings</a>
                         <a href="#" class="block menu-item"><i class="fas fa-question-circle mr-2"></i> Help</a>
                         <div style="text-align:center;margin-top:0.5rem;">
                             <a href="#" class="logout-link"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
@@ -151,7 +155,8 @@
     <div id="classes" class="classes-section student-classes-section">
         <div class="student-class-detail-content">
             <div class="class-details-container student-class-details-container">
-                <div class="class-details">
+                <div class="student-class-left-stack">
+                    <div class="class-details">
                     <h3>CLASS DETAILS</h3>
                     <p><strong>Course Instructor:</strong> <span id="studentDetailInstructor">-</span></p>
                     <p><strong>Program:</strong> <span id="studentDetailProgram">-</span></p>
@@ -161,6 +166,17 @@
                     <h3>REQUIREMENTS</h3>
                     <ul id="studentRequirementsList"></ul>
                     <p id="studentDeadlineDisplay"><strong>Deadline:</strong> Not set</p>
+                    </div>
+
+                    <aside id="studentDifficultyRatingWrap" class="student-difficulty-rating-card" aria-label="Rate the level of difficulty of this course">
+                        <h3 class="student-difficulty-rating-title">Rate the Level of Difficulty of this Course.</h3>
+                        <div class="student-difficulty-rating-group" role="group" aria-label="Class difficulty rating">
+                            <button type="button" class="student-difficulty-rating-btn" data-rating="easy">Easy</button>
+                            <button type="button" class="student-difficulty-rating-btn" data-rating="normal">Normal</button>
+                            <button type="button" class="student-difficulty-rating-btn" data-rating="hard">Hard</button>
+                        </div>
+                        <span id="studentDifficultyRatingStatus" class="student-difficulty-rating-status" aria-live="polite"></span>
+                    </aside>
                 </div>
 
                 <div class="student-class-right-layout">
@@ -182,15 +198,6 @@
                         <ul id="studentOutputsList"></ul>
                     </div>
 
-                    <aside id="studentDifficultyRatingWrap" class="student-difficulty-rating-card" aria-label="Class difficulty rating">
-                        <h3 class="student-difficulty-rating-title">Difficulty Rating:</h3>
-                        <div class="student-difficulty-rating-group" role="group" aria-label="Class difficulty rating">
-                            <button type="button" class="student-difficulty-rating-btn" data-rating="easy">Easy</button>
-                            <button type="button" class="student-difficulty-rating-btn" data-rating="normal">Normal</button>
-                            <button type="button" class="student-difficulty-rating-btn" data-rating="hard">Hard</button>
-                        </div>
-                        <span id="studentDifficultyRatingStatus" class="student-difficulty-rating-status" aria-live="polite"></span>
-                    </aside>
                 </div>
             </div>
         </div>

@@ -24,7 +24,7 @@ function resolve_local_owner_user(mysqli $conn): ?array
     $preferredEmail = trim((string) ($_COOKIE['local_owner_email'] ?? ''));
     if ($preferredEmail !== '' && filter_var($preferredEmail, FILTER_VALIDATE_EMAIL)) {
         $preferredStmt = $conn->prepare(
-            'SELECT u.user_id, u.first_name, u.last_name, u.email, u.role_type, u.status, u.is_verified,
+                'SELECT u.user_id, u.first_name, u.last_name, u.email, u.role_type, u.status, u.is_verified, u.profile_picture,
                     f.faculty_role
              FROM users u
              LEFT JOIN faculty f ON f.user_id = u.user_id
@@ -100,7 +100,7 @@ if ($email === '') {
     $_SESSION['role_type'] = (string) ($user['role_type'] ?? 'faculty');
     $_SESSION['is_verified'] = (int) ($user['is_verified'] ?? 1);
 } else {
-    $stmt = $conn->prepare('SELECT user_id, first_name, last_name, email, role_type, status, is_verified FROM users WHERE email = ? LIMIT 1');
+    $stmt = $conn->prepare('SELECT user_id, first_name, last_name, email, role_type, status, is_verified, profile_picture FROM users WHERE email = ? LIMIT 1');
     if (!$stmt) {
         http_response_code(500);
         echo json_encode([
@@ -168,6 +168,7 @@ echo json_encode([
         'facultyRole' => $facultyRole,
         'status' => (int) $user['status'],
         'isVerified' => (int) $user['is_verified'],
+        'profile_picture' => (string) ($user['profile_picture'] ?? ''),
         'unreadNotifications' => $unreadCount,
         'nextPath' => $nextPath,
         'canAccessDashboard' => $isDashboardRoute,

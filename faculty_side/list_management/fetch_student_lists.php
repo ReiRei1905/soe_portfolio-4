@@ -35,7 +35,7 @@ if (isset($existingColumns['year_of_enrollment'])) {
     ], 500);
 }
 
-$programs = list_get_manageable_programs($conn, $sessionUser);
+$programs = list_get_visible_programs($conn, $sessionUser);
 if (empty($programs)) {
     faculty_send_json([
         'success' => true,
@@ -112,6 +112,7 @@ $stmt->close();
 
 $groups = [];
 foreach ($groupMap as $group) {
+    // Only send the program to the screen if it actually has lists!
     if (!empty($group['lists'])) {
         $groups[] = $group;
     }

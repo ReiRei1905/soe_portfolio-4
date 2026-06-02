@@ -1,6 +1,12 @@
 <?php
 session_start();
 
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+
 $flashMessage = $_SESSION['flash_message'] ?? '';
 unset($_SESSION['flash_message']);
 
@@ -60,13 +66,16 @@ if ($flashMessage !== '') {
                     include 'connect.php'; // Ensure the database connection is included
                     $query = "SELECT program_id, program_name FROM programs";
                     $result = $conn->query($query);
-                
-                    if ($result->num_rows > 0) {
+
+                    if ($result instanceof mysqli_result && $result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
                             echo "<option value='" . $row['program_id'] . "'>" . $row['program_name'] . "</option>";
                         }
-                    } else {
+                    } elseif ($result instanceof mysqli_result) {
                         echo "<option value='' disabled>No programs available</option>";
+                    } else {
+                        error_log('Failed to load programs: ' . $conn->error);
+                        echo "<option value='' disabled>Programs unavailable</option>";
                     }
                     ?>
                 </select>
@@ -132,13 +141,16 @@ if ($flashMessage !== '') {
                     include 'connect.php'; // Ensure the database connection is included
                     $query = "SELECT program_id, program_name FROM programs";
                     $result = $conn->query($query);
-                
-                    if ($result->num_rows > 0) {
+
+                    if ($result instanceof mysqli_result && $result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
                             echo "<option value='" . $row['program_id'] . "'>" . $row['program_name'] . "</option>";
                         }
-                    } else {
+                    } elseif ($result instanceof mysqli_result) {
                         echo "<option value='' disabled>No programs available</option>";
+                    } else {
+                        error_log('Failed to load programs: ' . $conn->error);
+                        echo "<option value='' disabled>Programs unavailable</option>";
                     }
                     ?>
                 </select>
@@ -275,5 +287,13 @@ if ($flashMessage !== '') {
             if(document.getElementById('adminSignUp')) document.getElementById('adminSignUp').style.display = 'none';
         }
     });
+    </script>
+    <?php if ($flashMessage !== '' && strpos($flashMessage, 'APC email addresses') !== false): ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            alert(<?php echo json_encode($flashMessage, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>);
+        });
+        </script>
+    <?php endif; ?>
 </body>
 </html>

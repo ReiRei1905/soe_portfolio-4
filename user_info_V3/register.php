@@ -37,6 +37,11 @@ function sanitizeInput($conn, $input) {
     return htmlspecialchars(strip_tags(trim($conn->real_escape_string($input))));
 }
 
+function isApcEmail(string $email): bool {
+    $email = strtolower(trim($email));
+    return preg_match('/@student\.apc\.edu\.ph$/', $email) || preg_match('/@apc\.edu\.ph$/', $email);
+}
+
 if (isset($_POST['signUp'])) {
     $first_name = sanitizeInput($conn, $_POST['fName']);
     $last_name = sanitizeInput($conn, $_POST['lName']);
@@ -46,11 +51,7 @@ if (isset($_POST['signUp'])) {
     $id_number = sanitizeInput($conn, $_POST['id_number']);
 
     $email = sanitizeInput($conn, $_POST['email']);
-    if (
-    !preg_match('/@student\.apc\.edu\.ph$/', $email) &&
-    !preg_match('/@apc\.edu\.ph$/', $email) &&
-    !preg_match('/@gmail\.com$/', $email) // Allow Gmail for testing purposes
-    ) {
+    if (!isApcEmail($email)) {
         redirect_with_alert('Only APC email addresses are allowed for registration!', 'index.php?showSignup=1');
     }
 
@@ -221,6 +222,9 @@ if (isset($_POST['signIn'])) {
             redirect_with_alert('Invalid email or password!', 'index.php');
         }
     } else {
+        if (!isApcEmail($email)) {
+            redirect_with_alert('Only APC email addresses are allowed to sign in.', 'index.php');
+        }
         redirect_with_alert('Invalid email or password!', 'index.php');
     }
 }

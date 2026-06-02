@@ -46,7 +46,10 @@ if (!$listRow) {
 $programId = (int) ($listRow['program_id'] ?? 0);
 $yearOfEnrollment = (int) ($listRow['year_of_enrollment'] ?? 0);
 
-if (!list_can_manage_program($conn, $sessionUser, $programId)) {
+$role = list_normalize_role((string) ($sessionUser['faculty_role'] ?? ''));
+$isExd = str_contains($role, 'executive director') || faculty_is_executive_director($sessionUser);
+
+if (!$isExd && !list_can_manage_program($conn, $sessionUser, $programId)) {
     faculty_send_json(['success' => false, 'message' => 'You are not allowed to access this list.'], 403);
 }
 

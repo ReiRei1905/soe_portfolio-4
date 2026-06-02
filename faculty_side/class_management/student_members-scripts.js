@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResults = document.getElementById('studentSearchResults');
     const pendingList = document.getElementById('pendingMembersList');
     const approvedList = document.getElementById('approvedMembersList');
+    const copyInviteLinkBtn = document.getElementById('copyInviteLinkBtn');
+    const inviteLinkStatus = document.getElementById('inviteLinkStatus');
     let actionToastTimer = null;
 
     if (!classId) {
@@ -111,6 +113,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function wait(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function setInviteLinkStatus(message, isError = false) {
+        if (!inviteLinkStatus) return;
+        inviteLinkStatus.textContent = message;
+        inviteLinkStatus.classList.toggle('is-error', isError);
+        inviteLinkStatus.classList.toggle('is-success', !isError && message !== '');
+    }
+
+    async function copyInviteLink() {
+        if (!copyInviteLinkBtn) return;
+
+        try {
+            copyInviteLinkBtn.disabled = true;
+            copyInviteLinkBtn.classList.add('is-loading');
+            setInviteLinkStatus('Generating link...');
+
+            const body = new URLSearchParams({ class_id: String(classId) });
+            const response = await fetch('create_invite_link.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: body.toString()
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success || !payload.inviteUrl) {
+                throw new Error(payload.message || 'Unable to generate invite link.');
+            }
+
+            const inviteUrl = String(payload.inviteUrl);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(inviteUrl);
+            } else {
+                window.prompt('Copy this invite link:', inviteUrl);
+            }
+
+            setInviteLinkStatus('Invite link copied.');
+        } catch (error) {
+            setInviteLinkStatus(error.message || 'Failed to copy invite link.', true);
+            alert(error.message || 'Failed to copy invite link.');
+        } finally {
+            copyInviteLinkBtn.classList.remove('is-loading');
+            copyInviteLinkBtn.disabled = false;
+        }
     }
 
     function createMemberCard(item, mode) {
@@ -214,6 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return wrapper;
+    }
+
+    if (copyInviteLinkBtn) {
+        copyInviteLinkBtn.addEventListener('click', () => {
+            copyInviteLink();
+        });
     }
 
     async function postForm(url, payload) {

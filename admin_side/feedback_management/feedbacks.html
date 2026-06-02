@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>E-Portfolio - Feedbacks</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="../style_admin.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../admin_scripts.js" defer></script>
+    <script src="feedbacks_scripts.js" defer></script>
+</head>
+<body class="page-layout">
+<div id="actionToast" class="action-toast hidden" aria-live="polite"></div>
+<header>
+    <div class="header-container">
+        <div class="header-display">
+            <img alt="College logo" class="college-header" src="../../images/soe apc logo.png"/>
+        </div>
+    </div>
+    <div class="header-actions">
+        <div class="header-home">
+            <i class="fas fa-home" onclick="goToOverviewPage()"></i>
+            <h1 class="text-lg">E-PORTFOLIO</h1>
+        </div>
+        <div class="header-search">
+            <input class="search-input" placeholder="Search" type="text"/>
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="header-profile">
+            <div class="header-actions-icons">
+                <div class="header-notifications">
+                    <i class="fas fa-bell text-lg cursor-pointer" onclick="toggleHeaderMenu('notificationDropdown', this)" aria-haspopup="true" aria-expanded="false"></i>
+                    <span id="adminNotificationBadge" class="notification-count-badge hidden">0</span>
+                    <div id="notificationDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <div id="adminNotificationList" class="notification-list">
+                            <p class="text-gray-500 text-center">No new notifications at the moment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-profile-menu">
+                    <div class="profile-avatar-btn" onclick="toggleHeaderMenu('profileDropdown', this)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div id="profileDropdown" class="header-menu-dropdown hidden" role="menu" aria-hidden="true">
+                        <div class="profile-summary">
+                            <p id="adminProfileFullName" class="profile-summary-name">Full Name</p>
+                            <p id="adminProfileEmail" class="profile-summary-email">fullname@email.com</p>
+                        </div>
+                        <a href="#" class="menu-item"><i class="fas fa-edit"></i> Edit Profile</a>
+                        <a href="#" class="menu-item"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="menu-item"><i class="fas fa-question-circle"></i> Help</a>
+                        <div class="menu-logout-wrap">
+                            <a href="../../user_info_V3/logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="lists-users-header">
+        <div class="header-left">
+            <i class="fas fa-bars sidebar-toggle" onclick="toggleSidebar()"></i>
+            <h2 class="lists-users-title">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item" aria-current="page">Feedbacks</li>
+                    </ol>
+                </nav>
+            </h2>
+        </div>
+    </div>
+</header>
+<main class="main-content">
+    <div id="sidebar">
+        <nav>
+            <a class="text-lg" href="../admin_homepage.html">User Lists</a>
+            <a class="text-lg" href="feedbacks.html">Feedbacks</a>
+            <a class="text-lg" href="../admin_about_us.html">About us</a>
+        </nav>
+    </div>
+
+    <div id="feedbacks" class="feedbacks-section">
+     <div class="search-filter-container">
+            <div class="search-bar">
+                <input id="feedbackSearchInput" class="search-input" placeholder="Search feedback" type="text"/>
+                <i class="search-icon fas fa-search"></i>
+            </div>
+            <button id="sortDateBtn" class="filter-button" type="button" style="margin-right: 7rem;">
+                <i class="fas fa-sort-amount-down"></i>
+                <span id="sortDateText">Recent to Oldest</span>
+            </button>
+        </div>
+
+        <div class="tableContainer feedbacks-table-container">
+            <section class="table__body">
+                <table class="feedbacks-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Message</th>
+                            <th>Submitted By</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Screenshot</th>
+                            <th>Submitted At</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedbackTableBody"></tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+</main>
+<footer class="footer-content">
+    <div class="footer-container">
+        <p class="footer-text">
+            Copyright © 2024 |
+            <a class="footer-link" href="#">JRC.inc.</a>
+            All rights reserved
+        </p>
+    </div>
+</footer>
+</body>
+</html>
