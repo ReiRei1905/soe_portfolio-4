@@ -2,9 +2,41 @@ console.log("assessments_scripts.js loaded");
 
 let currentAssessmentFolder = null;
 let currentAssessmentSort = 'recent';
+let currentAssessmentYearFilter = 'all'; // New: Default year filter
+
+function populateAssessmentYearFilter(files) {
+    const yearSelect = document.getElementById('assessmentYearFilter');
+    if (!yearSelect) return;
+
+    // Clear existing options, but keep "All Years"
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+
+    const years = new Set();
+    files.forEach(file => {
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (timestamp) {
+            const year = new Date(timestamp).getFullYear();
+            if (Number.isFinite(year)) {
+                years.add(year);
+            }
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a); // Sort descending
+
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSelect.appendChild(option);
+    });
+
+    // Set the dropdown to the currently selected filter, or 'all' if none
+    yearSelect.value = currentAssessmentYearFilter;
+}
 
 function closeFileActionDropdowns() {
-    document.querySelectorAll('.files-window .file-actions-dropdown').forEach((menu) => {
+    document.querySelectorAll(".files-window .file-actions-dropdown").forEach((menu) => {
         menu.classList.add('hidden');
     });
 }
@@ -331,9 +363,21 @@ function renderCurrentSection() {
     // Get all files from session storage
     const allFiles = (typeof studentFiles !== 'undefined') ? studentFiles : [];
     const assessmentFiles = allFiles.filter(f => f.category === 'assessment');
+
+    // Populate year filter dropdown
+    populateAssessmentYearFilter(assessmentFiles);
+
+    // Apply year filter
+    const yearFilteredFiles = assessmentFiles.filter(file => {
+        if (currentAssessmentYearFilter === 'all') return true;
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (!timestamp) return false;
+        return new Date(timestamp).getFullYear() === Number(currentAssessmentYearFilter);
+    });
+
     const visibleFiles = currentAssessmentFolder
-        ? assessmentFiles.filter((file) => !isAssessmentFolderEntry(file) && (file.folder || '') === currentAssessmentFolder)
-        : assessmentFiles.filter((file) => isAssessmentFolderEntry(file) || !file.folder);
+        ? yearFilteredFiles.filter((file) => !isAssessmentFolderEntry(file) && (file.folder || '') === currentAssessmentFolder)
+        : yearFilteredFiles.filter((file) => isAssessmentFolderEntry(file) || !file.folder);
     const sortedFiles = sortAssessmentEntries(visibleFiles);
 
     updateAssessmentBreadcrumb();
@@ -427,6 +471,15 @@ document.addEventListener("DOMContentLoaded", () => {
         sortSelect.value = currentAssessmentSort;
         sortSelect.addEventListener('change', () => {
             currentAssessmentSort = sortSelect.value || 'recent';
+            renderCurrentSection();
+        });
+    }
+
+    const yearFilterSelect = document.getElementById('assessmentYearFilter');
+    if (yearFilterSelect) {
+        yearFilterSelect.value = currentAssessmentYearFilter;
+        yearFilterSelect.addEventListener('change', () => {
+            currentAssessmentYearFilter = yearFilterSelect.value || 'all';
             renderCurrentSection();
         });
     }

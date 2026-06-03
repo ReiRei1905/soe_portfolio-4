@@ -2,6 +2,36 @@ console.log("other_files_scripts.js loaded");
 
 let currentOtherFilesFolder = null;
 let currentOtherFilesSort = 'recent';
+let currentOtherFilesYearFilter = 'all';
+
+function populateOtherFilesYearFilter(files) {
+    const yearSelect = document.getElementById('otherFilesYearFilter');
+    if (!yearSelect) return;
+
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+
+    const years = new Set();
+    files.forEach(file => {
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (timestamp) {
+            const year = new Date(timestamp).getFullYear();
+            if (Number.isFinite(year)) {
+                years.add(year);
+            }
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSelect.appendChild(option);
+    });
+
+    yearSelect.value = currentOtherFilesYearFilter;
+}
 
 function getCurrentOtherFilesFolderName() {
     return currentOtherFilesFolder || '';
@@ -335,9 +365,19 @@ function renderCurrentSection() {
 
     const allFiles = (typeof studentFiles !== 'undefined') ? studentFiles : [];
     const categoryFiles = allFiles.filter(f => f.category === 'other_files');
+
+    populateOtherFilesYearFilter(categoryFiles);
+
+    const yearFilteredFiles = categoryFiles.filter(file => {
+        if (currentOtherFilesYearFilter === 'all') return true;
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (!timestamp) return false;
+        return new Date(timestamp).getFullYear() === Number(currentOtherFilesYearFilter);
+    });
+
     const visibleFiles = currentOtherFilesFolder
-        ? categoryFiles.filter((file) => !isOtherFilesFolderEntry(file) && (file.folder || '') === currentOtherFilesFolder)
-        : categoryFiles.filter((file) => isOtherFilesFolderEntry(file) || !file.folder);
+        ? yearFilteredFiles.filter((file) => !isOtherFilesFolderEntry(file) && (file.folder || '') === currentOtherFilesFolder)
+        : yearFilteredFiles.filter((file) => isOtherFilesFolderEntry(file) || !file.folder);
     const sortedFiles = sortOtherFilesEntries(visibleFiles);
 
     updateOtherFilesBreadcrumb();
@@ -427,6 +467,15 @@ document.addEventListener("DOMContentLoaded", () => {
         sortSelect.value = currentOtherFilesSort;
         sortSelect.addEventListener('change', () => {
             currentOtherFilesSort = sortSelect.value || 'recent';
+            renderCurrentSection();
+        });
+    }
+
+    const yearFilterSelect = document.getElementById('otherFilesYearFilter');
+    if (yearFilterSelect) {
+        yearFilterSelect.value = currentOtherFilesYearFilter;
+        yearFilterSelect.addEventListener('change', () => {
+            currentOtherFilesYearFilter = yearFilterSelect.value || 'all';
             renderCurrentSection();
         });
     }

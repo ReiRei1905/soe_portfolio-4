@@ -2,6 +2,38 @@ console.log("certificates_scripts.js loaded");
 
 let currentCertificatesFolder = null;
 let currentCertificatesSort = 'recent';
+let currentCertificatesYearFilter = 'all'; // New: Default year filter
+
+function populateCertificatesYearFilter(files) {
+    const yearSelect = document.getElementById('certificatesYearFilter');
+    if (!yearSelect) return;
+
+    // Clear existing options, but keep "All Years"
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+
+    const years = new Set();
+    files.forEach(file => {
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (timestamp) {
+            const year = new Date(timestamp).getFullYear();
+            if (Number.isFinite(year)) {
+                years.add(year);
+            }
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a); // Sort descending
+
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSelect.appendChild(option);
+    });
+
+    // Set the dropdown to the currently selected filter, or 'all' if none
+    yearSelect.value = currentCertificatesYearFilter;
+}
 
 function getCurrentCertificatesFolderName() {
     return currentCertificatesFolder || '';
@@ -337,9 +369,21 @@ function renderCurrentSection() {
     // Get all files from session storage
     const allFiles = (typeof studentFiles !== 'undefined') ? studentFiles : [];
     const certFiles = allFiles.filter(f => f.category === 'certificates');
+
+    // Populate year filter dropdown
+    populateCertificatesYearFilter(certFiles);
+
+    // Apply year filter
+    const yearFilteredFiles = certFiles.filter(file => {
+        if (currentCertificatesYearFilter === 'all') return true;
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (!timestamp) return false;
+        return new Date(timestamp).getFullYear() === Number(currentCertificatesYearFilter);
+    });
+
     const visibleFiles = currentCertificatesFolder
-        ? certFiles.filter((file) => !isCertificatesFolderEntry(file) && (file.folder || '') === currentCertificatesFolder)
-        : certFiles.filter((file) => isCertificatesFolderEntry(file) || !file.folder);
+        ? yearFilteredFiles.filter((file) => !isCertificatesFolderEntry(file) && (file.folder || '') === currentCertificatesFolder)
+        : yearFilteredFiles.filter((file) => isCertificatesFolderEntry(file) || !file.folder);
     const sortedFiles = sortCertificatesEntries(visibleFiles);
 
     updateCertificatesBreadcrumb();
@@ -433,6 +477,15 @@ document.addEventListener("DOMContentLoaded", () => {
         sortSelect.value = currentCertificatesSort;
         sortSelect.addEventListener('change', () => {
             currentCertificatesSort = sortSelect.value || 'recent';
+            renderCurrentSection();
+        });
+    }
+
+    const yearFilterSelect = document.getElementById('certificatesYearFilter');
+    if (yearFilterSelect) {
+        yearFilterSelect.value = currentCertificatesYearFilter;
+        yearFilterSelect.addEventListener('change', () => {
+            currentCertificatesYearFilter = yearFilterSelect.value || 'all';
             renderCurrentSection();
         });
     }

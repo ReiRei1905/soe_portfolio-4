@@ -2,6 +2,36 @@ console.log("projects_scripts.js loaded");
 
 let currentProjectsFolder = null;
 let currentProjectsSort = 'recent';
+let currentProjectsYearFilter = 'all';
+
+function populateProjectsYearFilter(files) {
+    const yearSelect = document.getElementById('projectsYearFilter');
+    if (!yearSelect) return;
+
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+
+    const years = new Set();
+    files.forEach(file => {
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (timestamp) {
+            const year = new Date(timestamp).getFullYear();
+            if (Number.isFinite(year)) {
+                years.add(year);
+            }
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSelect.appendChild(option);
+    });
+
+    yearSelect.value = currentProjectsYearFilter;
+}
 
 function getCurrentProjectsFolderName() {
     return currentProjectsFolder || '';
@@ -337,9 +367,19 @@ function renderCurrentSection() {
     // Get all files from session storage
     const allFiles = (typeof studentFiles !== 'undefined') ? studentFiles : [];
     const projectsFiles = allFiles.filter(f => f.category === 'projects');
+
+    populateProjectsYearFilter(projectsFiles);
+
+    const yearFilteredFiles = projectsFiles.filter(file => {
+        if (currentProjectsYearFilter === 'all') return true;
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (!timestamp) return false;
+        return new Date(timestamp).getFullYear() === Number(currentProjectsYearFilter);
+    });
+
     const visibleFiles = currentProjectsFolder
-        ? projectsFiles.filter((file) => !isProjectsFolderEntry(file) && (file.folder || '') === currentProjectsFolder)
-        : projectsFiles.filter((file) => isProjectsFolderEntry(file) || !file.folder);
+        ? yearFilteredFiles.filter((file) => !isProjectsFolderEntry(file) && (file.folder || '') === currentProjectsFolder)
+        : yearFilteredFiles.filter((file) => isProjectsFolderEntry(file) || !file.folder);
     const sortedFiles = sortProjectsEntries(visibleFiles);
 
     updateProjectsBreadcrumb();
@@ -433,6 +473,15 @@ document.addEventListener("DOMContentLoaded", () => {
         sortSelect.value = currentProjectsSort;
         sortSelect.addEventListener('change', () => {
             currentProjectsSort = sortSelect.value || 'recent';
+            renderCurrentSection();
+        });
+    }
+
+    const yearFilterSelect = document.getElementById('projectsYearFilter');
+    if (yearFilterSelect) {
+        yearFilterSelect.value = currentProjectsYearFilter;
+        yearFilterSelect.addEventListener('change', () => {
+            currentProjectsYearFilter = yearFilterSelect.value || 'all';
             renderCurrentSection();
         });
     }
