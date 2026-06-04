@@ -281,21 +281,6 @@ async function loadFacultyNotifications(options = {}) {
     }
 }
 
-function handleNotificationClick() {
-    const notificationDropdown = document.getElementById("notificationDropdown");
-    const notificationBadge = document.getElementById("notificationBadge");
-
-    if (notificationDropdown) {
-        notificationDropdown.classList.toggle("hidden");
-
-        if (!notificationDropdown.classList.contains("hidden") && notificationBadge) {
-            notificationBadge.classList.add("hidden");
-        }
-    } else {
-        console.warn("Notification dropdown element not found");
-    }
-}
-
 function handleProfileClick() {
     // Lightweight placeholder used by header icon across pages
     // You can extend this to open a profile menu/modal later
@@ -411,13 +396,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById('sidebar');
     if (header && sidebar) sidebar.style.top = `${header.offsetHeight}px`;
 
-    // Close notification dropdown when clicking outside
-    document.addEventListener("click", (event) => {
+    // Close header notification/profile menus on outside click.
+    document.addEventListener('click', (event) => {
         const notificationDropdown = document.getElementById("notificationDropdown");
         const notificationIcon = document.querySelector(".header-notifications i");
-
-        if (notificationDropdown && notificationIcon && !notificationDropdown.contains(event.target) && !notificationIcon.contains(event.target)) {
-            notificationDropdown.classList.add("hidden");
+        
+        // Handle outside click to close menus
+        if (!event.target.closest('.header-notifications') && !event.target.closest('.header-profile-menu')) {
+            document.querySelectorAll('.header-menu-dropdown').forEach((menu) => {
+                const wasOpen = !menu.classList.contains('hidden');
+                if (wasOpen) {
+                    menu.classList.add('hidden');
+                    menu.setAttribute('aria-hidden', 'true');
+                    // Mark read if we are closing an open notification dropdown
+                    if (menu.id === 'notificationDropdown') {
+                        loadFacultyNotifications({ markRead: true });
+                    }
+                }
+            });
         }
     });
 
@@ -429,21 +425,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 dropdown.classList.add("hidden");
             }
         });
-    });
-
-    // Close header notification/profile menus on outside click.
-    document.addEventListener('click', (event) => {
-        if (!event.target.closest('.header-notifications') && !event.target.closest('.header-profile-menu')) {
-            document.querySelectorAll('.header-menu-dropdown').forEach((menu) => {
-                const wasOpen = !menu.classList.contains('hidden');
-                menu.classList.add('hidden');
-                menu.setAttribute('aria-hidden', 'true');
-                // Mark read if we are closing an open notification dropdown
-                if (wasOpen && menu.id === 'notificationDropdown') {
-                    loadFacultyNotifications({ markRead: true });
-                }
-            });
-        }
     });
 
     loadFacultySessionUser().then((isAuthenticated) => {

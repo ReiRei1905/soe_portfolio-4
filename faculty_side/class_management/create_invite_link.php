@@ -84,5 +84,6 @@ $invitePath = $rootPath . '/student_side/student_class/join_class_invite.php?tok
 
 faculty_send_json([
     'success' => true,
-    'inviteUrl' => $scheme . '://' . $host . $invitePath
+    'inviteUrl' => $scheme . '://' . $host . $invitePath,
+    'token' => $token
 ]);

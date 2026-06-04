@@ -6,6 +6,34 @@ require_once __DIR__ . '/admin_api_common.php';
 
 $filter = normalize_filter_value($_GET['filter'] ?? 'all');
 $search = strtolower(trim((string) ($_GET['search'] ?? '')));
+$sort = trim((string) ($_GET['sort'] ?? ''));
+$order = strtolower(trim((string) ($_GET['order'] ?? 'desc')));
+$programFilter = trim((string) ($_GET['program'] ?? ''));
+
+$allowedSortColumns = ['firstName', 'middleInitial', 'lastName', 'suffix', 'createdAccount', 'program'];
+$orderBy = 'u.created_at DESC, u.user_id DESC';
+
+// Case-insensitive check
+$matchedSort = '';
+foreach ($allowedSortColumns as $col) {
+    if (strtolower($col) === strtolower($sort)) {
+        $matchedSort = $col;
+        break;
+    }
+}
+
+if ($matchedSort !== '') {
+    $dir = ($order === 'asc') ? 'ASC' : 'DESC';
+    $orderBy = match ($matchedSort) {
+        'firstName' => "first_name {$dir}, u.created_at DESC",
+        'middleInitial' => "middle_name {$dir}, u.created_at DESC",
+        'lastName' => "last_name {$dir}, u.created_at DESC",
+        'suffix' => "suffix {$dir}, u.created_at DESC",
+        'createdAccount' => "u.created_at {$dir}, u.user_id DESC",
+        'program' => "program_name {$dir}, u.created_at DESC",
+        default => $orderBy
+    };
+}
 
 $sql = "
     SELECT
@@ -31,7 +59,7 @@ $sql = "
     LEFT JOIN admins a ON a.user_id = u.user_id
     LEFT JOIN programs ps ON ps.program_id = s.program_id
     LEFT JOIN programs pf ON pf.program_id = f.program_id
-    ORDER BY u.created_at DESC, u.user_id DESC
+    ORDER BY {$orderBy}
 ";
 
 $result = $conn->query($sql);
@@ -46,8 +74,13 @@ if (!$result) {
 $users = [];
 while ($row = $result->fetch_assoc()) {
     $normalizedRole = to_filter_role((string) $row['role_type'], $row['faculty_role'] ?? null);
+    $programName = (string) ($row['program_name'] ?? 'N/A');
 
     if ($filter !== 'all' && $normalizedRole !== $filter) {
+        continue;
+    }
+
+    if ($programFilter !== '' && strtolower($programName) !== strtolower($programFilter)) {
         continue;
     }
 
@@ -80,6 +113,7 @@ while ($row = $result->fetch_assoc()) {
         'suffix' => $suffix,
         'role' => to_display_role((string) $row['role_type'], $row['faculty_role'] ?? null),
         'roleFilterKey' => $normalizedRole,
+        'program' => (string) ($row['program_name'] ?? 'N/A'),
         'status' => to_status_label($email, (int) $row['status'], (int) ($row['is_verified'] ?? 0)),
         'createdAccount' => format_signup_date($row['created_at'] ?? null)
     ];

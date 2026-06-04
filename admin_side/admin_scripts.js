@@ -63,6 +63,10 @@ const roleToFilterParam = {
 
 let currentFilter = 'all';
 let currentSearch = '';
+let currentSortColumn = 'createdAccount';
+let currentSortOrder = 'desc';
+let currentProgramFilter = ''; // Added for program cycling filter
+let availablePrograms = []; // To store programs for cycling
 let selectedUserId = null;
 let selectedAccessRole = 'student';
 let selectedUserStatus = '';
@@ -285,10 +289,88 @@ function setFilterLabel(filterKey) {
     }
 }
 
+function toggleSort(column) {
+    if (currentSortColumn === column) {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortOrder = 'asc';
+    }
+    
+    // Visual feedback on headers
+    updateSortIcons();
+    loadUsers();
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('thead th i.fas').forEach(icon => {
+        icon.className = 'fas fa-sort';
+        icon.style.opacity = '0.3';
+    });
+
+    // Program column indicator
+    const programTh = document.querySelector('thead th[onclick*="toggleProgramFilter"]');
+    if (programTh) {
+        const icon = programTh.querySelector('i');
+        if (icon) {
+            if (currentProgramFilter) {
+                icon.className = 'fas fa-filter';
+                icon.style.opacity = '1';
+                programTh.title = `Filtering by: ${currentProgramFilter}`;
+            } else {
+                icon.className = 'fas fa-sort';
+                icon.style.opacity = '0.3';
+                programTh.title = 'Click to cycle through programs';
+            }
+        }
+    }
+
+    const activeTh = document.querySelector(`thead th[onclick*="'${currentSortColumn}'"]`);
+    if (activeTh) {
+        const icon = activeTh.querySelector('i');
+        if (icon) {
+            icon.className = currentSortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            icon.style.opacity = '1';
+        }
+    }
+}
+
+function toggleProgramFilter() {
+    if (availablePrograms.length === 0) {
+        // Fallback: extract from current users if not fetched
+        const uniquePrograms = Array.from(new Set(users.map(u => u.program).filter(p => p && p !== 'N/A')));
+        if (uniquePrograms.length > 0) {
+            availablePrograms = uniquePrograms;
+        } else {
+            return;
+        }
+    }
+
+    if (!currentProgramFilter) {
+        currentProgramFilter = availablePrograms[0];
+    } else {
+        const currentIndex = availablePrograms.indexOf(currentProgramFilter);
+        if (currentIndex === -1 || currentIndex === availablePrograms.length - 1) {
+            currentProgramFilter = ''; 
+        } else {
+            currentProgramFilter = availablePrograms[currentIndex + 1];
+        }
+    }
+
+    updateSortIcons();
+    loadUsers();
+}
+
+window.toggleProgramFilter = toggleProgramFilter;
+window.toggleSort = toggleSort;
+
 async function fetchUsersFromApi() {
     const query = new URLSearchParams({
         filter: roleToFilterParam[currentFilter] || 'all',
-        search: currentSearch
+        search: currentSearch,
+        sort: currentSortColumn,
+        order: currentSortOrder,
+        program: currentProgramFilter
     });
 
     const response = await fetch(`get_users.php?${query.toString()}`);
@@ -313,8 +395,6 @@ function renderUsersTable() {
     }
 
     users.forEach((user) => {
-        const statusClass = user.status === 'Verified' ? 'verified' : 'not-verified';
-
         const row = document.createElement('tr');
         row.id = `userRow-${user.id}`;
         row.innerHTML = `
@@ -323,7 +403,7 @@ function renderUsersTable() {
             <td>${escapeHtml(user.lastName)}</td>
             <td>${escapeHtml(user.suffix || '')}</td>
             <td>${escapeHtml(user.role)}</td>
-            <td><span class="status ${statusClass}">${escapeHtml(user.status)}</span></td>
+            <td>${escapeHtml(user.program)}</td>
             <td>${escapeHtml(user.createdAccount)}</td>
             <td>
                 <div class="dropdown">
@@ -891,8 +971,21 @@ window.addEventListener('click', (event) => {
     }
 });
 
+async function loadPrograms() {
+    try {
+        const response = await fetch('get_programs.php');
+        const payload = await response.json();
+        if (response.ok && payload.success) {
+            availablePrograms = payload.programs || [];
+        }
+    } catch (error) {
+        console.warn('Failed to load programs list:', error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     normalizeAdminHeaderLinks();
+    loadPrograms(); // Initialize programs list
     const header = document.querySelector('header');
     const sidebar = document.getElementById('sidebar');
     if (header && sidebar) {

@@ -36,7 +36,7 @@ try {
         json_response(404, ['ok' => false, 'message' => 'Portfolio not found.']);
     }
 
-    $filesStmt = $conn->prepare('SELECT f.file_id, f.original_file_name, f.mime_type, f.category_id, ac.category_key, ac.category_label, fo.folder_name FROM files f INNER JOIN academic_categories ac ON ac.category_id = f.category_id LEFT JOIN folders fo ON fo.folder_id = f.folder_id WHERE f.student_id = ? ORDER BY ac.category_key ASC, fo.folder_name ASC, f.original_file_name ASC');
+    $filesStmt = $conn->prepare('SELECT f.file_id, f.original_file_name, f.mime_type, f.category_id, f.created_at, ac.category_key, ac.category_label, fo.folder_name FROM files f INNER JOIN academic_categories ac ON ac.category_id = f.category_id LEFT JOIN folders fo ON fo.folder_id = f.folder_id WHERE f.student_id = ? ORDER BY ac.category_key ASC, fo.folder_name ASC, f.original_file_name ASC');
     $filesStmt->bind_param('i', $studentId);
     $filesStmt->execute();
     $filesResult = $filesStmt->get_result();
@@ -55,6 +55,7 @@ try {
             'id' => $fileId,
             'name' => $name,
             'mimeType' => $mimeType,
+            'timestamp' => (string) ($row['created_at'] ?? ''),
             'categoryKey' => (string) ($row['category_key'] ?? ''),
             'categoryLabel' => (string) ($row['category_label'] ?? ''),
             'folderName' => (string) ($row['folder_name'] ?? '')

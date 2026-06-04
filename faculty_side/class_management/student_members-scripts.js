@@ -122,13 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
         inviteLinkStatus.classList.toggle('is-success', !isError && message !== '');
     }
 
-    async function copyInviteLink() {
+    async function handleCopyInvite() {
         if (!copyInviteLinkBtn) return;
 
         try {
             copyInviteLinkBtn.disabled = true;
             copyInviteLinkBtn.classList.add('is-loading');
-            setInviteLinkStatus('Generating link...');
+            setInviteLinkStatus('Generating...');
 
             const body = new URLSearchParams({ class_id: String(classId) });
             const response = await fetch('create_invite_link.php', {
@@ -139,18 +139,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const payload = await response.json();
 
-            if (!response.ok || !payload.success || !payload.inviteUrl) {
-                throw new Error(payload.message || 'Unable to generate invite link.');
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Unable to generate invite.');
             }
 
+            const className = (classNameEl && classNameEl.textContent) ? classNameEl.textContent.trim() : 'Class';
             const inviteUrl = String(payload.inviteUrl);
-            if (navigator.clipboard && navigator.clipboard.writeText) {
+            const htmlLink = `<a href="${inviteUrl}">${className}</a>`;
+            
+            if (navigator.clipboard && window.ClipboardItem) {
+                const blobHtml = new Blob([htmlLink], { type: 'text/html' });
+                const blobText = new Blob([inviteUrl], { type: 'text/plain' });
+                const item = new ClipboardItem({
+                    'text/html': blobHtml,
+                    'text/plain': blobText
+                });
+                await navigator.clipboard.write([item]);
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(inviteUrl);
             } else {
                 window.prompt('Copy this invite link:', inviteUrl);
             }
 
-            setInviteLinkStatus('Invite link copied.');
+            setInviteLinkStatus(`Hyperlink for ${className} copied.`);
         } catch (error) {
             setInviteLinkStatus(error.message || 'Failed to copy invite link.', true);
             alert(error.message || 'Failed to copy invite link.');
@@ -265,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (copyInviteLinkBtn) {
         copyInviteLinkBtn.addEventListener('click', () => {
-            copyInviteLink();
+            handleCopyInvite();
         });
     }
 

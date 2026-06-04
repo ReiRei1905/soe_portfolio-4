@@ -373,6 +373,13 @@ function initStudentClassDetailsPage() {
 	let portfolioReviewedAt = '';
 	let selectedDifficultyRating = '';
 
+	// Feedback logic for invite redirects
+	if (params.get('already_joined') === '1') {
+		alert("You are already a member of this class.");
+	} else if (params.get('joined') === '1') {
+		alert("Successfully joined the class!");
+	}
+
 	if (!classId) {
 		alert('Missing class reference.');
 		window.location.href = './student_classes.html';

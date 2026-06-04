@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../api/common.php';
 
-function render_invite_error(string $title, string $message): void
+function render_invite_error(string $title, string $message, string $token = ''): void
 {
     http_response_code(400);
     echo '<!DOCTYPE html>';
@@ -14,7 +14,14 @@ function render_invite_error(string $title, string $message): void
     echo '<body style="font-family: Arial, sans-serif; padding: 24px;">';
     echo '<h2>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2>';
     echo '<p>' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</p>';
-    echo '<p><a href="../../user_info_V3/index.php">Go to login</a></p>';
+    
+    $loginUrl = '../../user_info_V3/index.php';
+    if ($token !== '') {
+        $currentPage = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+        $loginUrl .= '?redirect=' . urlencode($currentPage);
+    }
+    
+    echo '<p><a href="' . htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8') . '">Go to login</a></p>';
     echo '</body></html>';
     exit;
 }
@@ -27,7 +34,7 @@ if ($token === '') {
 $conn = db_connect();
 
 if (!isset($_SESSION['email']) || trim((string) $_SESSION['email']) === '') {
-    render_invite_error('Sign in required', 'Please log in with your APC email to join this class.');
+    render_invite_error('Sign in required', 'Please log in with your APC email to join this class.', $token);
 }
 
 $email = trim((string) ($_SESSION['email'] ?? ''));
@@ -60,8 +67,8 @@ if ($expiresAt !== '' && strtotime($expiresAt) < time()) {
     render_invite_error('Invite expired', 'This invite link has expired. Please request a new one.');
 }
 
-if (!preg_match('/@apc\.edu\.ph$/i', $email)) {
-    render_invite_error('Invalid email domain', 'Please use your @apc.edu.ph account to join this class.');
+if (!preg_match('/@student\.apc\.edu\.ph$/i', $email)) {
+    render_invite_error('Invalid email domain', 'Please use your @student.apc.edu.ph account to join this class.');
 }
 
 $classId = (int) ($linkRow['class_id'] ?? 0);
@@ -85,7 +92,7 @@ $checkStmt->close();
 if ($existing) {
     $status = strtolower((string) ($existing['status'] ?? ''));
     if ($status === 'approved') {
-        $redirectPath = './student_class.html?class_id=' . urlencode((string) $classId) . '&joined=1';
+        $redirectPath = './student_class.html?class_id=' . urlencode((string) $classId) . '&already_joined=1';
         header('Location: ' . $redirectPath);
         exit;
     }

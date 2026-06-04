@@ -98,19 +98,41 @@
                 <table class="feedbacks-table">
                     <thead>
                         <tr>
-                            <th>Subject</th>
+                            <th onclick="toggleSort('f.subject')" class="cursor-pointer">Subject <i class="fas fa-sort ml-1 opacity-30"></i></th>
                             <th>Message</th>
-                            <th>Submitted By</th>
-                            <th>Role</th>
-                            <th>Email</th>
+                            <th onclick="toggleSort('full_name')" class="cursor-pointer">Submitted By <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('f.user_role')" class="cursor-pointer">Role <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('f.user_email')" class="cursor-pointer">Email <i class="fas fa-sort ml-1 opacity-30"></i></th>
                             <th>Screenshot</th>
-                            <th>Submitted At</th>
-                            <th>Status</th>
+                            <th onclick="toggleSort('f.created_at')" class="cursor-pointer">Submitted At <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('f.status')" class="cursor-pointer">Status <i class="fas fa-sort ml-1 opacity-30"></i></th>
                         </tr>
                     </thead>
                     <tbody id="feedbackTableBody"></tbody>
                 </table>
             </section>
+        </div>
+    </div>
+
+    <!-- Message Viewer Modal -->
+    <div id="feedbackMessageModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; min-height: auto;">
+            <div class="modal-header">
+                <h2>Feedback Message</h2>
+                <button onclick="closeFeedbackMessageModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="flex-direction: column;">
+                <div style="margin-bottom: 1rem;">
+                    <h4 id="modalSubject" style="font-weight: 700; font-size: 1.1rem; color: #1e3a8a;">Subject</h4>
+                    <p id="modalSubmitter" style="font-size: 0.85rem; color: #6b7280; margin-top: 0.2rem;">By: Full Name</p>
+                </div>
+                <div style="background: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; max-height: 300px; overflow-y: auto;">
+                    <p id="modalMessage" style="white-space: pre-wrap; line-height: 1.6; color: #374151;"></p>
+                </div>
+                <div style="margin-top: 1.5rem; text-align: right;">
+                    <button class="approve-button" onclick="closeFeedbackMessageModal()" style="padding: 0.5rem 1.5rem;">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </main>

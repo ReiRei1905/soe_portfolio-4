@@ -278,8 +278,6 @@ main {
 
 .header-actions .dropdown p { margin: 0; color: #6b7280; }
 .notification-list {
-    max-height: 14rem;
-    overflow-y: auto;
     min-width: 18rem;
 }
 

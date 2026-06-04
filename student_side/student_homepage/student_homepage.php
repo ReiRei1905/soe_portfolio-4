@@ -315,6 +315,15 @@ $viewStudentParam = $isViewOnly ? htmlspecialchars($_GET['view_student'], ENT_QU
                 <button type="button" class="picker-tab" data-category="other_files" onclick="setQuickCardPickerCategory('other_files')">External Files</button>
             </div>
 
+            <div class="files-toolbar" style="margin-top: 1rem; margin-bottom: 1rem; justify-content: flex-start; gap: 1rem;">
+                <div class="files-toolbar-left">
+                    <label class="files-toolbar-label" for="quickCardYearFilter">Filter by Year</label>
+                    <select id="quickCardYearFilter" class="files-sort-select" onchange="setQuickCardPickerYear(this.value)">
+                        <option value="all">All Years</option>
+                    </select>
+                </div>
+            </div>
+
             <div id="quickCardPickerList" class="picker-file-list" aria-live="polite"></div>
 
             <div class="picker-actions">

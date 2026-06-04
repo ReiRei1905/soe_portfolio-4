@@ -87,8 +87,16 @@
     <div id="overview" class="overview-section">
         <!--Start of Content-->
         <div class="content-container">
-            <div id="profName" class="prof-name">
-                    <h3 id="facultyGreetingText">Hello! Professor Name</h3>
+            <div class="dashboard-header-row">
+                <div id="profName" class="prof-name">
+                        <h3 id="facultyGreetingText">Hello! Professor Name</h3>
+                </div>
+                <div class="dashboard-filters">
+                    <label for="dashboardYearFilter" class="filter-label">Filter by Year:</label>
+                    <select id="dashboardYearFilter" class="dashboard-filter-select">
+                        <!-- Years will be populated by JS -->
+                    </select>
+                </div>
             </div>
             <div id="dashboardLoadingContainer" class="dashboard-loading">
                 <p>Loading dashboard...</p>

@@ -1,5 +1,7 @@
 let feedbackSearchDebounce = null;
-let currentSortOrder = 'desc';
+let feedbackSearch = '';
+let feedbackSortColumn = 'f.created_at';
+let feedbackSortOrder = 'desc';
 
 const roleLabelMap = {
     all: 'All Roles',
@@ -16,28 +18,31 @@ const statusLabelMap = {
     resolved: 'Resolved'
 };
 
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('feedbackMessageModal');
+    if (event.target === modal) {
+        closeFeedbackMessageModal();
+    }
+});
+
 function initFeedbacksPage() {
     if (window.__adminFeedbacksInitialized) return;
     window.__adminFeedbacksInitialized = true;
     bindFeedbackFilters();
     loadFeedbacks();
-    console.log('asdf');
 }
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initFeedbacksPage);
-    console.log('asdf1');
 } else {
     initFeedbacksPage();
-    console.log('asdf2');
 }
-    console.log('asdf2');
 
 function bindFeedbackFilters() {
     const searchInput = document.getElementById('feedbackSearchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (event) => {
-            currentSearch = (event.target.value || '').trim();
+            feedbackSearch = (event.target.value || '').trim();
             if (feedbackSearchDebounce) {
                 clearTimeout(feedbackSearchDebounce);
             }
@@ -48,22 +53,60 @@ function bindFeedbackFilters() {
     const sortBtn = document.getElementById('sortDateBtn');
     if (sortBtn) {
         sortBtn.addEventListener('click', () => {
-            const icon = sortBtn.querySelector('i');
-            const text = document.getElementById('sortDateText');
-            
-            if (currentSortOrder === 'desc') {
-                currentSortOrder = 'asc';
-                icon.className = 'fas fa-sort-amount-up';
-                text.textContent = 'Oldest to Recent';
-            } else {
-                currentSortOrder = 'desc';
-                icon.className = 'fas fa-sort-amount-down';
-                text.textContent = 'Recent to Oldest';
-            }
-            loadFeedbacks();
+            toggleSort('f.created_at');
         });
     }
 }
+
+function toggleSort(column) {
+    if (feedbackSortColumn === column) {
+        if (feedbackSortOrder === 'asc') {
+            feedbackSortOrder = 'desc';
+        } else {
+            // Cycle back to default (created_at desc)
+            feedbackSortColumn = 'f.created_at';
+            feedbackSortOrder = 'desc';
+        }
+    } else {
+        feedbackSortColumn = column;
+        feedbackSortOrder = 'asc';
+    }
+
+    updateSortIcons();
+    loadFeedbacks();
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('thead th i.fas').forEach(icon => {
+        icon.className = 'fas fa-sort';
+        icon.style.opacity = '0.3';
+    });
+
+    const activeTh = document.querySelector(`thead th[onclick*="'${feedbackSortColumn}'"]`);
+    if (activeTh) {
+        const icon = activeTh.querySelector('i');
+        if (icon) {
+            icon.className = feedbackSortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            icon.style.opacity = '1';
+        }
+    }
+
+    // Update legacy sort button if it exists
+    const sortBtn = document.getElementById('sortDateBtn');
+    if (sortBtn) {
+        const icon = sortBtn.querySelector('i');
+        const text = document.getElementById('sortDateText');
+        if (feedbackSortColumn === 'f.created_at') {
+            if (icon) icon.className = feedbackSortOrder === 'asc' ? 'fas fa-sort-amount-up' : 'fas fa-sort-down';
+            if (text) text.textContent = feedbackSortOrder === 'asc' ? 'Oldest to Recent' : 'Recent to Oldest';
+        } else {
+            if (icon) icon.className = 'fas fa-history';
+            if (text) text.textContent = 'Reset to Default';
+        }
+    }
+}
+
+window.toggleSort = toggleSort;
 
 function toggleFeedbackDropdown(id) {
     const dropdown = document.getElementById(id);
@@ -79,9 +122,9 @@ function closeFeedbackDropdown(id) {
 
 function buildFeedbackQuery() {
     const params = new URLSearchParams();
-    // Removed Role and Status params
-    if (currentSearch !== '') params.set('search', currentSearch);
-    params.set('sort', currentSortOrder);
+    if (feedbackSearch !== '') params.set('search', feedbackSearch);
+    params.set('sort', feedbackSortColumn);
+    params.set('order', feedbackSortOrder);
     return params.toString();
 }
 
@@ -138,20 +181,48 @@ function renderFeedbacksTable(feedbacks) {
             ? `<a class="feedback-screenshot-link" href="${resolveScreenshotUrl(item.screenshot_path)}" target="_blank" rel="noopener">View</a>`
             : '<span class="feedback-empty">-</span>';
 
+        // Message is now a View link that opens a modal
+        const messageHtml = `<a href="#" class="feedback-view-link" onclick="return openFeedbackMessageModal('${escapeHtml(item.subject)}', '${escapeHtml(item.message)}', '${escapeHtml(item.full_name)}')">View</a>`;
+
         row.innerHTML = `
             <td>${escapeHtml(item.subject)}</td>
-            <td class="feedback-message-cell">${escapeHtml(item.message)}</td>
+            <td>${messageHtml}</td>
             <td>${escapeHtml(item.full_name)}</td>
             <td>${escapeHtml(item.role_label)}</td>
             <td>${escapeHtml(item.user_email)}</td>
             <td>${screenshotHtml}</td>
             <td>${escapeHtml(item.created_at)}</td>
-            <td>${formatStatusBadge(item.status)}</td>
+            <td>${formatStatusBadge(item.is_new_submission)}</td>
         `;
 
         tableBody.appendChild(row);
     });
 }
+
+function openFeedbackMessageModal(subject, message, fullName) {
+    const modal = document.getElementById('feedbackMessageModal');
+    const subjectEl = document.getElementById('modalSubject');
+    const submitterEl = document.getElementById('modalSubmitter');
+    const messageEl = document.getElementById('modalMessage');
+
+    if (modal && subjectEl && submitterEl && messageEl) {
+        subjectEl.textContent = subject;
+        submitterEl.textContent = `By: ${fullName}`;
+        messageEl.textContent = message;
+        modal.style.display = 'block';
+    }
+    return false;
+}
+
+function closeFeedbackMessageModal() {
+    const modal = document.getElementById('feedbackMessageModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+window.openFeedbackMessageModal = openFeedbackMessageModal;
+window.closeFeedbackMessageModal = closeFeedbackMessageModal;
 
 function resolveScreenshotUrl(path) {
     if (!path) return '#';
@@ -161,10 +232,9 @@ function resolveScreenshotUrl(path) {
     return `../../images/feedbacks/${path}`;
 }
 
-function formatStatusBadge(status) {
-    const normalized = String(status || '').toLowerCase();
-    const label = statusLabelMap[normalized] || 'New';
-    const className = `feedback-status status-${normalized || 'new'}`;
+function formatStatusBadge(isNew) {
+    const label = isNew ? 'New' : 'Old';
+    const className = `feedback-status status-${isNew ? 'new' : 'old'}`;
     return `<span class="${className}">${label}</span>`;
 }
 

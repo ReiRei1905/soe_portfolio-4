@@ -516,6 +516,7 @@ let activeQuickCardPortfolioId = 0;
 let activeQuickCardPortfolioKey = '';
 let activeQuickCardTitle = '';
 let quickCardPickerCategory = 'all';
+let quickCardPickerYearFilter = 'all';
 let quickCardPickerAvailableFiles = [];
 let quickCardPickerSelectedFileIds = new Set();
 
@@ -1598,6 +1599,14 @@ function openQuickCardFilePicker() {
     if (!picker) return;
 
     picker.classList.remove('hidden');
+
+    // Populate year filter dropdown based on the currently selected category
+    const categoryFiles = quickCardPickerAvailableFiles.filter(file => {
+        if (quickCardPickerCategory === 'all') return true;
+        return String(file.categoryKey || '').toLowerCase() === quickCardPickerCategory;
+    });
+    populateQuickCardYearFilter(categoryFiles);
+
     renderQuickCardPickerTabs();
     renderQuickCardPickerList();
 }
@@ -1609,7 +1618,52 @@ function closeQuickCardFilePicker() {
 
 function setQuickCardPickerCategory(categoryKey) {
     quickCardPickerCategory = String(categoryKey || 'all').trim() || 'all';
+    quickCardPickerYearFilter = 'all'; // Reset year filter on category change
+
+    // Refresh year filter options for the new category
+    const categoryFiles = quickCardPickerAvailableFiles.filter(file => {
+        if (quickCardPickerCategory === 'all') return true;
+        return String(file.categoryKey || '').toLowerCase() === quickCardPickerCategory;
+    });
+    populateQuickCardYearFilter(categoryFiles);
+
     renderQuickCardPickerTabs();
+    renderQuickCardPickerList();
+}
+
+function populateQuickCardYearFilter(files) {
+    const yearSelect = document.getElementById('quickCardYearFilter');
+    if (!yearSelect) return;
+
+    // Clear existing options, but keep "All Years"
+    yearSelect.innerHTML = '<option value="all">All Years</option>';
+
+    const years = new Set();
+    files.forEach(file => {
+        const timestamp = file.timestamp || file.created_at || file.createdAt;
+        if (timestamp) {
+            const year = new Date(timestamp).getFullYear();
+            if (Number.isFinite(year)) {
+                years.add(year);
+            }
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a); // Sort descending
+
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSelect.appendChild(option);
+    });
+
+    // Set the dropdown to the currently selected filter, or 'all' if none
+    yearSelect.value = quickCardPickerYearFilter;
+}
+
+function setQuickCardPickerYear(year) {
+    quickCardPickerYearFilter = String(year || 'all').trim() || 'all';
     renderQuickCardPickerList();
 }
 
@@ -1648,12 +1702,24 @@ function renderQuickCardPickerList() {
     if (!container) return;
 
     const filteredFiles = quickCardPickerAvailableFiles.filter((file) => {
-        if (quickCardPickerCategory === 'all') return true;
-        return String(file.categoryKey || '').toLowerCase() === quickCardPickerCategory;
+        // Category filter
+        if (quickCardPickerCategory !== 'all') {
+            if (String(file.categoryKey || '').toLowerCase() !== quickCardPickerCategory) return false;
+        }
+
+        // Year filter
+        if (quickCardPickerYearFilter !== 'all') {
+            const timestamp = file.timestamp || file.created_at || file.createdAt;
+            if (!timestamp) return false;
+            const fileYear = new Date(timestamp).getFullYear();
+            if (fileYear !== Number(quickCardPickerYearFilter)) return false;
+        }
+
+        return true;
     });
 
     if (filteredFiles.length === 0) {
-        container.innerHTML = '<p class="picker-empty">No PDF/PNG/JPG files found in this category.</p>';
+        container.innerHTML = '<p class="picker-empty">No PDF/PNG/JPG files found matching the criteria.</p>';
         return;
     }
 

@@ -49,6 +49,23 @@ function sanitize_name(string $name, int $max = 255): string
 function current_student_id(mysqli $conn): int
 {
     $sessionStudentId = (int) ($_SESSION['student_id'] ?? 0);
+    $sessionRoleType = strtolower(trim((string) ($_SESSION['role_type'] ?? '')));
+    $isAdmin = $sessionRoleType === 'admin';
+
+    // Allow Admin override via GET/POST parameters
+    if ($isAdmin) {
+        $requestedId = (int) get_request_string('view_student_id');
+        if ($requestedId <= 0) {
+            $requestedId = (int) get_request_string('student_id');
+        }
+        if ($requestedId <= 0) {
+            $requestedId = (int) get_request_string('view_student');
+        }
+        if ($requestedId > 0) {
+            return $requestedId;
+        }
+    }
+
     if ($sessionStudentId > 0) {
         return $sessionStudentId;
     }

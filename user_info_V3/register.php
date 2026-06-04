@@ -214,8 +214,9 @@ if (isset($_POST['signIn'])) {
                     "Welcome {$fullName}, you have officially logged in the system."
                 );
             }
-            
-            $targetPath = resolve_effective_route($row);
+
+            $redirect = $_GET['redirect'] ?? '';
+            $targetPath = ($redirect !== '') ? $redirect : resolve_effective_route($row);
             header("Location: {$targetPath}", true, 303);
             exit();
         } else {

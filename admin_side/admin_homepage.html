@@ -93,29 +93,31 @@
                 <input id="userSearchInput" class="search-input" placeholder="Search Users" type="text"/>
                 <i class="search-icon fas fa-search"></i>
             </div>
-            <div class="search-dropdown">
-                <button class="filter-button" onclick="toggleUsersDropdown(this)">
-                    <i class="filter-icon fas fa-filter"></i> <!-- Filter Icon -->
-                    <span id="selectedFilter">All Users</span> <!-- Placeholder for selected filter -->
-                </button>
-                <div class="search-dropdown-content">
-                    <a href="#" onclick="return filterUsers('all')">All Users</a>
-                    <a href="#" onclick="return filterUsers('admin')">Admin</a>
-                    <a href="#" onclick="return filterUsers('executiveDirector')">Executive Director</a>
-                    <a href="#" onclick="return filterUsers('programDirector')">Program Director</a>
-                    <a href="#" onclick="return filterUsers('professor')">Professor</a>
-                    <a href="#" onclick="return filterUsers('student')">Student</a>
+            <div class="filter-actions-group">
+                <div class="search-dropdown">
+                    <button class="filter-button" onclick="toggleUsersDropdown(this)">
+                        <i class="filter-icon fas fa-filter"></i> <!-- Filter Icon -->
+                        <span id="selectedFilter">All Users</span> <!-- Placeholder for selected filter -->
+                    </button>
+                    <div class="search-dropdown-content">
+                        <a href="#" onclick="return filterUsers('all')">All Users</a>
+                        <a href="#" onclick="return filterUsers('admin')">Admin</a>
+                        <a href="#" onclick="return filterUsers('executiveDirector')">Executive Director</a>
+                        <a href="#" onclick="return filterUsers('programDirector')">Program Director</a>
+                        <a href="#" onclick="return filterUsers('professor')">Professor</a>
+                        <a href="#" onclick="return filterUsers('student')">Student</a>
+                    </div>
                 </div>
-            </div>
-            <div class="dropdown info-dropdown-container">
-                <button class="info-button" onclick="toggleInfoDropdown(this)">
-                    <i class="fas fa-info-circle"></i> <!-- Info Icon -->
-                </button>
-                <div class="info-dropdown">
-                    <p><strong>Executive Director Role</strong><br>Has access to create programs in program management.<br>Assign Program Director in specific program.</p>
-                    <p><strong>Program Directors Role</strong><br>Has access to create courses, lists of student management.<br>Assign Professor in classes.</p>
-                    <p><strong>Professors Role</strong><br>Has access to create courses, classes and define required outputs for academic portfolios.<br>Authorization of students enrolled courses in their classes.</p>
-                    <p><strong>Students Role</strong><br>Has access to folder management and upload portfolios.</p>
+                <div class="dropdown info-dropdown-container">
+                    <button class="info-button" onclick="toggleInfoDropdown(this)">
+                        <i class="fas fa-info-circle"></i> <!-- Info Icon -->
+                    </button>
+                    <div class="info-dropdown">
+                        <p><strong>Executive Director Role</strong><br>Has access to create programs in program management.<br>Assign Program Director in specific program.</p>
+                        <p><strong>Program Directors Role</strong><br>Has access to create courses, lists of student management.<br>Assign Professor in classes.</p>
+                        <p><strong>Professors Role</strong><br>Has access to create courses, classes and define required outputs for academic portfolios.<br>Authorization of students enrolled courses in their classes.</p>
+                        <p><strong>Students Role</strong><br>Has access to folder management and upload portfolios.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -127,13 +129,13 @@
                 <table>
                     <thead> 
                         <tr>
-                            <th> First Name </th>
-                            <th> Middle Initial</th>
-                            <th> Last Name </th>
-                            <th> Suffix</th>
+                            <th onclick="toggleSort('firstName')" class="cursor-pointer"> First Name <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('middleInitial')" class="cursor-pointer"> Middle Initial <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('lastName')" class="cursor-pointer"> Last Name <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('suffix')" class="cursor-pointer"> Suffix <i class="fas fa-sort ml-1 opacity-30"></i></th>
                             <th> Role </th>
-                            <th> Status </th>
-                            <th> Created Account </th>
+                            <th onclick="toggleProgramFilter()" class="cursor-pointer"> Programs <i class="fas fa-sort ml-1 opacity-30"></i></th>
+                            <th onclick="toggleSort('createdAccount')" class="cursor-pointer"> Created Account <i class="fas fa-sort ml-1 opacity-30"></i></th>
                             <th></th>
                         </tr>
                     </thead>

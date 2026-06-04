@@ -248,9 +248,16 @@ if ($flashMessage !== '') {
     </div>
 
     <!-- Sign-In Form -->
+    <?php
+    $redirect = $_GET['redirect'] ?? '';
+    $formAction = 'register.php';
+    if ($redirect !== '') {
+        $formAction .= '?redirect=' . urlencode($redirect);
+    }
+    ?>
     <div class="container" id="signIn">
         <h1 class="form-title">SOE-Portfolio Sign-In</h1>
-        <form method="post" action="register.php">
+        <form method="post" action="<?php echo htmlspecialchars($formAction, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="input-group">
                 <i class="fas fa-envelope"></i>
                 <input type="email" name="email" placeholder="Email" required>

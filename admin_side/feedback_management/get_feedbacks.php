@@ -7,8 +7,23 @@ require_once __DIR__ . '/../admin_api_common.php';
 $role = strtolower(trim((string) ($_GET['role'] ?? 'all')));
 $status = strtolower(trim((string) ($_GET['status'] ?? 'all')));
 $search = trim((string) ($_GET['search'] ?? ''));
-$sort = strtolower(trim((string) ($_GET['sort'] ?? 'desc')));
-$orderClause = ($sort === 'asc') ? 'ASC' : 'DESC';
+$sortField = trim((string) ($_GET['sort'] ?? 'f.created_at'));
+$sortOrder = strtolower(trim((string) ($_GET['order'] ?? 'desc')));
+
+$dir = ($sortOrder === 'asc') ? 'ASC' : 'DESC';
+$orderBy = "f.created_at {$dir}, f.feedback_id {$dir}";
+
+$allowedSortColumns = [
+    'f.subject', 'f.message', 'f.user_role', 'f.user_email', 'f.status', 'f.created_at', 'full_name'
+];
+
+if (in_array($sortField, $allowedSortColumns, true)) {
+    if ($sortField === 'full_name') {
+        $orderBy = "u.first_name {$dir}, u.last_name {$dir}, f.created_at DESC";
+    } else {
+        $orderBy = "{$sortField} {$dir}, f.created_at DESC";
+    }
+}
 
 $where = [];
 $params = [];
@@ -48,7 +63,7 @@ if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
 
-$sql .= " ORDER BY f.created_at {$orderClause}, f.feedback_id {$orderClause} LIMIT 200";
+$sql .= " ORDER BY {$orderBy} LIMIT 200";
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
@@ -63,9 +78,14 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $rows = [];
+$today = date('Y-m-d');
+
 while ($row = $result->fetch_assoc()) {
     $roleLabel = format_role_label((string) ($row['user_role'] ?? ''));
     $createdAt = (string) ($row['created_at'] ?? '');
+    $submissionDate = date('Y-m-d', strtotime($createdAt));
+    $isNew = ($submissionDate === $today);
+
     $rows[] = [
         'feedback_id' => (int) $row['feedback_id'],
         'user_id' => (int) $row['user_id'],
@@ -75,6 +95,7 @@ while ($row = $result->fetch_assoc()) {
         'screenshot_path' => (string) ($row['screenshot_path'] ?? ''),
         'screenshot_name' => (string) ($row['screenshot_name'] ?? ''),
         'status' => (string) ($row['status'] ?? 'new'),
+        'is_new_submission' => $isNew,
         'created_at' => $createdAt !== '' ? date('d/m/Y h:i A', strtotime($createdAt)) : 'N/A',
         'full_name' => trim((string) ($row['first_name'] ?? '') . ' ' . (string) ($row['last_name'] ?? '')),
         'role_label' => $roleLabel
