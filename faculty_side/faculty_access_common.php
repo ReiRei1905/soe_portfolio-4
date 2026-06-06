@@ -228,14 +228,8 @@ function faculty_can_manage_program(mysqli $conn, array $user, int $programId): 
         return false;
     }
 
-    if (faculty_is_executive_director($user)) {
-        return true;
-    }
-
-    if (!faculty_is_program_director($user)) {
-        return false;
-    }
-
+    // Even if the user is an Executive Director, they must be explicitly
+    // assigned as the Program Director for this specific program to manage its contents (courses, etc.)
     return faculty_is_program_assigned_to_director($conn, (int) ($user['user_id'] ?? 0), $programId);
 }
 

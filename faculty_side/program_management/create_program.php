@@ -15,6 +15,20 @@ if ($programName === '') {
     send_program_json(['success' => false, 'message' => 'Invalid program name.'], 400);
 }
 
+// Check for existing program with the same name (case-insensitive)
+$checkStmt = $conn->prepare('SELECT 1 FROM programs WHERE LOWER(TRIM(program_name)) = LOWER(?) LIMIT 1');
+if (!$checkStmt) {
+    send_program_json(['success' => false, 'message' => 'Failed to prepare duplicate check.'], 500);
+}
+$checkStmt->bind_param('s', $programName);
+$checkStmt->execute();
+$exists = (bool) ($checkStmt->get_result()->fetch_assoc());
+$checkStmt->close();
+
+if ($exists) {
+    send_program_json(['success' => false, 'message' => 'A program with this name already exists.'], 409);
+}
+
 $stmt = $conn->prepare('INSERT INTO programs (program_name) VALUES (?)');
 if (!$stmt) {
     send_program_json(['success' => false, 'message' => 'Failed to create program.'], 500);

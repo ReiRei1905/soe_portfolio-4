@@ -4415,6 +4415,43 @@ main {
     gap: 0.6rem;
 }
 
+.list-students-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0 0.65rem;
+    height: 2rem;
+    transition: all 0.2s ease;
+}
+
+.list-students-search-wrap:focus-within {
+    border-color: #1d4ed8;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.1);
+}
+
+.list-students-search-wrap i {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-right: 0.4rem;
+}
+
+.list-students-search-input {
+    border: none;
+    background: transparent;
+    font-size: 0.84rem;
+    color: #1e293b;
+    width: 12rem;
+    outline: none;
+}
+
+.list-students-search-input::placeholder {
+    color: #94a3b8;
+}
+
 .list-students-filter-wrap {
     position: relative;
 }

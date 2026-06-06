@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const listStudentsMembers = document.getElementById('listStudentsMembers');
     const listStudentsFilterBtn = document.getElementById('listStudentsFilterBtn');
     const listStudentsFilterMenu = document.getElementById('listStudentsFilterMenu');
+    const listStudentsSearchInput = document.getElementById('listStudentsSearchInput');
     const refreshListStudentsBtn = document.getElementById('refreshListStudentsBtn');
     const listStudentReportsView = document.getElementById('listStudentReportsView');
     const academicPortfoliosTabBtn = document.getElementById('academicPortfoliosTabBtn');
@@ -38,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentReportMode: 'academic',
         cachedExtracurricularByStudent: new Map(),
         currentStudents: [],
-        listStudentsSortMode: 'alphabetical'
+        listStudentsSortMode: 'alphabetical',
+        studentSearchQuery: ''
     };
 
     function redirectToLogin() {
@@ -83,6 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function showOverviewMode() {
         if (state.canCreate) {
             createListBtn.style.display = '';
+        }
+
+        state.studentSearchQuery = '';
+        if (listStudentsSearchInput) {
+            listStudentsSearchInput.value = '';
         }
 
         listStudentsView.classList.add('hidden');
@@ -260,9 +267,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         listStudentsMembers.innerHTML = '';
-        const sortedStudents = sortStudents(state.currentStudents);
+        
+        // Filter students based on search query
+        const query = (state.studentSearchQuery || '').toLowerCase().trim();
+        const filtered = state.currentStudents.filter(student => {
+            if (!query) return true;
+            const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
+            const idNumber = String(student.idNumber || '').toLowerCase();
+            const email = String(student.email || '').toLowerCase();
+            return fullName.includes(query) || idNumber.includes(query) || email.includes(query);
+        });
+
+        const sortedStudents = sortStudents(filtered);
         if (sortedStudents.length === 0) {
-            listStudentsMembers.innerHTML = '<p class="members-empty">No students found for this list.</p>';
+            const msg = query ? 'No students match your search.' : 'No students found for this list.';
+            listStudentsMembers.innerHTML = `<p class="members-empty">${msg}</p>`;
             return;
         }
 
@@ -1044,6 +1063,13 @@ document.addEventListener('DOMContentLoaded', () => {
             closeListStudentsFilterMenu();
         }
     });
+
+    if (listStudentsSearchInput) {
+        listStudentsSearchInput.addEventListener('input', () => {
+            state.studentSearchQuery = listStudentsSearchInput.value;
+            renderCurrentListStudents();
+        });
+    }
 
     if (listStudentsFilterBtn && listStudentsFilterMenu) {
         listStudentsFilterBtn.addEventListener('click', (event) => {

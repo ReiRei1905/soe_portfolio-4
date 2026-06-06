@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
             isProgramDirector = isFacultyVerified && isProgramDirectorRole;
             return {
                 userId: currentUserId,
-                canManageAnyProgram: isFacultyVerified && isExecDirectorRole,
+                canManageAnyProgram: false, // Executive Directors must be assigned as PD to manage courses
                 isProgramDirector
             };
         } catch (error) {
@@ -114,8 +114,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
             programId = program.id;
             window.__currentProgramId = programId;
-            canManageCurrentProgram = Boolean(access.canManageAnyProgram)
-                || (Boolean(access.isProgramDirector) && Number(program.assignedProgramDirectorUserId || 0) === Number(access.userId || 0));
+            
+            // Check if user is assigned as PD for THIS specific program
+            const isAssignedPD = Number(program.assignedProgramDirectorUserId || 0) === Number(access.userId || 0);
+            
+            // Executive Directors can manage programs ONLY if they are explicitly assigned as the PD for it
+            // Other Program Directors can manage their assigned programs
+            canManageCurrentProgram = isAssignedPD;
 
             applyCourseControlsVisibility();
             updateProgramDirectorNotice();
